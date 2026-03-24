@@ -77,36 +77,34 @@
 
 ## Traceability
 
-*Populated during roadmap creation.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| REC-01 | — | Pending |
-| REC-02 | — | Pending |
-| REC-03 | — | Pending |
-| REC-04 | — | Pending |
-| REC-05 | — | Pending |
-| REC-06 | — | Pending |
-| REC-07 | — | Pending |
-| REC-08 | — | Pending |
-| REC-09 | — | Pending |
-| REC-10 | — | Pending |
-| REC-11 | — | Pending |
-| JUDGE-01 | — | Pending |
-| JUDGE-02 | — | Pending |
-| JUDGE-03 | — | Pending |
-| JUDGE-04 | — | Pending |
-| LB-01 | — | Pending |
-| LB-02 | — | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| REC-01 | Phase 2 | Pending |
+| REC-02 | Phase 2 | Pending |
+| REC-03 | Phase 2 | Pending |
+| REC-04 | Phase 2 | Pending |
+| REC-05 | Phase 2 | Pending |
+| REC-06 | Phase 2 | Pending |
+| REC-07 | Phase 2 | Pending |
+| REC-08 | Phase 2 | Pending |
+| REC-09 | Phase 2 | Pending |
+| REC-10 | Phase 2 | Pending |
+| REC-11 | Phase 2 | Pending |
+| JUDGE-01 | Phase 3 | Pending |
+| JUDGE-02 | Phase 3 | Pending |
+| JUDGE-03 | Phase 3 | Pending |
+| JUDGE-04 | Phase 3 | Pending |
+| LB-01 | Phase 4 | Pending |
+| LB-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20 ⚠️ (populated by roadmapper)
+- Mapped to phases: 20
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-24*
-*Last updated: 2026-03-24 after initial definition*
+*Last updated: 2026-03-24 after roadmap creation — all 20 v1 requirements mapped*

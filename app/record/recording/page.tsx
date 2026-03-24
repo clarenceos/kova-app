@@ -4,19 +4,43 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRecord } from '@/lib/record-context'
 
-type PageState = 'setup' | 'countdown' | 'recording'
+type PageState = 'setup' | 'countdown' | 'recording' | 'processing'
 
 interface CameraDevice {
   deviceId: string
   label: string
 }
 
-function getCameraLabel(rawLabel: string, index: number): string {
-  const lower = rawLabel.toLowerCase()
-  if (lower.includes('front') || lower.includes('facing front')) return 'Front Camera'
-  if (lower.includes('back') || lower.includes('rear') || lower.includes('environment')) return 'Rear Camera'
-  if (rawLabel.trim()) return rawLabel
-  return `Camera ${index + 1}`
+function buildCameraList(devices: MediaDeviceInfo[]): CameraDevice[] {
+  const videoInputs = devices.filter(d => d.kind === 'videoinput')
+  const hasLabels = videoInputs.some(d => d.label.trim() !== '')
+
+  if (hasLabels) {
+    const front: CameraDevice[] = []
+    const rear: CameraDevice[] = []
+
+    for (const d of videoInputs) {
+      const lower = d.label.toLowerCase()
+      if (lower.includes('front') || lower.includes('facing front')) {
+        front.push({ deviceId: d.deviceId, label: 'Front Camera' })
+      } else {
+        rear.push({ deviceId: d.deviceId, label: '' })
+      }
+    }
+
+    const result: CameraDevice[] = []
+    if (rear[0]) result.push({ deviceId: rear[0].deviceId, label: 'Back Camera (1x)' })
+    if (rear[1]) result.push({ deviceId: rear[1].deviceId, label: 'Back Camera (0.5x)' })
+    result.push(...front)
+    return result
+  }
+
+  // No labels — positional fallback, max 3
+  const fallbackLabels = ['Front Camera', 'Back Camera (1x)', 'Back Camera (0.5x)']
+  return videoInputs.slice(0, 3).map((d, i) => ({
+    deviceId: d.deviceId,
+    label: fallbackLabels[i],
+  }))
 }
 
 export default function RecordingPage() {
@@ -49,6 +73,9 @@ export default function RecordingPage() {
   // ── Countdown display ──
   const [countdownDisplay, setCountdownDisplay] = useState<number>(10)
 
+  // ── Processing state ──
+  const [processingSlow, setProcessingSlow] = useState(false)
+
   // ── Recording params stored in refs so countdown effects can access them ──
   const recordWeightRef = useRef<number>(0)
   const recordBeepRef = useRef<boolean>(false)
@@ -65,6 +92,10 @@ export default function RecordingPage() {
   const timerMsRef = useRef<number>(0)
   const isRecordingRef = useRef<boolean>(false)
   const chunksRef = useRef<Blob[]>([])
+
+  // ── Countdown preview refs ──
+  const countdownDisplayRef = useRef<number>(10)
+  const previewRafRef = useRef<number | null>(null)
 
   // ── Wake Lock ──
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
@@ -85,18 +116,16 @@ export default function RecordingPage() {
   useEffect(() => {
     async function enumerate() {
       try {
-        // Request permission first so device labels are populated
         const tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        tempStream.getTracks().forEach(t => t.stop()) // Release immediately after permission
+        tempStream.getTracks().forEach(t => t.stop())
 
         const devices = await navigator.mediaDevices.enumerateDevices()
-        const videoDevices = devices.filter(d => d.kind === 'videoinput')
-        const mapped: CameraDevice[] = videoDevices.map((d, i) => ({
-          deviceId: d.deviceId,
-          label: getCameraLabel(d.label, i),
-        }))
-        setCameras(mapped)
-        if (mapped.length > 0) setSelectedCamera(mapped[0].deviceId)
+        const cameraList = buildCameraList(devices)
+        setCameras(cameraList)
+
+        // Default to Back Camera (1x); fall back to first
+        const backCamera = cameraList.find(c => c.label === 'Back Camera (1x)')
+        setSelectedCamera(backCamera?.deviceId ?? cameraList[0]?.deviceId ?? '')
       } catch (e) {
         console.error('Camera enumerate failed', e)
       }
@@ -143,7 +172,7 @@ export default function RecordingPage() {
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
 
-    oscillator.frequency.value = 880 // A5
+    oscillator.frequency.value = 880
     oscillator.type = 'sine'
     gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
     gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
@@ -169,7 +198,6 @@ export default function RecordingPage() {
     const canvasH = canvas.height
 
     // Layer 1: center-crop camera feed, mirrored horizontally for selfie view
-    // ctx transform is scoped to save/restore — overlays drawn after restore are unaffected
     const cropX = (video.videoWidth - canvasW) / 2
     ctx.save()
     ctx.scale(-1, 1)
@@ -177,13 +205,12 @@ export default function RecordingPage() {
     ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
     ctx.restore()
 
-    // Layer 2: overlays — drawn after restore, correctly oriented on screen and in export
+    // Layer 2: overlays
     const PAD = 20
     ctx.fillStyle = 'white'
     ctx.shadowColor = 'rgba(0,0,0,0.75)'
     ctx.shadowBlur = 8
 
-    // TOP LEFT — discipline (small, uppercase) then timer (large, bold)
     const minutes = Math.floor(timerMs / 60000)
     const seconds = Math.floor((timerMs % 60000) / 1000)
     const timerStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
@@ -195,7 +222,6 @@ export default function RecordingPage() {
     ctx.font = 'bold 80px sans-serif'
     ctx.fillText(timerStr, PAD, PAD + 22 + 8 + 80)
 
-    // BOTTOM RIGHT — weight, athlete name, serial (stacked, right-aligned)
     ctx.textAlign = 'right'
     const rightX = canvasW - PAD
 
@@ -208,7 +234,6 @@ export default function RecordingPage() {
     ctx.font = '400 22px sans-serif'
     ctx.fillText(serialStr.toUpperCase(), rightX, canvasH - PAD)
 
-    // BOTTOM LEFT — KOVA
     ctx.textAlign = 'left'
     ctx.font = 'bold 28px sans-serif'
     ctx.fillText('KOVA', PAD, canvasH - PAD)
@@ -228,32 +253,38 @@ export default function RecordingPage() {
 
     mediaRecorderRef.current?.stop()
     releaseWakeLock()
+    setPageState('processing')
     setIsRecording(false)
-
-    // Stream is released in recorder.onstop after blob is ready
   }, [])
 
-  // ── Countdown tick — useEffect drives the interval so functional updates work correctly ──
+  // ── Countdown tick ──
   useEffect(() => {
     if (pageState !== 'countdown') return
 
     const id = setInterval(() => {
       setCountdownDisplay(prev => prev - 1)
+      countdownDisplayRef.current -= 1
     }, 1000)
 
     return () => clearInterval(id)
   }, [pageState])
 
-  // ── Start MediaRecorder at 5s remaining so the final countdown is captured in the video ──
+  // ── Start MediaRecorder at 5s remaining ──
   useEffect(() => {
     if (pageState !== 'countdown' || countdownDisplay !== 5) return
     mediaRecorderRef.current?.start()
     acquireWakeLock()
   }, [countdownDisplay, pageState])
 
-  // ── Start lift timer when countdown fully completes ──
+  // ── Start lift timer when countdown completes ──
   useEffect(() => {
     if (pageState !== 'countdown' || countdownDisplay > 0) return
+
+    // Cancel countdown preview loop
+    if (previewRafRef.current !== null) {
+      cancelAnimationFrame(previewRafRef.current)
+      previewRafRef.current = null
+    }
 
     setPageState('recording')
     setIsRecording(true)
@@ -289,12 +320,17 @@ export default function RecordingPage() {
     }
 
     rafRef.current = requestAnimationFrame(loop)
-  // drawFrame, playBeep, stopRecording are stable useCallbacks; serial/disciplineLabel/athleteName
-  // don't change during a session — safe to capture without listing as deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countdownDisplay, pageState])
 
-  // ── Start session (called when "Start" is pressed) ──
+  // ── Processing slow timeout ──
+  useEffect(() => {
+    if (pageState !== 'processing') return
+    const id = setTimeout(() => setProcessingSlow(true), 15000)
+    return () => clearTimeout(id)
+  }, [pageState])
+
+  // ── Start session ──
   const startSession = useCallback(async (
     weightNum: number,
     countdownSecs: number,
@@ -302,7 +338,6 @@ export default function RecordingPage() {
     autoStopOn: boolean,
     deviceId: string,
   ) => {
-    // Save to context and recording refs
     setWeightKg(weightNum)
     setCountdownSeconds(countdownSecs)
     setBeepEveryMinute(beepEnabled)
@@ -312,25 +347,21 @@ export default function RecordingPage() {
     recordBeepRef.current = beepEnabled
     recordAutoStopRef.current = autoStopOn
 
-    // Acquire camera stream
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { deviceId: { exact: deviceId } },
       audio: false,
     })
     streamRef.current = stream
 
-    // Attach stream to hidden video element and wait for dimensions
     const video = videoRef.current!
     video.srcObject = stream
     await video.play().catch(() => {})
 
-    // Wait for video dimensions to be known before sizing the canvas
     await new Promise<void>(resolve => {
       if (video.videoWidth > 0) { resolve(); return }
       video.addEventListener('loadedmetadata', () => resolve(), { once: true })
     })
 
-    // Size canvas to portrait (9:16) by center-cropping the camera feed
     const cameraWidth = video.videoWidth || 1280
     const cameraHeight = video.videoHeight || 720
     const portraitWidth = Math.round(cameraHeight * 9 / 16)
@@ -338,7 +369,6 @@ export default function RecordingPage() {
     canvas.width = portraitWidth
     canvas.height = cameraHeight
 
-    // Setup MediaRecorder from the portrait canvas stream
     const canvasStream = canvas.captureStream(30)
 
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
@@ -374,7 +404,69 @@ export default function RecordingPage() {
 
     mediaRecorderRef.current = recorder
 
-    // Initialise countdown display then hand off to the useEffect interval
+    // Initialize countdown ref and start preview rAF loop
+    countdownDisplayRef.current = countdownSecs
+
+    function previewLoop() {
+      const canvas = canvasRef.current
+      const ctx = canvas?.getContext('2d')
+      const video = videoRef.current
+      if (!ctx || !video || !canvas) return
+
+      const canvasW = canvas.width
+      const canvasH = canvas.height
+
+      // Mirror camera feed — same pattern as drawFrame Layer 1
+      const cropX = (video.videoWidth - canvasW) / 2
+      ctx.save()
+      ctx.scale(-1, 1)
+      ctx.translate(-canvasW, 0)
+      ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+      ctx.restore()
+
+      // Countdown number overlay
+      const num = countdownDisplayRef.current
+      if (num > 0) {
+        const fontSize = Math.round(canvasH * 0.25)
+        const centerX = canvasW / 2
+        const centerY = canvasH / 2
+
+        ctx.font = `bold ${fontSize}px sans-serif`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        const textW = ctx.measureText(String(num)).width
+        const padX = 24
+        const padY = 20
+
+        // Semi-transparent dark pill behind number only
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'
+        ctx.beginPath()
+        ctx.roundRect(
+          centerX - textW / 2 - padX,
+          centerY - fontSize / 2 - padY,
+          textW + padX * 2,
+          fontSize + padY * 2,
+          fontSize * 0.4,
+        )
+        ctx.fill()
+
+        // White number with shadow
+        ctx.fillStyle = 'white'
+        ctx.shadowColor = 'rgba(0,0,0,0.75)'
+        ctx.shadowBlur = 8
+        ctx.fillText(String(num), centerX, centerY)
+        ctx.shadowBlur = 0
+        ctx.textBaseline = 'alphabetic'
+        ctx.textAlign = 'left'
+
+        previewRafRef.current = requestAnimationFrame(previewLoop)
+      }
+      // num <= 0: loop stops naturally
+    }
+
+    previewRafRef.current = requestAnimationFrame(previewLoop)
+
     setCountdownDisplay(countdownSecs)
     setPageState('countdown')
   }, [
@@ -391,6 +483,7 @@ export default function RecordingPage() {
   // ── Cleanup on unmount ──
   useEffect(() => {
     return () => {
+      if (previewRafRef.current !== null) cancelAnimationFrame(previewRafRef.current)
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
       streamRef.current?.getTracks().forEach(t => t.stop())
       releaseWakeLock()
@@ -405,13 +498,12 @@ export default function RecordingPage() {
   }
 
   const showSetup = pageState === 'setup'
-  const showCountdown = pageState === 'countdown'
   const showRecording = pageState === 'recording'
+  const showProcessing = pageState === 'processing'
 
   return (
     <>
-      {/* ── Always-mounted recording elements — visibility controlled by CSS ── */}
-      {/* The video is always hidden; canvas is shown during countdown/recording */}
+      {/* Always-mounted recording elements */}
       <video ref={videoRef} className="hidden" playsInline muted />
       <canvas
         ref={canvasRef}
@@ -529,18 +621,6 @@ export default function RecordingPage() {
         </div>
       )}
 
-      {/* ── Countdown UI ── */}
-      {showCountdown && (
-        <div className="fixed inset-0 z-10 flex flex-col items-center justify-center">
-          <p className="mb-4 text-sm font-medium uppercase tracking-widest text-white/70">
-            Get Ready
-          </p>
-          <p className="text-[9rem] font-black leading-none text-white drop-shadow-2xl">
-            {countdownDisplay}
-          </p>
-        </div>
-      )}
-
       {/* ── Recording UI — stop button only ── */}
       {showRecording && (
         <div className="fixed bottom-8 left-0 right-0 z-10 flex justify-center">
@@ -551,6 +631,21 @@ export default function RecordingPage() {
           >
             Stop Recording
           </button>
+        </div>
+      )}
+
+      {/* ── Processing overlay ── */}
+      {showProcessing && (
+        <div className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/90">
+          <div className="flex flex-col items-center gap-4 text-center px-6">
+            <div className="h-10 w-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+            <p className="text-white font-semibold text-lg">Processing your video…</p>
+            {processingSlow && (
+              <p className="text-zinc-400 text-sm max-w-xs">
+                This is taking longer than expected. Large videos may take a moment.
+              </p>
+            )}
+          </div>
         </div>
       )}
     </>

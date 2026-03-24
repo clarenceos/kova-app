@@ -244,12 +244,17 @@ export default function RecordingPage() {
     return () => clearInterval(id)
   }, [pageState])
 
-  // ── Start recording when countdown reaches 0 ──
+  // ── Start MediaRecorder at 5s remaining so the final countdown is captured in the video ──
+  useEffect(() => {
+    if (pageState !== 'countdown' || countdownDisplay !== 5) return
+    mediaRecorderRef.current?.start()
+    acquireWakeLock()
+  }, [countdownDisplay, pageState])
+
+  // ── Start lift timer when countdown fully completes ──
   useEffect(() => {
     if (pageState !== 'countdown' || countdownDisplay > 0) return
 
-    mediaRecorderRef.current?.start()
-    acquireWakeLock()
     setPageState('recording')
     setIsRecording(true)
     isRecordingRef.current = true

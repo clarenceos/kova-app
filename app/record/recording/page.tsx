@@ -177,47 +177,43 @@ export default function RecordingPage() {
     ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
     ctx.restore()
 
-    // Layer 2: overlays — drawn after restore, so text is correctly oriented on screen and in export
-    ctx.lineWidth = 3
-    ctx.strokeStyle = 'black'
+    // Layer 2: overlays — drawn after restore, correctly oriented on screen and in export
+    const PAD = 20
     ctx.fillStyle = 'white'
+    ctx.shadowColor = 'rgba(0,0,0,0.75)'
+    ctx.shadowBlur = 8
 
-    // Timer - top center
+    // TOP LEFT — discipline (small, uppercase) then timer (large, bold)
     const minutes = Math.floor(timerMs / 60000)
     const seconds = Math.floor((timerMs % 60000) / 1000)
     const timerStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-    ctx.font = 'bold 72px monospace'
-    ctx.textAlign = 'center'
-    ctx.strokeText(timerStr, canvasW / 2, 80)
-    ctx.fillText(timerStr, canvasW / 2, 80)
 
-    // Athlete name - top left
-    ctx.font = 'bold 32px sans-serif'
     ctx.textAlign = 'left'
-    ctx.strokeText(name, 20, 50)
-    ctx.fillText(name, 20, 50)
+    ctx.font = '500 22px sans-serif'
+    ctx.fillText(discLabel.toUpperCase(), PAD, PAD + 22)
 
-    // Discipline - top right
+    ctx.font = 'bold 80px sans-serif'
+    ctx.fillText(timerStr, PAD, PAD + 22 + 8 + 80)
+
+    // BOTTOM RIGHT — weight, athlete name, serial (stacked, right-aligned)
     ctx.textAlign = 'right'
-    ctx.strokeText(discLabel, canvasW - 20, 50)
-    ctx.fillText(discLabel, canvasW - 20, 50)
+    const rightX = canvasW - PAD
 
-    // Weight - bottom left
+    ctx.font = '600 28px sans-serif'
+    ctx.fillText(`${weightKg} KG`, rightX, canvasH - PAD - 22 - 8 - 22 - 8)
+
+    ctx.font = '600 28px sans-serif'
+    ctx.fillText(name.toUpperCase(), rightX, canvasH - PAD - 22 - 8)
+
+    ctx.font = '400 22px sans-serif'
+    ctx.fillText(serialStr.toUpperCase(), rightX, canvasH - PAD)
+
+    // BOTTOM LEFT — KOVA
     ctx.textAlign = 'left'
-    ctx.strokeText(`${weightKg} kg`, 20, canvasH - 20)
-    ctx.fillText(`${weightKg} kg`, 20, canvasH - 20)
-
-    // KOVA branding - bottom right
     ctx.font = 'bold 28px sans-serif'
-    ctx.textAlign = 'right'
-    ctx.strokeText('KOVA', canvasW - 20, canvasH - 20)
-    ctx.fillText('KOVA', canvasW - 20, canvasH - 20)
+    ctx.fillText('KOVA', PAD, canvasH - PAD)
 
-    // Serial - bottom center, small
-    ctx.font = '18px monospace'
-    ctx.textAlign = 'center'
-    ctx.strokeText(serialStr, canvasW / 2, canvasH - 5)
-    ctx.fillText(serialStr, canvasW / 2, canvasH - 5)
+    ctx.shadowBlur = 0
   }, [])
 
   // ── Stop recording ──

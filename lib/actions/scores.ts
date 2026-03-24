@@ -1,6 +1,7 @@
 'use server'
 
 import { auth } from '@clerk/nextjs/server'
+import { revalidatePath } from 'next/cache'
 import { db } from '@/lib/db'
 import { scores } from '@/lib/schema'
 
@@ -35,5 +36,6 @@ export async function submitScore(input: {
     createdAt: new Date(),
   })
 
+  revalidatePath('/leaderboard')
   return { id }
 }

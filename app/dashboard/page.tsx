@@ -41,6 +41,17 @@ export default async function DashboardPage() {
               Count reps and submit a score
             </span>
           </Link>
+
+          <Link
+            href="/leaderboard"
+            className="flex flex-col gap-1 rounded-2xl border border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-zinc-600 active:bg-zinc-800"
+          >
+            <span className="text-2xl">🏆</span>
+            <span className="mt-2 text-lg font-semibold text-white">Leaderboard</span>
+            <span className="text-sm text-zinc-400">
+              View all submitted scores
+            </span>
+          </Link>
         </div>
       </div>
     </div>

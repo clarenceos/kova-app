@@ -49,6 +49,11 @@ export default function RecordingPage() {
   // ── Countdown display ──
   const [countdownDisplay, setCountdownDisplay] = useState<number>(10)
 
+  // ── Recording params stored in refs so countdown effects can access them ──
+  const recordWeightRef = useRef<number>(0)
+  const recordBeepRef = useRef<boolean>(false)
+  const recordAutoStopRef = useRef<boolean>(false)
+
   // ── Recording DOM elements — always mounted, visibility controlled via CSS ──
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -155,15 +160,23 @@ export default function RecordingPage() {
     name: string,
     weightKg: number,
   ) => {
-    const ctx = canvasRef.current?.getContext('2d')
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
     const video = videoRef.current
-    if (!ctx || !video) return
+    if (!ctx || !video || !canvas) return
 
-    // Layer 1: camera frame
-    ctx.drawImage(video, 0, 0, 1280, 720)
+    const canvasW = canvas.width
+    const canvasH = canvas.height
 
-    // Layer 2: overlays
+    // Layer 1: center-crop camera feed to portrait canvas
+    // cropX takes a centered vertical slice from the (wider) camera feed
+    const cropX = (video.videoWidth - canvasW) / 2
+    ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+
+    // Layer 2: overlays — positions relative to canvas dimensions
     ctx.lineWidth = 3
+    ctx.strokeStyle = 'black'
+    ctx.fillStyle = 'white'
 
     // Timer - top center
     const minutes = Math.floor(timerMs / 60000)
@@ -171,10 +184,8 @@ export default function RecordingPage() {
     const timerStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
     ctx.font = 'bold 72px monospace'
     ctx.textAlign = 'center'
-    ctx.strokeStyle = 'black'
-    ctx.fillStyle = 'white'
-    ctx.strokeText(timerStr, 640, 80)
-    ctx.fillText(timerStr, 640, 80)
+    ctx.strokeText(timerStr, canvasW / 2, 80)
+    ctx.fillText(timerStr, canvasW / 2, 80)
 
     // Athlete name - top left
     ctx.font = 'bold 32px sans-serif'
@@ -184,25 +195,25 @@ export default function RecordingPage() {
 
     // Discipline - top right
     ctx.textAlign = 'right'
-    ctx.strokeText(discLabel, 1260, 50)
-    ctx.fillText(discLabel, 1260, 50)
+    ctx.strokeText(discLabel, canvasW - 20, 50)
+    ctx.fillText(discLabel, canvasW - 20, 50)
 
     // Weight - bottom left
     ctx.textAlign = 'left'
-    ctx.strokeText(`${weightKg} kg`, 20, 700)
-    ctx.fillText(`${weightKg} kg`, 20, 700)
+    ctx.strokeText(`${weightKg} kg`, 20, canvasH - 20)
+    ctx.fillText(`${weightKg} kg`, 20, canvasH - 20)
 
     // KOVA branding - bottom right
     ctx.font = 'bold 28px sans-serif'
     ctx.textAlign = 'right'
-    ctx.strokeText('KOVA', 1260, 700)
-    ctx.fillText('KOVA', 1260, 700)
+    ctx.strokeText('KOVA', canvasW - 20, canvasH - 20)
+    ctx.fillText('KOVA', canvasW - 20, canvasH - 20)
 
     // Serial - bottom center, small
     ctx.font = '18px monospace'
     ctx.textAlign = 'center'
-    ctx.strokeText(serialStr, 640, 715)
-    ctx.fillText(serialStr, 640, 715)
+    ctx.strokeText(serialStr, canvasW / 2, canvasH - 5)
+    ctx.fillText(serialStr, canvasW / 2, canvasH - 5)
   }, [])
 
   // ── Stop recording ──
@@ -222,6 +233,62 @@ export default function RecordingPage() {
     // Stream is released in recorder.onstop after blob is ready
   }, [])
 
+  // ── Countdown tick — useEffect drives the interval so functional updates work correctly ──
+  useEffect(() => {
+    if (pageState !== 'countdown') return
+
+    const id = setInterval(() => {
+      setCountdownDisplay(prev => prev - 1)
+    }, 1000)
+
+    return () => clearInterval(id)
+  }, [pageState])
+
+  // ── Start recording when countdown reaches 0 ──
+  useEffect(() => {
+    if (pageState !== 'countdown' || countdownDisplay > 0) return
+
+    mediaRecorderRef.current?.start()
+    acquireWakeLock()
+    setPageState('recording')
+    setIsRecording(true)
+    isRecordingRef.current = true
+    timerMsRef.current = 0
+    lastBeepMinuteRef.current = -1
+
+    let lastTimestamp: number | null = null
+
+    function loop(ts: number) {
+      if (!isRecordingRef.current) return
+
+      if (lastTimestamp !== null) {
+        timerMsRef.current += ts - lastTimestamp
+      }
+      lastTimestamp = ts
+
+      const currentTimerMs = timerMsRef.current
+      drawFrame(currentTimerMs, serial, disciplineLabel ?? '', athleteName, recordWeightRef.current)
+
+      const currentMinute = Math.floor(currentTimerMs / 60000)
+      if (recordBeepRef.current && currentMinute > 0 && currentMinute !== lastBeepMinuteRef.current) {
+        lastBeepMinuteRef.current = currentMinute
+        playBeep()
+      }
+
+      if (recordAutoStopRef.current && currentTimerMs >= 610000) {
+        stopRecording()
+        return
+      }
+
+      rafRef.current = requestAnimationFrame(loop)
+    }
+
+    rafRef.current = requestAnimationFrame(loop)
+  // drawFrame, playBeep, stopRecording are stable useCallbacks; serial/disciplineLabel/athleteName
+  // don't change during a session — safe to capture without listing as deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countdownDisplay, pageState])
+
   // ── Start session (called when "Start" is pressed) ──
   const startSession = useCallback(async (
     weightNum: number,
@@ -230,15 +297,15 @@ export default function RecordingPage() {
     autoStopOn: boolean,
     deviceId: string,
   ) => {
-    // Save to context
+    // Save to context and recording refs
     setWeightKg(weightNum)
     setCountdownSeconds(countdownSecs)
     setBeepEveryMinute(beepEnabled)
     setAutoStop(autoStopOn)
     setSelectedDeviceId(deviceId)
-
-    setCountdownDisplay(countdownSecs)
-    setPageState('countdown')
+    recordWeightRef.current = weightNum
+    recordBeepRef.current = beepEnabled
+    recordAutoStopRef.current = autoStopOn
 
     // Acquire camera stream
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -247,13 +314,26 @@ export default function RecordingPage() {
     })
     streamRef.current = stream
 
-    // Attach stream to hidden video element
+    // Attach stream to hidden video element and wait for dimensions
     const video = videoRef.current!
     video.srcObject = stream
     await video.play().catch(() => {})
 
-    // Setup MediaRecorder from the canvas stream
+    // Wait for video dimensions to be known before sizing the canvas
+    await new Promise<void>(resolve => {
+      if (video.videoWidth > 0) { resolve(); return }
+      video.addEventListener('loadedmetadata', () => resolve(), { once: true })
+    })
+
+    // Size canvas to portrait (9:16) by center-cropping the camera feed
+    const cameraWidth = video.videoWidth || 1280
+    const cameraHeight = video.videoHeight || 720
+    const portraitWidth = Math.round(cameraHeight * 9 / 16)
     const canvas = canvasRef.current!
+    canvas.width = portraitWidth
+    canvas.height = cameraHeight
+
+    // Setup MediaRecorder from the portrait canvas stream
     const canvasStream = canvas.captureStream(30)
 
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
@@ -277,12 +357,10 @@ export default function RecordingPage() {
         const fixedBlob = await webmFixDuration(rawBlob, durationMs)
         setRecordedBlob(fixedBlob)
       } catch {
-        // If fix fails (e.g. MP4), use raw blob
         setRecordedBlob(rawBlob)
       }
       setMimeType(mimeType)
 
-      // Release camera stream
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
 
@@ -291,66 +369,10 @@ export default function RecordingPage() {
 
     mediaRecorderRef.current = recorder
 
-    // ── Countdown tick ──
-    let remaining = countdownSecs
-
-    const tick = setInterval(() => {
-      remaining -= 1
-      setCountdownDisplay(remaining)
-
-      if (remaining === 3) {
-        // Start recording 3 seconds before countdown ends
-        recorder.start()
-        acquireWakeLock()
-      }
-
-      if (remaining <= 0) {
-        clearInterval(tick)
-        setPageState('recording')
-        setIsRecording(true)
-        isRecordingRef.current = true
-        timerMsRef.current = 0
-        lastBeepMinuteRef.current = -1
-
-        let lastTimestamp: number | null = null
-
-        // ── rAF recording loop ──
-        function loop(ts: number) {
-          if (!isRecordingRef.current) return
-
-          if (lastTimestamp !== null) {
-            timerMsRef.current += ts - lastTimestamp
-          }
-          lastTimestamp = ts
-
-          const currentTimerMs = timerMsRef.current
-          drawFrame(currentTimerMs, serial, disciplineLabel ?? '', athleteName, weightNum)
-
-          // Beep at minute marks
-          const currentMinute = Math.floor(currentTimerMs / 60000)
-          if (beepEnabled && currentMinute > 0 && currentMinute !== lastBeepMinuteRef.current) {
-            lastBeepMinuteRef.current = currentMinute
-            playBeep()
-          }
-
-          // Auto-stop at 10:10 (610,000ms)
-          if (autoStopOn && currentTimerMs >= 610000) {
-            stopRecording()
-            return
-          }
-
-          rafRef.current = requestAnimationFrame(loop)
-        }
-
-        rafRef.current = requestAnimationFrame(loop)
-      }
-    }, 1000)
+    // Initialise countdown display then hand off to the useEffect interval
+    setCountdownDisplay(countdownSecs)
+    setPageState('countdown')
   }, [
-    athleteName,
-    disciplineLabel,
-    serial,
-    drawFrame,
-    playBeep,
     setWeightKg,
     setCountdownSeconds,
     setBeepEveryMinute,
@@ -359,7 +381,6 @@ export default function RecordingPage() {
     setRecordedBlob,
     setMimeType,
     router,
-    stopRecording,
   ])
 
   // ── Cleanup on unmount ──
@@ -389,10 +410,10 @@ export default function RecordingPage() {
       <video ref={videoRef} className="hidden" playsInline muted />
       <canvas
         ref={canvasRef}
-        width={1280}
+        width={405}
         height={720}
         className={showSetup ? 'hidden' : undefined}
-        style={!showSetup ? { position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } : undefined}
+        style={!showSetup ? { position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black' } : undefined}
       />
 
       {/* ── Setup UI ── */}

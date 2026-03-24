@@ -23,7 +23,7 @@
 - [ ] **REC-08**: Playback screen shows the recorded video for athlete review before export
 - [ ] **REC-09**: Export downloads the recording with correct duration metadata (post-processed via `webm-fix-duration`); filename: `kova-[discipline-slug]-[athlete-name-slug]-[serial].[ext]` where ext reflects actual MIME type (webm or mp4)
 - [ ] **REC-10**: YouTube instructions screen shows step-by-step upload guide + pre-filled description (athlete name, discipline, weight, date, serial, KOVA tagline) with copy-to-clipboard
-- [ ] **REC-11**: Browser capability check on recorder entry — if `canvas.captureStream` is unsupported (iOS Safari), displays a clear "unsupported browser" message instead of proceeding
+- [x] **REC-11**: Browser capability check on recorder entry — if `canvas.captureStream` is unsupported (iOS Safari), displays a clear "unsupported browser" message instead of proceeding
 
 ### Judge Interface
 
@@ -92,7 +92,7 @@
 | REC-08 | Phase 2 | Pending |
 | REC-09 | Phase 2 | Pending |
 | REC-10 | Phase 2 | Pending |
-| REC-11 | Phase 2 | Pending |
+| REC-11 | Phase 2 | Complete |
 | JUDGE-01 | Phase 3 | Pending |
 | JUDGE-02 | Phase 3 | Pending |
 | JUDGE-03 | Phase 3 | Pending |

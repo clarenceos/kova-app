@@ -168,12 +168,16 @@ export default function RecordingPage() {
     const canvasW = canvas.width
     const canvasH = canvas.height
 
-    // Layer 1: center-crop camera feed to portrait canvas
-    // cropX takes a centered vertical slice from the (wider) camera feed
+    // Layer 1: center-crop camera feed, mirrored horizontally for selfie view
+    // ctx transform is scoped to save/restore — overlays drawn after restore are unaffected
     const cropX = (video.videoWidth - canvasW) / 2
+    ctx.save()
+    ctx.scale(-1, 1)
+    ctx.translate(-canvasW, 0)
     ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+    ctx.restore()
 
-    // Layer 2: overlays — positions relative to canvas dimensions
+    // Layer 2: overlays — drawn after restore, so text is correctly oriented on screen and in export
     ctx.lineWidth = 3
     ctx.strokeStyle = 'black'
     ctx.fillStyle = 'white'
@@ -413,7 +417,7 @@ export default function RecordingPage() {
         width={405}
         height={720}
         className={showSetup ? 'hidden' : undefined}
-        style={!showSetup ? { position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black', transform: 'scaleX(-1)' } : undefined}
+        style={!showSetup ? { position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black' } : undefined}
       />
 
       {/* ── Setup UI ── */}

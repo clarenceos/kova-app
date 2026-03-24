@@ -77,6 +77,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 0/TBD | Not started | - |
-| 2. Athlete Video Recorder | 0/TBD | Not started | - |
+| 2. Athlete Video Recorder | 1/3 | In Progress|  |
 | 3. Judge Interface | 0/TBD | Not started | - |
 | 4. Leaderboard | 0/TBD | Not started | - |

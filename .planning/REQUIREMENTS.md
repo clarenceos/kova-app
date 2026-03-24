@@ -13,11 +13,11 @@
 
 ### Recorder
 
-- [ ] **REC-01**: Athlete selects discipline (Long Cycle, Jerk, Snatch — 10 min)
-- [ ] **REC-02**: Athlete configures lift: kettlebell weight (kg), countdown duration (5–60s), beep-every-minute toggle, auto-stop-at-10:10 toggle, front/rear camera selection (locked after setup)
+- [x] **REC-01**: Athlete selects discipline (Long Cycle, Jerk, Snatch — 10 min)
+- [x] **REC-02**: Athlete configures lift: kettlebell weight (kg), countdown duration (5–60s), beep-every-minute toggle, auto-stop-at-10:10 toggle, front/rear camera selection (locked after setup)
 - [ ] **REC-03**: Canvas overlays (timer 0:00→10:00, athlete name, discipline, kettlebell weight, KOVA brand + icon, UUID serial number) drawn onto every frame via `requestAnimationFrame`
 - [ ] **REC-04**: Recording starts after countdown completes; `MediaRecorder` records the canvas stream at 30fps
-- [ ] **REC-05**: Beep-every-minute plays via `AudioContext` at each minute mark when enabled
+- [x] **REC-05**: Beep-every-minute plays via `AudioContext` at each minute mark when enabled
 - [ ] **REC-06**: Auto-stop ends recording 10 seconds after timer reaches 10:00 when enabled
 - [ ] **REC-07**: Screen Wake Lock is active during recording to prevent screen dimming killing the session
 - [ ] **REC-08**: Playback screen shows the recorded video for athlete review before export
@@ -82,11 +82,11 @@
 | AUTH-01 | Phase 1 | Pending |
 | AUTH-02 | Phase 1 | Pending |
 | AUTH-03 | Phase 1 | Pending |
-| REC-01 | Phase 2 | Pending |
-| REC-02 | Phase 2 | Pending |
+| REC-01 | Phase 2 | Complete |
+| REC-02 | Phase 2 | Complete |
 | REC-03 | Phase 2 | Pending |
 | REC-04 | Phase 2 | Pending |
-| REC-05 | Phase 2 | Pending |
+| REC-05 | Phase 2 | Complete |
 | REC-06 | Phase 2 | Pending |
 | REC-07 | Phase 2 | Pending |
 | REC-08 | Phase 2 | Pending |

@@ -413,7 +413,7 @@ export default function RecordingPage() {
         width={405}
         height={720}
         className={showSetup ? 'hidden' : undefined}
-        style={!showSetup ? { position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black' } : undefined}
+        style={!showSetup ? { position: 'fixed', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: 'black', transform: 'scaleX(-1)' } : undefined}
       />
 
       {/* ── Setup UI ── */}

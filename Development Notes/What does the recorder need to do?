@@ -1,0 +1,58 @@
+What does the recorder need to do?
+
+Record the athlete's lift using their phone camera - yes (but in app)
+Bake overlays into the video (like a timer, rep counter, competition name?) - yes. later ask me specific questions to dial this in
+Save/export the video so the athlete can upload it to YouTube themselves - yes. this is the exact plan.
+
+What overlays should be baked in?
+
+A running clock/timer - yes
+Athlete name or competition name? -yes
+Something else? - for now placeholder of a kettlebell SVG beside the app name.
+
+Where does the flow start and end?
+
+The athlete selects a competition, starts the lift recording, and the app saves the video.
+but for now since the competition features are not yet there. the athlete selects a discipline (e.g. 10 Min. Long Cycle, 10 Min. Jerk, 10 Min. Snatch, Biathlon)
+This goees to the next modal, where the athlete enters the weight of the kettlebell they are using. for now we trust the input, but for future there must be verification ways to confirm the weight.
+the modal also asks the athlete how long of a countdown do they want before the lift starts. (minimum of 5, maximum of 60) for our example lets say 10 seconds.
+the modal would ask if they want a beep every minute
+The athlete presses "start" and the countdown begins.
+Once the countdown reaches 3, the video recording starts.
+What the athlete sees while the video is recording: their body in motion, the timer running, and the app name with the kettlebell icon. (if theyre using front cam). they may also use the rear cam but that disadvantages them since they cant see the time well.
+the athlete keeps lifting until the 10 minute mark. the recording does not stop until the athlete presses "stop" or we can include an auto-stop toggle. where the recording stops 10s after the 10-minute timer ends.
+The next UI is a video playback screen where the athlete can review their submission.
+Press "render and export" to save the video.
+the page will turn into the instructions on how to upload the video on youtube as unlisted
+there should be a textfield with a copy to clipboard button.
+this generates the video description that the athlete SHOULD use when uploading the video on youtube.
+
+-----
+
+Overlay specifics:
+
+Where does the athlete enter their name? Should I add a name field to the setup modal, or skip it for now and just show the discipline + weight on the overlay?
+
+In the app setup, when they first login they have to write their name. this should be fetched from the db. so we can overlay the athlete's name on the video.
+
+What should the timer display look like — counting up from 0:00 to 10:00, or counting down from 10:00 to 0:00?
+Starting from 0:00 and counting up to 10:00 is the simplest and most straightforward option.
+
+For Biathlon — what's the time format? Is it two separate 5-minute sets, or one 10-minute set with a switch halfway?
+skip biathlon for now
+
+Recording screen:
+
+Can the athlete switch between front and rear camera before starting, or also during the recording?
+It has to be decided immediately before the recording starts.switching can be skeetchy on the final output and may cause cheating controversies.
+
+
+
+Should the timer and overlays be always visible on screen while recording (so athlete can see them in real time), or is it fine if they're only baked into the video output?
+ideally the timer and overlays should be visible on screen while recording, this way the athlete knows that the output video is perrfectly timed and synced.
+
+Export:
+
+For the auto-generated YouTube description — what info should it include? For example: athlete name, discipline, kettlebell weight, date, competition name placeholder?
+
+yes and a unique serial number (this would be then used for the judging - just preparing for a stronger authentication system in the future.)

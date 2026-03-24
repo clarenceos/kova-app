@@ -7,14 +7,15 @@ import { useRecord } from '@/lib/record-context'
 
 export default function InstructionsPage() {
   const router = useRouter()
-  const { serial, disciplineLabel, athleteName, weightKg } = useRecord()
+  const { serial, disciplineLabel, athleteName, weightKg, recordedBlob } = useRecord()
   const [copied, setCopied] = useState(false)
 
+  // serial is always a UUID (never falsy); use recordedBlob as the guard for direct navigation
   useEffect(() => {
-    if (!serial) {
+    if (!recordedBlob) {
       router.replace('/record')
     }
-  }, [serial, router])
+  }, [recordedBlob, router])
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -33,7 +34,7 @@ Recorded with KOVA — Kettlebell Sport Competition Platform`
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (!serial) {
+  if (!recordedBlob) {
     return null
   }
 

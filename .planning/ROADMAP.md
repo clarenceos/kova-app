@@ -13,7 +13,7 @@ Kova v1 delivers three interconnected capabilities: an authenticated canvas-base
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Foundation & Auth** - DB schema, DAL scaffolding, Clerk auth flow, athlete onboarding, remove next-pwa
-- [ ] **Phase 2: Athlete Video Recorder** - Full canvas recording pipeline with authenticated overlays, export, and YouTube instructions
+- [x] **Phase 2: Athlete Video Recorder** - Full canvas recording pipeline with authenticated overlays, export, and YouTube instructions (completed 2026-03-24)
 - [ ] **Phase 3: Judge Interface** - YouTube embed, tap counter, score submission to DB
 - [ ] **Phase 4: Leaderboard** - Live scores filterable by discipline, completing the v1 loop
 
@@ -77,6 +77,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Auth | 0/TBD | Not started | - |
-| 2. Athlete Video Recorder | 1/3 | In Progress|  |
+| 2. Athlete Video Recorder | 3/3 | Complete   | 2026-03-24 |
 | 3. Judge Interface | 0/TBD | Not started | - |
 | 4. Leaderboard | 0/TBD | Not started | - |

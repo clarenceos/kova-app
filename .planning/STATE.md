@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to execute
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-24T11:45:06.700Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-24T11:53:48.510Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 3
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ## Current Position
 
 Phase: 2 (Athlete Video Recorder) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -47,6 +47,8 @@ Plan: 2 of 3
 
 *Updated after each plan completion*
 | Phase 02-athlete-video-recorder P01 | 2 | 5 tasks | 5 files |
+| Phase 02-athlete-video-recorder P03 | 221 | 3 tasks | 2 files |
+| Phase 02-athlete-video-recorder P02 | 4 | 4 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -62,6 +64,10 @@ Recent decisions affecting current work:
 - [Phase 02-01]: RecordProvider accepts athleteName as prop from server layout — avoids redundant Clerk calls in client components
 - [Phase 02-01]: iOS gate uses canvas.captureStream feature detection rather than user-agent sniffing — future-proof
 - [Phase 02-01]: Discipline stored as both id (slug) and label (display) in RecordContext — slug for filename, label for overlay
+- [Phase 02-03]: Navigation guard in instructions screen uses recordedBlob (not serial) — serial is always a UUID string, never falsy
+- [Phase 02-03]: Export filename extension determined dynamically from mimeType — .mp4 on iOS Safari, .webm on Chrome/Firefox
+- [Phase 02-02]: Canvas element always-mounted via CSS toggle (not conditional rendering) so captureStream() references the same DOM node throughout recording state transitions
+- [Phase 02-02]: MediaRecorder.start() called at countdown=3 to begin recording before countdown ends, eliminating dead footage
 
 ### Pending Todos
 
@@ -75,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T11:45:06.695Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-24T11:53:48.508Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None

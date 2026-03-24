@@ -15,15 +15,15 @@
 
 - [x] **REC-01**: Athlete selects discipline (Long Cycle, Jerk, Snatch — 10 min)
 - [x] **REC-02**: Athlete configures lift: kettlebell weight (kg), countdown duration (5–60s), beep-every-minute toggle, auto-stop-at-10:10 toggle, front/rear camera selection (locked after setup)
-- [ ] **REC-03**: Canvas overlays (timer 0:00→10:00, athlete name, discipline, kettlebell weight, KOVA brand + icon, UUID serial number) drawn onto every frame via `requestAnimationFrame`
-- [ ] **REC-04**: Recording starts after countdown completes; `MediaRecorder` records the canvas stream at 30fps
+- [x] **REC-03**: Canvas overlays (timer 0:00→10:00, athlete name, discipline, kettlebell weight, KOVA brand + icon, UUID serial number) drawn onto every frame via `requestAnimationFrame`
+- [x] **REC-04**: Recording starts after countdown completes; `MediaRecorder` records the canvas stream at 30fps
 - [x] **REC-05**: Beep-every-minute plays via `AudioContext` at each minute mark when enabled
-- [ ] **REC-06**: Auto-stop ends recording 10 seconds after timer reaches 10:00 when enabled
-- [ ] **REC-07**: Screen Wake Lock is active during recording to prevent screen dimming killing the session
-- [ ] **REC-08**: Playback screen shows the recorded video for athlete review before export
-- [ ] **REC-09**: Export downloads the recording with correct duration metadata (post-processed via `webm-fix-duration`); filename: `kova-[discipline-slug]-[athlete-name-slug]-[serial].[ext]` where ext reflects actual MIME type (webm or mp4)
-- [ ] **REC-10**: YouTube instructions screen shows step-by-step upload guide + pre-filled description (athlete name, discipline, weight, date, serial, KOVA tagline) with copy-to-clipboard
-- [ ] **REC-11**: Browser capability check on recorder entry — if `canvas.captureStream` is unsupported (iOS Safari), displays a clear "unsupported browser" message instead of proceeding
+- [x] **REC-06**: Auto-stop ends recording 10 seconds after timer reaches 10:00 when enabled
+- [x] **REC-07**: Screen Wake Lock is active during recording to prevent screen dimming killing the session
+- [x] **REC-08**: Playback screen shows the recorded video for athlete review before export
+- [x] **REC-09**: Export downloads the recording with correct duration metadata (post-processed via `webm-fix-duration`); filename: `kova-[discipline-slug]-[athlete-name-slug]-[serial].[ext]` where ext reflects actual MIME type (webm or mp4)
+- [x] **REC-10**: YouTube instructions screen shows step-by-step upload guide + pre-filled description (athlete name, discipline, weight, date, serial, KOVA tagline) with copy-to-clipboard
+- [x] **REC-11**: Browser capability check on recorder entry — if `canvas.captureStream` is unsupported (iOS Safari), displays a clear "unsupported browser" message instead of proceeding
 
 ### Judge Interface
 
@@ -84,15 +84,15 @@
 | AUTH-03 | Phase 1 | Pending |
 | REC-01 | Phase 2 | Complete |
 | REC-02 | Phase 2 | Complete |
-| REC-03 | Phase 2 | Pending |
-| REC-04 | Phase 2 | Pending |
+| REC-03 | Phase 2 | Complete |
+| REC-04 | Phase 2 | Complete |
 | REC-05 | Phase 2 | Complete |
-| REC-06 | Phase 2 | Pending |
-| REC-07 | Phase 2 | Pending |
-| REC-08 | Phase 2 | Pending |
-| REC-09 | Phase 2 | Pending |
-| REC-10 | Phase 2 | Pending |
-| REC-11 | Phase 2 | Pending |
+| REC-06 | Phase 2 | Complete |
+| REC-07 | Phase 2 | Complete |
+| REC-08 | Phase 2 | Complete |
+| REC-09 | Phase 2 | Complete |
+| REC-10 | Phase 2 | Complete |
+| REC-11 | Phase 2 | Complete |
 | JUDGE-01 | Phase 3 | Pending |
 | JUDGE-02 | Phase 3 | Pending |
 | JUDGE-03 | Phase 3 | Pending |

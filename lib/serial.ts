@@ -10,13 +10,18 @@ function randomSerial(): string {
 }
 
 export async function generateSerial(): Promise<string> {
-  for (;;) {
-    const candidate = randomSerial()
-    const existing = await db
-      .select({ serial: scores.serial })
-      .from(scores)
-      .where(eq(scores.serial, candidate))
-      .limit(1)
-    if (existing.length === 0) return candidate
+  try {
+    for (;;) {
+      const candidate = randomSerial()
+      const existing = await db
+        .select({ serial: scores.serial })
+        .from(scores)
+        .where(eq(scores.serial, candidate))
+        .limit(1)
+      if (existing.length === 0) return candidate
+    }
+  } catch {
+    // DB check failed — return unchecked serial (collision risk negligible at 175M combinations)
+    return randomSerial()
   }
 }

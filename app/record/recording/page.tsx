@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRecord } from '@/lib/record-context'
+import { GlobalHeader } from '@/components/ui/GlobalHeader'
 
 type PageState = 'setup' | 'countdown' | 'recording' | 'processing'
 
@@ -501,6 +502,9 @@ export default function RecordingPage() {
   const showRecording = pageState === 'recording'
   const showProcessing = pageState === 'processing'
 
+  const inputClass =
+    'w-full rounded-xl border border-raw-steel/30 bg-charcoal px-4 py-3 text-parchment placeholder-raw-steel/50 focus:border-patina-bronze focus:outline-none transition-colors'
+
   return (
     <>
       {/* Always-mounted recording elements */}
@@ -515,107 +519,110 @@ export default function RecordingPage() {
 
       {/* ── Setup UI ── */}
       {showSetup && (
-        <div className="flex min-h-screen flex-col bg-zinc-950 px-4 py-8">
-          <div className="mx-auto w-full max-w-sm">
-            <h1 className="mb-1 text-2xl font-bold text-white">Recording Setup</h1>
-            <p className="mb-8 text-sm text-zinc-400">{disciplineLabel}</p>
+        <div className="flex min-h-screen flex-col bg-forge-black">
+          <GlobalHeader />
+          <div className="px-4 py-8">
+            <div className="mx-auto w-full max-w-sm">
+              <h1 className="mb-1 text-2xl font-bold text-parchment">Recording Setup</h1>
+              <p className="mb-8 text-sm text-raw-steel">{disciplineLabel}</p>
 
-            <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-              <p className="text-xs font-medium uppercase tracking-widest text-zinc-500 mb-1">Athlete</p>
-              <p className="text-lg font-semibold text-white">{athleteName}</p>
-            </div>
-
-            <div className="flex flex-col gap-5">
-              {/* Weight */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-zinc-300">
-                  Weight (kg)
-                </label>
-                <input
-                  type="number"
-                  min="4"
-                  max="100"
-                  step="0.5"
-                  placeholder="e.g. 24"
-                  value={weight}
-                  onChange={e => setWeight(e.target.value)}
-                  required
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none"
-                />
+              <div className="mb-6 rounded-2xl border border-raw-steel/20 bg-charcoal p-4">
+                <p className="mb-1 text-xs font-medium uppercase tracking-widest text-raw-steel">Athlete</p>
+                <p className="text-lg font-semibold text-parchment">{athleteName}</p>
               </div>
 
-              {/* Countdown */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-zinc-300">
-                  Countdown (seconds)
-                </label>
-                <input
-                  type="number"
-                  min="5"
-                  max="60"
-                  value={countdown}
-                  onChange={e => setCountdown(Number(e.target.value))}
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-white focus:border-zinc-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Beep every minute */}
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-zinc-300">Beep every minute</label>
-                <button
-                  type="button"
-                  onClick={() => setBeep(v => !v)}
-                  className={`relative h-7 w-12 rounded-full transition-colors ${beep ? 'bg-white' : 'bg-zinc-700'}`}
-                  aria-pressed={beep}
-                >
-                  <span
-                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-zinc-950 transition-transform ${beep ? 'translate-x-5' : 'translate-x-0.5'}`}
-                  />
-                </button>
-              </div>
-
-              {/* Auto-stop */}
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-zinc-300">Auto-stop after 10:00 (+10s)</label>
-                <button
-                  type="button"
-                  onClick={() => setAutoStopEnabled(v => !v)}
-                  className={`relative h-7 w-12 rounded-full transition-colors ${autoStopEnabled ? 'bg-white' : 'bg-zinc-700'}`}
-                  aria-pressed={autoStopEnabled}
-                >
-                  <span
-                    className={`absolute top-0.5 h-6 w-6 rounded-full bg-zinc-950 transition-transform ${autoStopEnabled ? 'translate-x-5' : 'translate-x-0.5'}`}
-                  />
-                </button>
-              </div>
-
-              {/* Camera selection */}
-              {cameras.length > 0 && (
+              <div className="flex flex-col gap-5">
+                {/* Weight */}
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-zinc-300">Camera</label>
-                  <select
-                    value={selectedCamera}
-                    onChange={e => setSelectedCamera(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-white focus:border-zinc-500 focus:outline-none"
-                  >
-                    {cameras.map(cam => (
-                      <option key={cam.deviceId} value={cam.deviceId}>
-                        {cam.label}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="mb-1.5 block text-sm font-medium text-raw-steel">
+                    Weight (kg)
+                  </label>
+                  <input
+                    type="number"
+                    min="4"
+                    max="100"
+                    step="0.5"
+                    placeholder="e.g. 24"
+                    value={weight}
+                    onChange={e => setWeight(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
                 </div>
-              )}
 
-              {/* Start button */}
-              <button
-                type="button"
-                onClick={handleStart}
-                disabled={!weight || isNaN(parseFloat(weight))}
-                className="mt-2 w-full rounded-2xl bg-white px-6 py-4 text-lg font-bold text-zinc-950 transition-opacity disabled:opacity-40 active:opacity-80"
-              >
-                Start
-              </button>
+                {/* Countdown */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-raw-steel">
+                    Countdown (seconds)
+                  </label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="60"
+                    value={countdown}
+                    onChange={e => setCountdown(Number(e.target.value))}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Beep every minute */}
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-raw-steel">Beep every minute</label>
+                  <button
+                    type="button"
+                    onClick={() => setBeep(v => !v)}
+                    className={`relative h-7 w-12 rounded-full transition-colors ${beep ? 'bg-patina-bronze' : 'bg-raw-steel/30'}`}
+                    aria-pressed={beep}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-forge-black transition-transform ${beep ? 'translate-x-5' : 'translate-x-0.5'}`}
+                    />
+                  </button>
+                </div>
+
+                {/* Auto-stop */}
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-raw-steel">Auto-stop after 10:00 (+10s)</label>
+                  <button
+                    type="button"
+                    onClick={() => setAutoStopEnabled(v => !v)}
+                    className={`relative h-7 w-12 rounded-full transition-colors ${autoStopEnabled ? 'bg-patina-bronze' : 'bg-raw-steel/30'}`}
+                    aria-pressed={autoStopEnabled}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-6 w-6 rounded-full bg-forge-black transition-transform ${autoStopEnabled ? 'translate-x-5' : 'translate-x-0.5'}`}
+                    />
+                  </button>
+                </div>
+
+                {/* Camera selection */}
+                {cameras.length > 0 && (
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-raw-steel">Camera</label>
+                    <select
+                      value={selectedCamera}
+                      onChange={e => setSelectedCamera(e.target.value)}
+                      className={`${inputClass} appearance-none`}
+                    >
+                      {cameras.map(cam => (
+                        <option key={cam.deviceId} value={cam.deviceId}>
+                          {cam.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Start button */}
+                <button
+                  type="button"
+                  onClick={handleStart}
+                  disabled={!weight || isNaN(parseFloat(weight))}
+                  className="mt-2 w-full rounded-2xl bg-patina-bronze px-6 py-4 text-lg font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80 disabled:opacity-40"
+                >
+                  Start
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -636,12 +643,12 @@ export default function RecordingPage() {
 
       {/* ── Processing overlay ── */}
       {showProcessing && (
-        <div className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-zinc-950/90">
-          <div className="flex flex-col items-center gap-4 text-center px-6">
-            <div className="h-10 w-10 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-            <p className="text-white font-semibold text-lg">Processing your video…</p>
+        <div className="fixed inset-0 z-20 flex flex-col items-center justify-center bg-forge-black/95">
+          <div className="flex flex-col items-center gap-4 px-6 text-center">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-patina-bronze/30 border-t-patina-bronze" />
+            <p className="text-lg font-semibold text-parchment">Processing your video…</p>
             {processingSlow && (
-              <p className="text-zinc-400 text-sm max-w-xs">
+              <p className="max-w-xs text-sm text-raw-steel">
                 This is taking longer than expected. Large videos may take a moment.
               </p>
             )}

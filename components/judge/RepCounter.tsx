@@ -1,5 +1,11 @@
 'use client'
 
+import { useState } from 'react'
+import { Check, X, RotateCcw } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+export type Rep = { time: number | null; type: 'rep' | 'no-rep' }
+
 function formatMMSS(t: number): string {
   const m = Math.floor(t / 60)
   const s = Math.floor(t % 60)
@@ -7,60 +13,111 @@ function formatMMSS(t: number): string {
 }
 
 interface RepCounterProps {
-  reps: number[]
+  reps: Rep[]
+  playerReady: boolean
   onRep: () => void
+  onNoRep: () => void
   onUndo: () => void
 }
 
-export function RepCounter({ reps, onRep, onUndo }: RepCounterProps) {
+export function RepCounter({ reps, playerReady, onRep, onNoRep, onUndo }: RepCounterProps) {
+  const [pulsing, setPulsing] = useState(false)
+
+  const repCount = reps.filter(r => r.type === 'rep').length
+
+  function handleRep() {
+    navigator.vibrate?.(30)
+    setPulsing(true)
+    setTimeout(() => setPulsing(false), 150)
+    onRep()
+  }
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Rep count display */}
-      <div className="text-center py-4">
-        <span className="text-8xl font-bold text-white tabular-nums">
-          {reps.length}
+    <div className="flex flex-col gap-3">
+      {/* Rep count */}
+      <div className="py-2 text-center">
+        <span className="text-7xl font-bold tabular-nums leading-none text-parchment">
+          {repCount}
         </span>
-        <p className="text-zinc-400 text-sm mt-1">reps</p>
+        <p className="mt-1 text-sm uppercase tracking-widest text-raw-steel">reps</p>
       </div>
 
-      {/* Large tap target */}
+      {/* REP — primary action */}
       <button
         type="button"
-        onClick={onRep}
-        className="w-full min-h-40 bg-white text-zinc-950 font-bold text-2xl rounded-2xl active:bg-zinc-200 transition-colors select-none touch-manipulation"
+        onClick={handleRep}
+        disabled={!playerReady}
+        className={cn(
+          'w-full min-h-[72px] rounded-2xl text-2xl font-bold text-parchment select-none touch-manipulation transition-all',
+          !playerReady
+            ? 'bg-patina-bronze opacity-40 cursor-not-allowed'
+            : pulsing
+              ? 'bg-bright-bronze scale-[0.99]'
+              : 'bg-patina-bronze hover:bg-bright-bronze active:scale-[0.98]'
+        )}
         aria-label="Count rep"
       >
-        TAP
+        REP
       </button>
 
-      {/* Undo button */}
-      <button
-        type="button"
-        onClick={onUndo}
-        disabled={reps.length === 0}
-        className="w-full py-3 border border-zinc-700 rounded-xl text-zinc-300 text-sm font-medium hover:border-zinc-600 hover:text-white active:bg-zinc-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        Undo Last Rep
-      </button>
+      {/* NO REP + UNDO */}
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={onNoRep}
+          disabled={!playerReady}
+          className={cn(
+            'min-h-[48px] rounded-xl border text-sm font-semibold transition-colors touch-manipulation select-none',
+            !playerReady
+              ? 'border-raw-steel/30 text-raw-steel opacity-40 cursor-not-allowed'
+              : 'border-raw-steel/50 text-raw-steel hover:border-raw-steel hover:text-parchment active:bg-raw-steel/10'
+          )}
+          aria-label="No rep"
+        >
+          NO REP
+        </button>
+        <button
+          type="button"
+          onClick={onUndo}
+          disabled={reps.length === 0}
+          className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-raw-steel/20 text-sm font-medium text-raw-steel/60 transition-colors hover:border-raw-steel/50 hover:text-raw-steel active:bg-raw-steel/5 touch-manipulation select-none disabled:cursor-not-allowed disabled:opacity-30"
+          aria-label="Undo last entry"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          UNDO
+        </button>
+      </div>
 
       {/* Rep log */}
       {reps.length > 0 && (
-        <div className="border border-zinc-800 rounded-xl overflow-hidden">
-          <div className="px-3 py-2 border-b border-zinc-800">
-            <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">Rep Log</p>
+        <div className="mt-1 overflow-hidden rounded-xl bg-charcoal">
+          <div className="border-b border-raw-steel/10 px-3 py-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-raw-steel">
+              Rep Log
+            </p>
           </div>
-          <div className="overflow-y-auto max-h-48">
-            {reps.map((t, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 last:border-b-0"
-              >
-                <span className="text-sm text-zinc-300">Rep {i + 1}</span>
-                <span className="text-sm text-zinc-500 font-mono">
-                  {t > 0 ? formatMMSS(t) : '—'}
-                </span>
-              </div>
-            ))}
+          <div className="max-h-40 overflow-y-auto">
+            {[...reps].reverse().map((rep, revIdx) => {
+              const seqNum = reps.length - revIdx
+              const isRep = rep.type === 'rep'
+              return (
+                <div
+                  key={reps.length - 1 - revIdx}
+                  className="flex items-center justify-between border-b border-raw-steel/10 px-3 py-2 last:border-b-0"
+                >
+                  <span className="text-sm text-raw-steel">#{seqNum}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs text-raw-steel/60">
+                      {rep.time !== null ? formatMMSS(rep.time) : '--:--'}
+                    </span>
+                    {isRep
+                      ? <Check className="h-4 w-4 text-patina-bronze" />
+                      : <X className="h-4 w-4 text-raw-steel" />
+                    }
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

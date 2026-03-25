@@ -2,16 +2,29 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { LogOut } from 'lucide-react'
 import { useJudgeSession } from '@/lib/judge-context'
 import { YouTubeEmbed } from '@/components/judge/YouTubeEmbed'
-import { RepCounter } from '@/components/judge/RepCounter'
+import { RepCounter, type Rep } from '@/components/judge/RepCounter'
 import { submitScore } from '@/lib/actions/scores'
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
 
 export default function JudgeSessionPage() {
   const router = useRouter()
   const { session, setLastSubmission } = useJudgeSession()
-  const [reps, setReps] = useState<number[]>([])
+  const [reps, setReps] = useState<Rep[]>([])
   const playerRef = useRef<unknown>(null)
+  const [playerReady, setPlayerReady] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -21,10 +34,20 @@ export default function JudgeSessionPage() {
 
   if (!session) return null
 
-  function handleRep() {
+  const repCount = reps.filter(r => r.type === 'rep').length
+
+  function getTimestamp(): number | null {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const t = (playerRef.current as any)?.getCurrentTime?.() ?? 0
-    setReps(prev => [...prev, t])
+    const raw = (playerRef.current as any)?.getCurrentTime?.()
+    return raw ? (raw as number) : null
+  }
+
+  function handleRep() {
+    setReps(prev => [...prev, { time: getTimestamp(), type: 'rep' }])
+  }
+
+  function handleNoRep() {
+    setReps(prev => [...prev, { time: getTimestamp(), type: 'no-rep' }])
   }
 
   function handleUndo() {
@@ -38,7 +61,7 @@ export default function JudgeSessionPage() {
         athleteName: session!.athleteName,
         discipline: session!.discipline,
         weightKg: session!.weightKg,
-        reps: reps.length,
+        reps: repCount,
         youtubeUrl: session!.youtubeUrl,
         serial: session!.serial,
       })
@@ -48,55 +71,88 @@ export default function JudgeSessionPage() {
         return
       }
 
-      setLastSubmission({ ...session!, reps: reps.length })
+      setLastSubmission({ ...session!, reps: repCount })
       router.push('/judge/complete')
     })
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 px-4 py-6">
-      {/* Header */}
-      <div className="mb-6">
-        <p className="text-zinc-400 text-sm">{session.disciplineLabel}</p>
-        <h1 className="text-white font-semibold text-lg">{session.athleteName}</h1>
-        <p className="text-zinc-500 text-xs mt-0.5">
-          {session.weightKg} kg · Serial: {session.serial}
-        </p>
-      </div>
-
-      {/* Main layout: video left, counter right on md+ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Video */}
+    <div className="flex min-h-screen flex-col bg-forge-black">
+      {/* Session info */}
+      <div className="flex shrink-0 items-start justify-between px-4 pb-2 pt-3">
         <div>
-          <YouTubeEmbed
-            videoId={session.videoId}
-            onPlayerReady={player => { playerRef.current = player }}
-          />
+          <p className="text-xs tracking-wide text-raw-steel">{session.disciplineLabel}</p>
+          <h1 className="text-base font-semibold leading-tight text-parchment">{session.athleteName}</h1>
+          <p className="mt-0.5 font-mono text-[11px] text-raw-steel/60">
+            {session.weightKg} kg · {session.serial}
+          </p>
         </div>
 
-        {/* Rep counter */}
-        <div>
-          <RepCounter
-            reps={reps}
-            onRep={handleRep}
-            onUndo={handleUndo}
-          />
-        </div>
+        {/* Exit button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-raw-steel transition-colors hover:text-parchment active:bg-raw-steel/10"
+              aria-label="Exit session"
+            >
+              <LogOut className="h-4 w-4" />
+              Exit
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Exit Session?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your rep count will be lost. This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => router.push('/dashboard')}>
+                Exit
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      {/* Submit */}
-      <div className="mt-8 max-w-sm mx-auto md:max-w-none">
-        {submitError && (
-          <p className="text-red-400 text-sm mb-3 text-center">{submitError}</p>
-        )}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={reps.length === 0 || isPending}
-          className="w-full bg-white text-zinc-950 font-semibold rounded-2xl py-3 hover:bg-zinc-100 active:bg-zinc-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          {isPending ? 'Submitting…' : `Submit Score — ${reps.length} rep${reps.length === 1 ? '' : 's'}`}
-        </button>
+      {/* Video */}
+      <div className="relative shrink-0 px-2">
+        <YouTubeEmbed
+          videoId={session.videoId}
+          onPlayerReady={player => {
+            playerRef.current = player
+            setPlayerReady(true)
+          }}
+        />
+        {/* Gradient bridge into action deck */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-gradient-to-t from-forge-black to-transparent" />
+      </div>
+
+      {/* Action deck */}
+      <div className="flex-1 px-4 pb-8 pt-2">
+        <RepCounter
+          reps={reps}
+          playerReady={playerReady}
+          onRep={handleRep}
+          onNoRep={handleNoRep}
+          onUndo={handleUndo}
+        />
+
+        {/* Submit */}
+        <div className="mt-6">
+          {submitError && (
+            <p className="mb-3 text-center text-sm text-raw-steel">{submitError}</p>
+          )}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={repCount === 0 || isPending}
+            className="w-full rounded-2xl bg-patina-bronze py-3 font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            {isPending ? 'Submitting…' : `Submit Score — ${repCount} rep${repCount === 1 ? '' : 's'}`}
+          </button>
+        </div>
       </div>
     </div>
   )

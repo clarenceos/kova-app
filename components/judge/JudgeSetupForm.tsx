@@ -70,12 +70,16 @@ export function JudgeSetupForm() {
     router.push('/judge/session')
   }
 
+  const inputClass =
+    'w-full rounded-xl border border-raw-steel/30 bg-charcoal px-4 py-3 text-parchment placeholder-raw-steel/50 focus:border-patina-bronze focus:outline-none transition-colors'
+  const labelClass = 'block text-sm font-medium text-raw-steel'
+
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="px-4 py-8">
+      <div className="mx-auto w-full max-w-md">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white">Judge a Submission</h1>
-          <p className="text-zinc-400 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-parchment">Judge a Submission</h1>
+          <p className="mt-1 text-sm text-raw-steel">
             Enter the submission details to begin judging.
           </p>
         </div>
@@ -83,46 +87,38 @@ export function JudgeSetupForm() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* YouTube URL */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-300">
-              YouTube URL
-            </label>
+            <label className={labelClass}>YouTube URL</label>
             <input
               type="text"
               value={youtubeUrl}
               onChange={e => { setYoutubeUrl(e.target.value); setUrlError('') }}
               placeholder="https://youtube.com/watch?v=..."
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
+              className={inputClass}
             />
-            {urlError && (
-              <p className="text-red-400 text-xs mt-1">{urlError}</p>
-            )}
+            {urlError && <p className="mt-1 text-xs text-raw-steel">{urlError}</p>}
           </div>
 
           {/* Athlete Name */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-300">
-              Athlete Name
-            </label>
+            <label className={labelClass}>Athlete Name</label>
             <input
               type="text"
               value={athleteName}
               onChange={e => setAthleteName(e.target.value)}
               placeholder="Full name"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
+              className={inputClass}
             />
           </div>
 
           {/* Discipline */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-300">
-              Discipline
-            </label>
+            <label className={labelClass}>Discipline</label>
             <select
               value={discipline}
               onChange={e => setDiscipline(e.target.value as DisciplineKey | '')}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:border-zinc-500 focus:outline-none transition-colors appearance-none"
+              className={`${inputClass} appearance-none`}
             >
-              <option value="" className="text-zinc-500">Select discipline…</option>
+              <option value="">Select discipline…</option>
               {DISCIPLINES.map(d => (
                 <option key={d.value} value={d.value}>{d.label}</option>
               ))}
@@ -131,9 +127,7 @@ export function JudgeSetupForm() {
 
           {/* Kettlebell Weight */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-300">
-              Kettlebell Weight (kg)
-            </label>
+            <label className={labelClass}>Kettlebell Weight (kg)</label>
             <input
               type="number"
               value={weightKg}
@@ -141,31 +135,27 @@ export function JudgeSetupForm() {
               placeholder="e.g. 16"
               min="1"
               step="0.5"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors"
+              className={inputClass}
             />
           </div>
 
           {/* Serial Number */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-zinc-300">
-              Serial Number
-            </label>
+            <label className={labelClass}>Serial Number</label>
             <input
               type="text"
               value={serial}
               onChange={e => setSerial(e.target.value)}
               placeholder="From the video description"
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:border-zinc-500 focus:outline-none transition-colors font-mono text-sm"
+              className={`${inputClass} font-mono text-sm`}
             />
           </div>
 
-          {formError && (
-            <p className="text-red-400 text-sm">{formError}</p>
-          )}
+          {formError && <p className="text-sm text-raw-steel">{formError}</p>}
 
           <button
             type="submit"
-            className="w-full bg-white text-zinc-950 font-semibold rounded-2xl py-3 mt-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+            className="mt-2 w-full rounded-2xl bg-patina-bronze py-3 font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
           >
             Start Judging
           </button>

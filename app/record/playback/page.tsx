@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRecord } from '@/lib/record-context'
+import { GlobalHeader } from '@/components/ui/GlobalHeader'
 
 export default function PlaybackPage() {
   const router = useRouter()
@@ -37,55 +38,54 @@ export default function PlaybackPage() {
     a.click()
   }
 
-  if (!recordedBlob) {
-    return null
-  }
+  if (!recordedBlob) return null
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 py-8">
-      <div className="max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold text-white">Review Your Recording</h1>
-        <p className="mt-1 text-sm text-zinc-400">Serial: {serial}</p>
+    <div className="min-h-screen bg-forge-black">
+      <GlobalHeader />
+      <div className="mx-auto max-w-lg px-4 py-8">
+        <h1 className="text-2xl font-bold text-parchment">Review Your Recording</h1>
+        <p className="mt-1 text-sm text-raw-steel">Serial: {serial}</p>
 
         {blobUrl && (
           <video
             src={blobUrl}
             controls
             playsInline
-            className="w-full rounded-xl mt-4 bg-zinc-900"
+            className="mt-4 w-full rounded-xl bg-charcoal"
           />
         )}
 
         <div className="mt-6 flex flex-col gap-3">
           <button
             onClick={handleExport}
-            className="w-full py-3 px-6 bg-white text-zinc-950 font-semibold rounded-xl hover:bg-zinc-200 active:bg-zinc-300 transition-colors"
+            className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
           >
             Render and Export
           </button>
 
           <button
             onClick={() => router.push('/record/instructions')}
-            className="w-full py-3 px-6 bg-zinc-800 text-white font-semibold rounded-xl hover:bg-zinc-700 active:bg-zinc-600 transition-colors border border-zinc-700"
+            className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
           >
             Next: Upload to YouTube &rarr;
           </button>
         </div>
 
         {(disciplineLabel || weightKg) && (
-          <div className="mt-6 rounded-xl border border-zinc-800 p-4 text-sm text-zinc-400 space-y-1">
+          <div className="mt-6 space-y-1 rounded-xl border border-raw-steel/20 bg-charcoal p-4 text-sm">
             {disciplineLabel && (
-              <p>
-                Discipline: <span className="text-zinc-200">{disciplineLabel}</span>
+              <p className="text-raw-steel">
+                Discipline: <span className="text-parchment">{disciplineLabel}</span>
               </p>
             )}
             {weightKg && (
-              <p>
-                Weight: <span className="text-zinc-200">{weightKg} kg</span>
+              <p className="text-raw-steel">
+                Weight: <span className="text-parchment">{weightKg} kg</span>
               </p>
             )}
-            <p>
-              Athlete: <span className="text-zinc-200">{athleteName}</span>
+            <p className="text-raw-steel">
+              Athlete: <span className="text-parchment">{athleteName}</span>
             </p>
           </div>
         )}

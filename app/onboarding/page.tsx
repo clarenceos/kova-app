@@ -1,29 +1,42 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { saveAthleteName } from "@/lib/actions/onboarding";
+import { KovaWordmark } from "@/components/ui/KovaWordmark";
 
-export default async function OnboardingPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+export default function OnboardingPage() {
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const user = await currentUser();
-  if (user?.publicMetadata?.name) redirect("/dashboard");
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    const formData = new FormData(e.currentTarget);
+    const result = await saveAthleteName(formData);
+    if (result?.error) {
+      setError(result.error);
+      setPending(false);
+    }
+    // on success, the server action redirects to /dashboard
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-forge-black px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Welcome to Kova
-          </h1>
-          <p className="mt-2 text-sm text-zinc-400">
-            Enter your full name. It will appear on your recorded videos.
+        <div className="mb-10 flex flex-col items-center">
+          <KovaWordmark height={36} className="text-parchment" />
+          <p className="mt-4 text-center text-sm text-raw-steel">
+            Enter your name to begin.
           </p>
         </div>
 
-        <form action={saveAthleteName} className="flex flex-col gap-4">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="fullName" className="text-sm font-medium text-zinc-300">
+            <label htmlFor="fullName" className="text-sm font-medium text-raw-steel">
               Full Name
             </label>
             <input
@@ -31,17 +44,20 @@ export default async function OnboardingPage() {
               name="fullName"
               type="text"
               placeholder="e.g. Alex Johnson"
-              required
               autoFocus
-              className="rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-base text-white placeholder:text-zinc-500 focus:border-zinc-400 focus:outline-none"
+              className="rounded-lg border border-raw-steel/40 bg-charcoal px-4 py-3 text-base text-parchment placeholder:text-raw-steel/50 focus:border-patina-bronze focus:outline-none transition-colors"
             />
+            {error && (
+              <p className="text-sm text-raw-steel">{error}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            className="mt-2 rounded-lg bg-white px-4 py-3 text-base font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 active:bg-zinc-300"
+            disabled={pending}
+            className="mt-2 rounded-lg bg-patina-bronze px-4 py-3 text-base font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80 disabled:opacity-50"
           >
-            Continue
+            {pending ? "Saving…" : "Continue"}
           </button>
         </form>
       </div>

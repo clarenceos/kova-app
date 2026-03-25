@@ -26,8 +26,8 @@ export function DisciplineFilter({ currentDiscipline }: DisciplineFilterProps) {
             className={[
               'shrink-0 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors whitespace-nowrap',
               isActive
-                ? 'border-white text-white'
-                : 'border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-300',
+                ? 'border-patina-bronze bg-patina-bronze/10 text-patina-bronze'
+                : 'border-raw-steel/30 text-raw-steel hover:border-raw-steel/60 hover:text-parchment',
             ].join(' ')}
           >
             {filter.label}

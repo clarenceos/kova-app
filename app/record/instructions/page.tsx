@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useRecord } from '@/lib/record-context'
+import { GlobalHeader } from '@/components/ui/GlobalHeader'
 
 export default function InstructionsPage() {
   const router = useRouter()
@@ -34,90 +35,78 @@ Recorded with KOVA — Kettlebell Sport Competition Platform`
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (!recordedBlob) {
-    return null
-  }
+  if (!recordedBlob) return null
+
+  const stepClass =
+    'flex-shrink-0 flex h-6 w-6 items-center justify-center rounded-full border border-patina-bronze/30 bg-charcoal text-xs font-bold text-parchment'
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white px-4 py-8">
-      <div className="max-w-lg mx-auto">
-        <h1 className="text-2xl font-bold text-white">Upload to YouTube</h1>
+    <div className="min-h-screen bg-forge-black">
+      <GlobalHeader />
+      <div className="mx-auto max-w-lg px-4 py-8">
+        <h1 className="text-2xl font-bold text-parchment">Upload to YouTube</h1>
 
-        <ol className="mt-6 space-y-3 text-sm text-zinc-300">
+        <ol className="mt-6 space-y-3 text-sm text-raw-steel">
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-zinc-800 text-zinc-200 flex items-center justify-center text-xs font-bold">
-              1
-            </span>
+            <span className={stepClass}>1</span>
             <span>
               Open YouTube at{' '}
-              <span className="text-white font-medium">youtube.com</span>
+              <span className="font-medium text-parchment">youtube.com</span>
             </span>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-zinc-800 text-zinc-200 flex items-center justify-center text-xs font-bold">
-              2
-            </span>
+            <span className={stepClass}>2</span>
             <span>
-              Click <span className="text-white font-medium">&ldquo;Create&rdquo;</span>{' '}
-              &rarr; <span className="text-white font-medium">&ldquo;Upload video&rdquo;</span>
+              Click <span className="font-medium text-parchment">&ldquo;Create&rdquo;</span>{' '}
+              &rarr; <span className="font-medium text-parchment">&ldquo;Upload video&rdquo;</span>
             </span>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-zinc-800 text-zinc-200 flex items-center justify-center text-xs font-bold">
-              3
-            </span>
+            <span className={stepClass}>3</span>
             <span>Select your recorded video file</span>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-zinc-800 text-zinc-200 flex items-center justify-center text-xs font-bold">
-              4
-            </span>
+            <span className={stepClass}>4</span>
             <span>
               Set visibility to{' '}
-              <span className="text-white font-medium">&ldquo;Unlisted&rdquo;</span>
+              <span className="font-medium text-parchment">&ldquo;Unlisted&rdquo;</span>
             </span>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-zinc-800 text-zinc-200 flex items-center justify-center text-xs font-bold">
-              5
-            </span>
-            <span>
-              Copy and paste the description below into the video description
-            </span>
+            <span className={stepClass}>5</span>
+            <span>Copy and paste the description below into the video description</span>
           </li>
           <li className="flex gap-3">
-            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-zinc-800 text-zinc-200 flex items-center justify-center text-xs font-bold">
-              6
-            </span>
+            <span className={stepClass}>6</span>
             <span>
-              Click <span className="text-white font-medium">&ldquo;Save&rdquo;</span>
+              Click <span className="font-medium text-parchment">&ldquo;Save&rdquo;</span>
             </span>
           </li>
         </ol>
 
         <div className="mt-8">
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">
+          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-raw-steel">
             Video Description
           </h2>
           <textarea
             readOnly
             value={description}
             rows={10}
-            className="w-full rounded-xl border border-zinc-700 bg-zinc-900 text-white px-4 py-3 text-sm resize-none focus:outline-none"
+            className="w-full resize-none rounded-xl border border-raw-steel/30 bg-charcoal px-4 py-3 text-sm text-parchment focus:outline-none"
           />
           <button
             onClick={handleCopy}
-            className="mt-3 w-full py-3 px-6 bg-white text-zinc-950 font-semibold rounded-xl hover:bg-zinc-200 active:bg-zinc-300 transition-colors"
+            className="mt-3 w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
           >
             {copied ? 'Copied!' : 'Copy to Clipboard'}
           </button>
         </div>
 
-        <hr className="border-zinc-800 my-8" />
+        <hr className="my-8 border-raw-steel/20" />
 
         <Link
           href="/dashboard"
-          className="block w-full py-3 px-6 bg-zinc-800 text-white font-semibold rounded-xl hover:bg-zinc-700 active:bg-zinc-600 transition-colors border border-zinc-700 text-center"
+          className="block w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 text-center font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
         >
           Done
         </Link>

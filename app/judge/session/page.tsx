@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, RotateCcw } from 'lucide-react'
 import { useJudgeSession } from '@/lib/judge-context'
 import { YouTubeEmbed } from '@/components/judge/YouTubeEmbed'
 import { RepCounter, type Rep } from '@/components/judge/RepCounter'
@@ -18,6 +18,55 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog'
+
+function SessionHeader({
+  disciplineLabel,
+  athleteName,
+  weightKg,
+  serial,
+  onExit,
+}: {
+  disciplineLabel: string
+  athleteName: string
+  weightKg: number
+  serial: string
+  onExit: () => void
+}) {
+  return (
+    <>
+      <div>
+        <p className="text-xs tracking-wide text-raw-steel">{disciplineLabel}</p>
+        <h1 className="text-base font-semibold leading-tight text-parchment">{athleteName}</h1>
+        <p className="mt-0.5 font-mono text-[11px] text-raw-steel/60">
+          {weightKg} kg · {serial}
+        </p>
+      </div>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-raw-steel transition-colors hover:text-parchment active:bg-raw-steel/10"
+            aria-label="Exit session"
+          >
+            <LogOut className="h-4 w-4" />
+            Exit
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Exit Session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your rep count will be lost. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onExit}>Exit</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}
 
 export default function JudgeSessionPage() {
   const router = useRouter()
@@ -77,47 +126,28 @@ export default function JudgeSessionPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-forge-black">
-      {/* Session info */}
-      <div className="flex shrink-0 items-start justify-between px-4 pb-2 pt-3">
-        <div>
-          <p className="text-xs tracking-wide text-raw-steel">{session.disciplineLabel}</p>
-          <h1 className="text-base font-semibold leading-tight text-parchment">{session.athleteName}</h1>
-          <p className="mt-0.5 font-mono text-[11px] text-raw-steel/60">
-            {session.weightKg} kg · {session.serial}
-          </p>
-        </div>
+    <div className="relative flex min-h-screen flex-col bg-forge-black md:h-screen md:flex-row md:overflow-hidden">
 
-        {/* Exit button */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-raw-steel transition-colors hover:text-parchment active:bg-raw-steel/10"
-              aria-label="Exit session"
-            >
-              <LogOut className="h-4 w-4" />
-              Exit
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Exit Session?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Your rep count will be lost. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => router.push('/dashboard')}>
-                Exit
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      {/* MODE 2: Phone landscape blocking overlay */}
+      <div className="fixed inset-0 z-50 hidden flex-col items-center justify-center gap-4 bg-forge-black landscape:max-md:flex">
+        <RotateCcw className="h-16 w-16 text-raw-steel" />
+        <p className="font-semibold text-parchment">Rotate your device</p>
+        <p className="text-sm text-raw-steel">Portrait mode only on mobile</p>
       </div>
 
-      {/* Video */}
-      <div className="relative shrink-0 px-2">
+      {/* Left column — video */}
+      <div className="relative shrink-0 px-2 md:flex md:h-full md:w-[45%] md:flex-col md:items-center md:justify-center md:border-r md:border-raw-steel/20 md:px-6 md:py-6">
+        {/* Portrait header — hidden on tablet/desktop */}
+        <div className="flex items-start justify-between px-2 pb-2 pt-3 md:hidden">
+          <SessionHeader
+            disciplineLabel={session.disciplineLabel}
+            athleteName={session.athleteName}
+            weightKg={session.weightKg}
+            serial={session.serial}
+            onExit={() => router.push('/dashboard')}
+          />
+        </div>
+
         <YouTubeEmbed
           videoId={session.videoId}
           onPlayerReady={player => {
@@ -125,12 +155,24 @@ export default function JudgeSessionPage() {
             setPlayerReady(true)
           }}
         />
-        {/* Gradient bridge into action deck */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-gradient-to-t from-forge-black to-transparent" />
+
+        {/* Gradient bridge into action deck — portrait only */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-gradient-to-t from-forge-black to-transparent md:hidden" />
       </div>
 
-      {/* Action deck */}
-      <div className="flex-1 px-4 pb-8 pt-2">
+      {/* Right column — action deck */}
+      <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 md:h-full md:w-[55%] md:px-6 md:pb-8 md:pt-4">
+        {/* Landscape header — hidden on mobile */}
+        <div className="hidden items-start justify-between pb-2 pt-3 md:flex">
+          <SessionHeader
+            disciplineLabel={session.disciplineLabel}
+            athleteName={session.athleteName}
+            weightKg={session.weightKg}
+            serial={session.serial}
+            onExit={() => router.push('/dashboard')}
+          />
+        </div>
+
         <RepCounter
           reps={reps}
           playerReady={playerReady}

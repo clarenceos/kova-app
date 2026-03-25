@@ -96,7 +96,7 @@ export function RepCounter({ reps, playerReady, onRep, onNoRep, onUndo }: RepCou
               Rep Log
             </p>
           </div>
-          <div className="max-h-40 overflow-y-auto">
+          <div className="max-h-40 overflow-y-auto md:max-h-none">
             {[...reps].reverse().map((rep, revIdx) => {
               const seqNum = reps.length - revIdx
               const isRep = rep.type === 'rep'

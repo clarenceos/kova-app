@@ -72,7 +72,7 @@ export function YouTubeEmbed({ videoId, onPlayerReady }: YouTubeEmbedProps) {
   }, [])
 
   return (
-    <div className="aspect-video w-full bg-charcoal overflow-hidden">
+    <div className="aspect-[9/16] w-full max-w-sm mx-auto bg-charcoal overflow-hidden md:max-w-none md:h-[80vh] md:w-auto">
       <div ref={containerRef} className="w-full h-full" style={{ width: '100%', height: '100%' }} />
     </div>
   )

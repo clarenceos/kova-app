@@ -36,11 +36,11 @@ const RecordContext = createContext<RecordState | null>(null)
 
 interface RecordProviderProps {
   athleteName: string
+  serial: string
   children: React.ReactNode
 }
 
-export function RecordProvider({ athleteName, children }: RecordProviderProps) {
-  const [serial] = useState<string>(() => crypto.randomUUID())
+export function RecordProvider({ athleteName, serial, children }: RecordProviderProps) {
   const [discipline, setDiscipline] = useState<Discipline | null>(null)
   const [disciplineLabel, setDisciplineLabel] = useState<string | null>(null)
   const [weightKg, setWeightKg] = useState<number | null>(null)

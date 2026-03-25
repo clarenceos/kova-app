@@ -1,6 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { RecordProvider } from '@/lib/record-context'
+import { generateSerial } from '@/lib/serial'
 
 interface RecordLayoutProps {
   children: React.ReactNode
@@ -15,8 +16,10 @@ export default async function RecordLayout({ children }: RecordLayoutProps) {
 
   if (!name) redirect('/onboarding')
 
+  const serial = await generateSerial()
+
   return (
-    <RecordProvider athleteName={name}>
+    <RecordProvider athleteName={name} serial={serial}>
       {children}
     </RecordProvider>
   )

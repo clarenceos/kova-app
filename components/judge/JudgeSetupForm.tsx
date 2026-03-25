@@ -55,6 +55,8 @@ export function JudgeSetupForm() {
       return
     }
 
+    const normalizedSerial = serial.replace(/\s/g, '').toUpperCase()
+
     const disciplineLabel = DISCIPLINES.find(d => d.value === discipline)!.label
 
     setSession({
@@ -64,7 +66,7 @@ export function JudgeSetupForm() {
       discipline,
       disciplineLabel,
       weightKg: weight,
-      serial: serial.trim(),
+      serial: normalizedSerial,
     })
 
     router.push('/judge/session')

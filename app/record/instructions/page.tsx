@@ -11,7 +11,7 @@ export default function InstructionsPage() {
   const { serial, disciplineLabel, athleteName, weightKg, recordedBlob } = useRecord()
   const [copied, setCopied] = useState(false)
 
-  // serial is always a UUID (never falsy); use recordedBlob as the guard for direct navigation
+  // serial is always set by the layout (never falsy); use recordedBlob as the guard for direct navigation
   useEffect(() => {
     if (!recordedBlob) {
       router.replace('/record')

@@ -12,6 +12,45 @@ interface CameraDevice {
   label: string
 }
 
+// ── Canvas overlay font loading ───────────────────────────────────────────────
+// Module-level promise so fonts are fetched once per page load, not per frame
+let tomorrowFontsPromise: Promise<void> | null = null
+
+async function loadTomorrowFonts(): Promise<void> {
+  // Fetch the Google Fonts CSS to get the correct woff2 URLs for each weight
+  const css = await fetch(
+    'https://fonts.googleapis.com/css2?family=Tomorrow:wght@600;700&display=swap'
+  ).then(r => r.text())
+
+  const seen = new Set<string>()
+  const loads: Promise<FontFace>[] = []
+  const re = /font-weight:\s*(\d+)[\s\S]*?url\((https:\/\/[^)]+\.woff2)\)/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(css)) !== null) {
+    const [, weight, src] = m
+    if (seen.has(weight)) continue  // take first (Latin-ext) block per weight only
+    seen.add(weight)
+    loads.push(new FontFace('Tomorrow', `url(${src})`, { weight }).load())
+  }
+  const faces = await Promise.all(loads)
+  faces.forEach(f => document.fonts.add(f))
+}
+
+function ensureTomorrowFonts(): Promise<void> {
+  if (!tomorrowFontsPromise) {
+    tomorrowFontsPromise = loadTomorrowFonts().catch(() => {
+      // Fallback to known-good URL for weight 400 if CSS fetch fails
+      const face = new FontFace(
+        'Tomorrow',
+        'url(https://fonts.gstatic.com/s/tomorrow/v18/WBLhrETNbFtZCeGqgR2xe2XiZg.woff2)'
+      )
+      return face.load().then(f => { document.fonts.add(f) })
+    })
+  }
+  return tomorrowFontsPromise
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function buildCameraList(devices: MediaDeviceInfo[]): CameraDevice[] {
   const videoInputs = devices.filter(d => d.kind === 'videoinput')
   const hasLabels = videoInputs.some(d => d.label.trim() !== '')
@@ -206,40 +245,69 @@ export default function RecordingPage() {
     ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
     ctx.restore()
 
-    // Layer 2: overlays
-    const PAD = 20
-    ctx.fillStyle = 'white'
-    ctx.shadowColor = 'rgba(0,0,0,0.75)'
-    ctx.shadowBlur = 8
+    // Layer 2: top gradient — drawn behind discipline label + timer
+    const topGrad = ctx.createLinearGradient(0, 0, 0, 180)
+    topGrad.addColorStop(0, 'rgba(0,0,0,0.72)')
+    topGrad.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = topGrad
+    ctx.fillRect(0, 0, canvasW, 180)
+
+    // Layer 3: bottom gradient — drawn behind athlete name + serial
+    const botGrad = ctx.createLinearGradient(0, canvasH - 220, 0, canvasH)
+    botGrad.addColorStop(0, 'rgba(0,0,0,0)')
+    botGrad.addColorStop(1, 'rgba(0,0,0,0.72)')
+    ctx.fillStyle = botGrad
+    ctx.fillRect(0, canvasH - 220, canvasW, 220)
+
+    ctx.shadowBlur = 0
+
+    const PAD = 24
+    const TOP = 32           // top edge of top text block
+    const BOT = canvasH - 32 // bottom edge of bottom text block
 
     const minutes = Math.floor(timerMs / 60000)
     const seconds = Math.floor((timerMs % 60000) / 1000)
     const timerStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 
+    // Top-left: discipline label — Tomorrow SemiBold 22px, parchment
+    ctx.textBaseline = 'top'
     ctx.textAlign = 'left'
-    ctx.font = '500 22px sans-serif'
-    ctx.fillText(discLabel.toUpperCase(), PAD, PAD + 22)
+    ctx.fillStyle = '#EDE9E2'
+    ctx.font = '600 22px Tomorrow, sans-serif'
+    ctx.fillText(discLabel.toUpperCase(), PAD, TOP)
 
-    ctx.font = 'bold 80px sans-serif'
-    ctx.fillText(timerStr, PAD, PAD + 22 + 8 + 80)
+    // Top-left: timer — Tomorrow Bold 80px, white
+    ctx.fillStyle = '#FFFFFF'
+    ctx.font = '700 80px Tomorrow, sans-serif'
+    ctx.fillText(timerStr, PAD, TOP + 22 + 4)
 
+    // Top-right: KOVA wordmark — Tomorrow SemiBold 36px, parchment
+    // Vertically centered on the timer block's vertical span
+    ctx.textBaseline = 'middle'
     ctx.textAlign = 'right'
-    const rightX = canvasW - PAD
+    ctx.fillStyle = '#EDE9E2'
+    ctx.font = '600 36px Tomorrow, sans-serif'
+    ctx.fillText('KOVA', canvasW - PAD, TOP + 22 + 4 + 40)
 
-    ctx.font = '600 28px sans-serif'
-    ctx.fillText(`${weightKg} KG`, rightX, canvasH - PAD - 22 - 8 - 22 - 8)
+    // Bottom-left: athlete name as "F. Lastname" — Tomorrow Bold 42px, white
+    const parts = name.trim().split(/\s+/)
+    const displayName = parts.length >= 2
+      ? `${parts[0][0].toUpperCase()}. ${parts.slice(1).join(' ')}`
+      : name
 
-    ctx.font = '600 28px sans-serif'
-    ctx.fillText(name.toUpperCase(), rightX, canvasH - PAD - 22 - 8)
-
-    ctx.font = '400 22px sans-serif'
-    ctx.fillText(serialStr.toUpperCase(), rightX, canvasH - PAD)
-
+    ctx.textBaseline = 'bottom'
     ctx.textAlign = 'left'
-    ctx.font = 'bold 28px sans-serif'
-    ctx.fillText('KOVA', PAD, canvasH - PAD)
+    ctx.fillStyle = '#FFFFFF'
+    ctx.font = '700 42px Tomorrow, sans-serif'
+    ctx.fillText(displayName, PAD, BOT - 24 - 8)
 
-    ctx.shadowBlur = 0
+    // Bottom-left: serial + weight — Tomorrow SemiBold 24px, parchment
+    // Em-space (\u2003) used for visual separation between serial and weight
+    ctx.fillStyle = '#EDE9E2'
+    ctx.font = '600 24px Tomorrow, sans-serif'
+    ctx.fillText(`${serialStr.toUpperCase()}\u2003\u2003${weightKg} KG`, PAD, BOT)
+
+    ctx.textBaseline = 'alphabetic'
   }, [])
 
   // ── Stop recording ──
@@ -369,6 +437,9 @@ export default function RecordingPage() {
     const canvas = canvasRef.current!
     canvas.width = portraitWidth
     canvas.height = cameraHeight
+
+    // Load Tomorrow font before the first canvas draw call
+    await ensureTomorrowFonts()
 
     const canvasStream = canvas.captureStream(30)
 

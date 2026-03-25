@@ -16,6 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Athlete Video Recorder** - Full canvas recording pipeline with authenticated overlays, export, and YouTube instructions (completed 2026-03-24)
 - [ ] **Phase 3: Judge Interface** - YouTube embed, tap counter, score submission to DB
 - [ ] **Phase 4: Leaderboard** - Live scores filterable by discipline, completing the v1 loop
+- [ ] **Phase 5: Complete Athlete Loop** - YouTube auto-upload, athlete profile/submissions, ghost replay, serial-based judge lookup
 
 ## Phase Details
 
@@ -69,10 +70,33 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 **UI hint**: yes
 
+### Phase 5: Complete Athlete Loop
+**Goal**: Athletes can upload recordings directly to YouTube from the app, view their submission history with status tracking, see ghost replays of judge scoring, and judges look up entries by serial number alone — closing the full athlete-to-judge loop with zero manual friction
+**Depends on**: Phase 3, Phase 4
+**Requirements**: LOOP-01, LOOP-02, LOOP-03, LOOP-04, LOOP-05, LOOP-06, LOOP-07, LOOP-08
+**Success Criteria** (what must be TRUE):
+  1. After recording, athlete taps one button and the video uploads directly to their YouTube channel via YouTube Data API v3 with progress indicator
+  2. Upload metadata (title, description, tags, category, privacy) is set automatically from session data — athlete configures nothing
+  3. On upload complete, youtube_url and youtube_id are stored in DB against the entry with status 'pending'
+  4. Athlete's PROFILE tab is unlocked and shows all their submissions ordered by date, each with serial, discipline, weight, status badge (PENDING/JUDGED), and rep count when judged
+  5. Tapping a submission card opens Entry Detail with YouTube embed and ghost replay — judge rep taps animate over the video in real time as it plays
+  6. Judge setup form no longer requires YouTube URL input — entering a serial auto-fetches the entry including video URL from DB
+  7. If athlete hasn't uploaded yet, judge sees "Video not yet uploaded" error on serial lookup
+  8. The full loop works end-to-end: record → upload → share serial → judge enters serial → judge scores → athlete sees JUDGED status with ghost replay
+**Plans:** 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — DB schema migration + core server actions (createEntry, lookupEntryBySerial, getAthleteEntries, getEntryById, updated submitScore)
+- [ ] 05-02-PLAN.md — YouTube auto-upload integration (token retrieval, resumable upload, progress bar, entry creation)
+- [ ] 05-03-PLAN.md — Judge serial-only lookup (setup form rewrite, rep_taps submission)
+- [ ] 05-04-PLAN.md — Profile page + entry detail with ghost replay (BottomNav unlock, submission history, ghost replay engine)
+
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -80,3 +104,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 2. Athlete Video Recorder | 3/3 | Complete    | 2026-03-24 |
 | 3. Judge Interface | 0/TBD | Not started | - |
 | 4. Leaderboard | 0/TBD | Not started | - |
+| 5. Complete Athlete Loop | 0/4 | Planned | - |

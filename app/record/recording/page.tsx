@@ -2,8 +2,20 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { Square } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
+import { DISCIPLINE_DURATION_SECONDS } from '@/lib/disciplines'
 import { GlobalHeader } from '@/components/ui/GlobalHeader'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 type PageState = 'setup' | 'countdown' | 'recording' | 'processing'
 
@@ -141,6 +153,9 @@ export default function RecordingPage() {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null)
   const [isRecording, setIsRecording] = useState<boolean>(false)
 
+  // ── Stop confirmation dialog ──
+  const [stopDialog, setStopDialog] = useState<'early' | 'complete' | null>(null)
+
   // ── AudioContext ──
   const audioCtxRef = useRef<AudioContext | null>(null)
   const lastBeepMinuteRef = useRef<number>(-1)
@@ -246,50 +261,50 @@ export default function RecordingPage() {
     ctx.restore()
 
     // Layer 2: top gradient — drawn behind discipline label + timer
-    const topGrad = ctx.createLinearGradient(0, 0, 0, 180)
+    const topGrad = ctx.createLinearGradient(0, 0, 0, 120)
     topGrad.addColorStop(0, 'rgba(0,0,0,0.72)')
     topGrad.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = topGrad
-    ctx.fillRect(0, 0, canvasW, 180)
+    ctx.fillRect(0, 0, canvasW, 120)
 
     // Layer 3: bottom gradient — drawn behind athlete name + serial
-    const botGrad = ctx.createLinearGradient(0, canvasH - 220, 0, canvasH)
+    const botGrad = ctx.createLinearGradient(0, canvasH - 140, 0, canvasH)
     botGrad.addColorStop(0, 'rgba(0,0,0,0)')
     botGrad.addColorStop(1, 'rgba(0,0,0,0.72)')
     ctx.fillStyle = botGrad
-    ctx.fillRect(0, canvasH - 220, canvasW, 220)
+    ctx.fillRect(0, canvasH - 140, canvasW, 140)
 
     ctx.shadowBlur = 0
 
-    const PAD = 24
-    const TOP = 32           // top edge of top text block
-    const BOT = canvasH - 32 // bottom edge of bottom text block
+    const PAD = 16
+    const TOP = 20           // top edge of top text block
+    const BOT = canvasH - 20 // bottom edge of bottom text block
 
     const minutes = Math.floor(timerMs / 60000)
     const seconds = Math.floor((timerMs % 60000) / 1000)
     const timerStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 
-    // Top-left: discipline label — Tomorrow SemiBold 22px, parchment
+    // Top-left: discipline label — Tomorrow SemiBold 16px, parchment
     ctx.textBaseline = 'top'
     ctx.textAlign = 'left'
     ctx.fillStyle = '#EDE9E2'
-    ctx.font = '600 22px Tomorrow, sans-serif'
+    ctx.font = '600 16px Tomorrow, sans-serif'
     ctx.fillText(discLabel.toUpperCase(), PAD, TOP)
 
-    // Top-left: timer — Tomorrow Bold 80px, white
+    // Top-left: timer — Tomorrow Bold 52px, white
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = '700 80px Tomorrow, sans-serif'
-    ctx.fillText(timerStr, PAD, TOP + 22 + 4)
+    ctx.font = '700 52px Tomorrow, sans-serif'
+    ctx.fillText(timerStr, PAD, TOP + 16 + 4)
 
-    // Top-right: KOVA wordmark — Tomorrow SemiBold 36px, parchment
-    // Vertically centered on the timer block's vertical span
+    // Top-right: KOVA wordmark — Tomorrow SemiBold 24px, parchment
+    // Vertically centered on the timer block's vertical span (half of 52px = 26)
     ctx.textBaseline = 'middle'
     ctx.textAlign = 'right'
     ctx.fillStyle = '#EDE9E2'
-    ctx.font = '600 36px Tomorrow, sans-serif'
-    ctx.fillText('KOVA', canvasW - PAD, TOP + 22 + 4 + 40)
+    ctx.font = '600 24px Tomorrow, sans-serif'
+    ctx.fillText('KOVA', canvasW - PAD, TOP + 16 + 4 + 26)
 
-    // Bottom-left: athlete name as "F. Lastname" — Tomorrow Bold 42px, white
+    // Bottom-left: athlete name as "F. Lastname" — Tomorrow Bold 28px, white
     const parts = name.trim().split(/\s+/)
     const displayName = parts.length >= 2
       ? `${parts[0][0].toUpperCase()}. ${parts.slice(1).join(' ')}`
@@ -298,13 +313,13 @@ export default function RecordingPage() {
     ctx.textBaseline = 'bottom'
     ctx.textAlign = 'left'
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = '700 42px Tomorrow, sans-serif'
-    ctx.fillText(displayName, PAD, BOT - 24 - 8)
+    ctx.font = '700 28px Tomorrow, sans-serif'
+    ctx.fillText(displayName, PAD, BOT - 16 - 8)
 
-    // Bottom-left: serial + weight — Tomorrow SemiBold 24px, parchment
+    // Bottom-left: serial + weight — Tomorrow SemiBold 16px, parchment
     // Em-space (\u2003) used for visual separation between serial and weight
     ctx.fillStyle = '#EDE9E2'
-    ctx.font = '600 24px Tomorrow, sans-serif'
+    ctx.font = '600 16px Tomorrow, sans-serif'
     ctx.fillText(`${serialStr.toUpperCase()}\u2003\u2003${weightKg} KG`, PAD, BOT)
 
     ctx.textBaseline = 'alphabetic'
@@ -569,6 +584,18 @@ export default function RecordingPage() {
     await startSession(weightNum, countdown, beep, autoStopEnabled, selectedCamera)
   }
 
+  // ── Handle stop button tap — show duration-aware confirmation ──
+  function handleStopRequest() {
+    const durSecs = discipline ? DISCIPLINE_DURATION_SECONDS[discipline] : undefined
+    if (durSecs === undefined) {
+      // Unknown discipline — stop immediately, never block the athlete
+      stopRecording()
+      return
+    }
+    const elapsedSecs = timerMsRef.current / 1000
+    setStopDialog(elapsedSecs >= durSecs ? 'complete' : 'early')
+  }
+
   const showSetup = pageState === 'setup'
   const showRecording = pageState === 'recording'
   const showProcessing = pageState === 'processing'
@@ -699,18 +726,59 @@ export default function RecordingPage() {
         </div>
       )}
 
-      {/* ── Recording UI — stop button only ── */}
+      {/* ── Recording UI — circular stop button ── */}
       {showRecording && (
-        <div className="fixed bottom-8 left-0 right-0 z-10 flex justify-center">
-          <button
-            type="button"
-            onClick={stopRecording}
-            className="rounded-full bg-red-600 px-10 py-4 text-lg font-bold text-white shadow-2xl transition-opacity active:opacity-80"
-          >
-            Stop Recording
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleStopRequest}
+          style={{ opacity: 0.75 }}
+          className="fixed bottom-6 right-6 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-red-600 shadow-2xl active:opacity-60"
+          aria-label="Stop recording"
+        >
+          <Square className="h-6 w-6 fill-white text-white" />
+        </button>
       )}
+
+      {/* ── Stop confirmation: early stop ── */}
+      <AlertDialog open={stopDialog === 'early'} onOpenChange={open => { if (!open) setStopDialog(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Stop recording early?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You haven&apos;t reached the full duration. Your video will be cut short.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={stopRecording}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Stop anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Stop confirmation: set complete ── */}
+      <AlertDialog open={stopDialog === 'complete'} onOpenChange={open => { if (!open) setStopDialog(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Set complete.</AlertDialogTitle>
+            <AlertDialogDescription>
+              Full duration recorded. Well done.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={stopRecording}
+              className="bg-patina-bronze text-parchment hover:bg-bright-bronze"
+            >
+              Save recording
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Processing overlay ── */}
       {showProcessing && (

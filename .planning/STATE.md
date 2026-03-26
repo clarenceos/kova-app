@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to execute
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-26T04:36:12.438Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-26T04:40:17.900Z"
 progress:
   total_phases: 5
   completed_phases: 1
   total_plans: 7
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ## Current Position
 
 Phase: 05 (complete-athlete-loop) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: 2 of 4
 | Phase 02-athlete-video-recorder P03 | 221 | 3 tasks | 2 files |
 | Phase 02-athlete-video-recorder P02 | 4 | 4 tasks | 1 files |
 | Phase 05-complete-athlete-loop P01 | 3 | 2 tasks | 6 files |
+| Phase 05-complete-athlete-loop P02 | 2 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase 05-01]: reps column stays NOT NULL — pending entries use reps: 0 to avoid ALTER TABLE constraint complexity
 - [Phase 05-01]: submitScore uses UPDATE-first pattern: updates existing entry by serial, inserts only as backward-compat fallback
 - [Phase 05-01]: repTaps stored as JSON string in TEXT column — avoids separate junction table for v1
+- [Phase 05-02]: XHR used for blob upload (not fetch) to enable xhr.upload.onprogress for real progress tracking
+- [Phase 05-02]: google_not_connected state shows connect link plus skip option — not a hard error
+- [Phase 05-02]: discipline converted from hyphenated (long-cycle) to underscored (long_cycle) at playback page level before createEntry
 
 ### Pending Todos
 
@@ -85,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T04:36:12.436Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-03-26T04:40:17.896Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

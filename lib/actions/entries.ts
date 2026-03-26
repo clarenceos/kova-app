@@ -66,8 +66,7 @@ export async function createEntry(input: {
     return { id }
   } catch (error) {
     console.error('[createEntry] Full error:', JSON.stringify(error, null, 2), (error as Error)?.message, (error as Error)?.cause)
-    const e = error as any
-    return { error: `code=${e?.code ?? '?'} | ${e?.message?.slice(0, 300) ?? String(e)} | cause=${e?.cause?.message ?? 'none'}` }
+    return { error: 'Failed to save entry. Please try again.' }
   }
 }
 

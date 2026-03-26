@@ -10,7 +10,7 @@ const NAV_TABS = [
   { id: 'competitions', label: 'COMPS', icon: Trophy, href: null, locked: true },
   { id: 'records', label: 'RECORDS', icon: Video, href: '/record', locked: false },
   { id: 'leaderboard', label: 'LEADERS', icon: BarChart2, href: '/leaderboard', locked: false },
-  { id: 'profile', label: 'PROFILE', icon: User, href: null, locked: true },
+  { id: 'profile', label: 'PROFILE', icon: User, href: '/profile', locked: false },
 ] as const
 
 export function BottomNav({ className }: { className?: string }) {

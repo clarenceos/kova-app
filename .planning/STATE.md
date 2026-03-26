@@ -103,8 +103,9 @@ None yet.
 | 260327-10k | IndexedDB backup for recordings to prevent data loss | 2026-03-27 | 7a0c0cd | [260327-10k-indexeddb-backup-for-recordings-to-preve](./quick/260327-10k-indexeddb-backup-for-recordings-to-preve/) |
 | 260327-19q | Remove webmFixDuration from onstop, IndexedDB-first save order | 2026-03-27 | 84b93c5 | [260327-19q-remove-webmfixduration-from-recorder-ons](./quick/260327-19q-remove-webmfixduration-from-recorder-ons/) |
 | 260327-21e | Incremental IndexedDB chunk writes + block iOS recording | 2026-03-27 | cbf188b | [260327-21e-incremental-indexeddb-chunk-writes-durin](./quick/260327-21e-incremental-indexeddb-chunk-writes-durin/) |
+| 260327-24f | Remove iOS recording block — allow iOS users to record | 2026-03-27 | 35a7738 | [260327-24f-remove-ios-recording-block-from-app-reco](./quick/260327-24f-remove-ios-recording-block-from-app-reco/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-21e: Incremental IndexedDB chunk writes + block iOS recording
+Last activity: 2026-03-27 - Completed quick task 260327-24f: Remove iOS recording block
 Resume file: None

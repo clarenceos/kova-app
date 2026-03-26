@@ -537,23 +537,14 @@ export default function RecordingPage() {
           return
         }
 
-        // 3. Fix duration for WebM
-        let finalBlob = rawBlob
-        try {
-          const { webmFixDuration } = await import('webm-fix-duration')
-          finalBlob = await webmFixDuration(rawBlob, timerMsRef.current)
-        } catch {
-          // Use raw blob if duration fix fails
-        }
+        // 3. Save to IndexedDB FIRST — before anything else can fail
+        await saveRecording(rawBlob, mimeType, serial)
 
-        // 4. Save to IndexedDB FIRST (durable backup)
-        await saveRecording(finalBlob, mimeType, serial)
-
-        // 5. Then update React context
-        setRecordedBlob(finalBlob)
+        // 4. Update React context
+        setRecordedBlob(rawBlob)
         setMimeType(mimeType)
 
-        // 6. Small delay for context propagation, then navigate
+        // 5. Small delay for context propagation, then navigate
         await new Promise(r => setTimeout(r, 150))
         router.push('/record/playback')
       } catch (err) {

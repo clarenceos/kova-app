@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: Milestone complete
 last_updated: "2026-03-26T14:11:42.998Z"
-last_activity: "2026-03-26 - Completed quick task 260326-u3g: Fix AudioContext user gesture chain broken by async/await"
+last_activity: "2026-03-27 - Completed quick task 260327-10k: IndexedDB backup for recordings to prevent data loss"
 progress:
   total_phases: 5
   completed_phases: 2
@@ -100,8 +100,9 @@ None yet.
 | 260326-u3g | Fix AudioContext user gesture chain broken by async/await | 2026-03-26 | 836c6e7 | [260326-u3g-fix-audiocontext-user-gesture-chain-brok](./quick/260326-u3g-fix-audiocontext-user-gesture-chain-brok/) |
 | 260326-umx | Fix beep resume-then-play, add discard, clean up playback buttons | 2026-03-26 | 3ccb73b | [260326-umx-fix-beep-resume-then-play-add-discard-bu](./quick/260326-umx-fix-beep-resume-then-play-add-discard-bu/) |
 | 260326-v24 | Remove audio track from recorded stream (Chrome WebM fix) | 2026-03-26 | 2736f6a | [260326-v24-remove-audio-track-from-recorded-stream-](./quick/260326-v24-remove-audio-track-from-recorded-stream-/) |
+| 260327-10k | IndexedDB backup for recordings to prevent data loss | 2026-03-27 | a8bbd2e | [260327-10k-indexeddb-backup-for-recordings-to-preve](./quick/260327-10k-indexeddb-backup-for-recordings-to-preve/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-26 - Completed quick task 260326-v24: Remove audio track from recorded stream to fix Chrome WebM silent-frame skipping
+Last activity: 2026-03-27 - Completed quick task 260327-10k: IndexedDB backup for recordings to prevent data loss from context resets
 Resume file: None

@@ -219,12 +219,12 @@ export default function RecordingPage() {
   }, [isRecording])
 
   // ── AudioContext beep ──
-  const playBeep = useCallback(() => {
+  const playBeep = useCallback(async () => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new AudioContext()
     }
     const ctx = audioCtxRef.current
-    if (ctx.state === 'suspended') ctx.resume()
+    if (ctx.state === 'suspended') await ctx.resume()
 
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
@@ -239,6 +239,29 @@ export default function RecordingPage() {
 
     oscillator.start(ctx.currentTime)
     oscillator.stop(ctx.currentTime + 0.3)
+  }, [])
+
+  // ── Start tone (higher pitch for "go" signal) ──
+  const playStartTone = useCallback(async () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext()
+    }
+    const ctx = audioCtxRef.current
+    if (ctx.state === 'suspended') await ctx.resume()
+
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+    if (audioDestRef.current) gainNode.connect(audioDestRef.current)
+
+    oscillator.frequency.value = 1320
+    oscillator.type = 'sine'
+    gainNode.gain.setValueAtTime(0.5, ctx.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+
+    oscillator.start(ctx.currentTime)
+    oscillator.stop(ctx.currentTime + 0.5)
   }, [])
 
   // ── Canvas draw loop ──
@@ -362,6 +385,16 @@ export default function RecordingPage() {
     return () => clearInterval(id)
   }, [pageState])
 
+  // ── Countdown beeps at 3, 2, 1 + start tone at 0 ──
+  useEffect(() => {
+    if (pageState !== 'countdown') return
+    if (countdownDisplay === 3 || countdownDisplay === 2 || countdownDisplay === 1) {
+      void playBeep()
+    } else if (countdownDisplay === 0) {
+      void playStartTone()
+    }
+  }, [countdownDisplay, pageState, playBeep, playStartTone])
+
   // ── Start MediaRecorder at 5s remaining ──
   useEffect(() => {
     if (pageState !== 'countdown' || countdownDisplay !== 5) return
@@ -401,7 +434,7 @@ export default function RecordingPage() {
       const currentMinute = Math.floor(currentTimerMs / 60000)
       if (recordBeepRef.current && currentMinute > 0 && currentMinute !== lastBeepMinuteRef.current) {
         lastBeepMinuteRef.current = currentMinute
-        playBeep()
+        void playBeep()
       }
 
       if (recordAutoStopRef.current && currentTimerMs >= 610000) {
@@ -479,11 +512,13 @@ export default function RecordingPage() {
       ...audioDestRef.current!.stream.getAudioTracks(),
     ])
 
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-      ? 'video/webm;codecs=vp9'
-      : MediaRecorder.isTypeSupported('video/webm')
-        ? 'video/webm'
-        : 'video/mp4'
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+      ? 'video/webm;codecs=vp9,opus'
+      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+        ? 'video/webm;codecs=vp8,opus'
+        : MediaRecorder.isTypeSupported('video/webm')
+          ? 'video/webm'
+          : 'video/mp4'
 
     const recorder = new MediaRecorder(combinedStream, { mimeType })
     chunksRef.current = []

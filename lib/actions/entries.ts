@@ -56,9 +56,13 @@ export async function createEntry(input: {
       throw dbError
     }
 
-    revalidatePath('/leaderboard')
-    revalidatePath('/profile')
-
+    try {
+      revalidatePath('/leaderboard')
+      revalidatePath('/profile')
+    } catch (revalidateError) {
+      console.error('[createEntry] revalidatePath failed:', String(revalidateError))
+    }
+    console.log('[createEntry] Insert succeeded, returning id:', id)
     return { id }
   } catch (error) {
     console.error('[createEntry] Full error:', JSON.stringify(error, null, 2), (error as Error)?.message, (error as Error)?.cause)

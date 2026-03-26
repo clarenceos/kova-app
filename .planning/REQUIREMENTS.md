@@ -46,7 +46,7 @@
 - [ ] **LOOP-05**: Entry Detail screen with YouTube embed and ghost replay — judge rep_taps animate over video in real time (Check/X icons at each tap's timestamp)
 - [ ] **LOOP-06**: Judge setup form: serial lookup auto-fetches entry including youtube_url; YouTube URL input removed entirely
 - [ ] **LOOP-07**: If entry has no youtube_url, judge sees "Video not yet uploaded by athlete" error
-- [ ] **LOOP-08**: DB schema extended: youtube_id, status, athlete_id, rep_taps columns added; reps made nullable for pending entries
+- [x] **LOOP-08**: DB schema extended: youtube_id, status, athlete_id, rep_taps columns added; reps made nullable for pending entries
 
 ## v2 Requirements
 
@@ -117,7 +117,7 @@
 | LOOP-05 | Phase 5 | Pending |
 | LOOP-06 | Phase 5 | Pending |
 | LOOP-07 | Phase 5 | Pending |
-| LOOP-08 | Phase 5 | Pending |
+| LOOP-08 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 28 total

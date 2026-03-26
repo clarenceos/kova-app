@@ -83,10 +83,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   6. Judge setup form no longer requires YouTube URL input — entering a serial auto-fetches the entry including video URL from DB
   7. If athlete hasn't uploaded yet, judge sees "Video not yet uploaded" error on serial lookup
   8. The full loop works end-to-end: record → upload → share serial → judge enters serial → judge scores → athlete sees JUDGED status with ghost replay
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
-- [ ] 05-01-PLAN.md — DB schema migration + core server actions (createEntry, lookupEntryBySerial, getAthleteEntries, getEntryById, updated submitScore)
+- [x] 05-01-PLAN.md — DB schema migration + core server actions (createEntry, lookupEntryBySerial, getAthleteEntries, getEntryById, updated submitScore)
 - [ ] 05-02-PLAN.md — YouTube auto-upload integration (token retrieval, resumable upload, progress bar, entry creation)
 - [ ] 05-03-PLAN.md — Judge serial-only lookup (setup form rewrite, rep_taps submission)
 - [ ] 05-04-PLAN.md — Profile page + entry detail with ghost replay (BottomNav unlock, submission history, ghost replay engine)
@@ -104,4 +104,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Athlete Video Recorder | 3/3 | Complete    | 2026-03-24 |
 | 3. Judge Interface | 0/TBD | Not started | - |
 | 4. Leaderboard | 0/TBD | Not started | - |
-| 5. Complete Athlete Loop | 0/4 | Planned | - |
+| 5. Complete Athlete Loop | 1/4 | In Progress|  |

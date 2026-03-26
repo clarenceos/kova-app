@@ -102,8 +102,9 @@ None yet.
 | 260326-v24 | Remove audio track from recorded stream (Chrome WebM fix) | 2026-03-26 | 2736f6a | [260326-v24-remove-audio-track-from-recorded-stream-](./quick/260326-v24-remove-audio-track-from-recorded-stream-/) |
 | 260327-10k | IndexedDB backup for recordings to prevent data loss | 2026-03-27 | 7a0c0cd | [260327-10k-indexeddb-backup-for-recordings-to-preve](./quick/260327-10k-indexeddb-backup-for-recordings-to-preve/) |
 | 260327-19q | Remove webmFixDuration from onstop, IndexedDB-first save order | 2026-03-27 | 84b93c5 | [260327-19q-remove-webmfixduration-from-recorder-ons](./quick/260327-19q-remove-webmfixduration-from-recorder-ons/) |
+| 260327-21e | Incremental IndexedDB chunk writes + block iOS recording | 2026-03-27 | cbf188b | [260327-21e-incremental-indexeddb-chunk-writes-durin](./quick/260327-21e-incremental-indexeddb-chunk-writes-durin/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-19q: Remove webmFixDuration from onstop, IndexedDB-first save order
+Last activity: 2026-03-27 - Completed quick task 260327-21e: Incremental IndexedDB chunk writes + block iOS recording
 Resume file: None

@@ -104,8 +104,9 @@ None yet.
 | 260327-19q | Remove webmFixDuration from onstop, IndexedDB-first save order | 2026-03-27 | 84b93c5 | [260327-19q-remove-webmfixduration-from-recorder-ons](./quick/260327-19q-remove-webmfixduration-from-recorder-ons/) |
 | 260327-21e | Incremental IndexedDB chunk writes + block iOS recording | 2026-03-27 | cbf188b | [260327-21e-incremental-indexeddb-chunk-writes-durin](./quick/260327-21e-incremental-indexeddb-chunk-writes-durin/) |
 | 260327-24f | Remove iOS recording block — allow iOS users to record | 2026-03-27 | 35a7738 | [260327-24f-remove-ios-recording-block-from-app-reco](./quick/260327-24f-remove-ios-recording-block-from-app-reco/) |
+| 260327-2o4 | Fix 308 resume, save-on-failure, manual URL submission | 2026-03-27 | fadb13a | [260327-2o4-fix-308-resume-save-on-failure-manual-ur](./quick/260327-2o4-fix-308-resume-save-on-failure-manual-ur/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-24f: Remove iOS recording block
+Last activity: 2026-03-27 - Completed quick task 260327-2o4: Fix 308 resume, save-on-failure, manual URL submission
 Resume file: None

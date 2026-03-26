@@ -118,7 +118,7 @@ export default function RecordingPage() {
   const [selectedCamera, setSelectedCamera] = useState<string>('')
   const [weight, setWeight] = useState<string>('')
   const [countdown, setCountdown] = useState<number>(10)
-  const [beep, setBeep] = useState<boolean>(false)
+  const [beep, setBeep] = useState<boolean>(true)
   const [autoStopEnabled, setAutoStopEnabled] = useState<boolean>(false)
   const [countdownError, setCountdownError] = useState<string>('')
 
@@ -221,41 +221,57 @@ export default function RecordingPage() {
   // ── AudioContext beep ──
   const playBeep = useCallback(() => {
     const ctx = audioCtxRef.current
-    if (!ctx || ctx.state !== 'running') return
+    if (!ctx) return
 
-    const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
-    if (audioDestRef.current) gainNode.connect(audioDestRef.current)
+    const doPlay = () => {
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      if (audioDestRef.current) gainNode.connect(audioDestRef.current)
 
-    oscillator.frequency.value = 880
-    oscillator.type = 'sine'
-    gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+      oscillator.frequency.value = 880
+      oscillator.type = 'sine'
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
 
-    oscillator.start(ctx.currentTime)
-    oscillator.stop(ctx.currentTime + 0.3)
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.3)
+    }
+
+    if (ctx.state === 'running') {
+      doPlay()
+    } else {
+      ctx.resume().then(doPlay).catch(() => {})
+    }
   }, [])
 
   // ── Start tone (higher pitch for "go" signal) ──
   const playStartTone = useCallback(() => {
     const ctx = audioCtxRef.current
-    if (!ctx || ctx.state !== 'running') return
+    if (!ctx) return
 
-    const oscillator = ctx.createOscillator()
-    const gainNode = ctx.createGain()
-    oscillator.connect(gainNode)
-    gainNode.connect(ctx.destination)
-    if (audioDestRef.current) gainNode.connect(audioDestRef.current)
+    const doPlay = () => {
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      if (audioDestRef.current) gainNode.connect(audioDestRef.current)
 
-    oscillator.frequency.value = 1320
-    oscillator.type = 'sine'
-    gainNode.gain.setValueAtTime(0.5, ctx.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
+      oscillator.frequency.value = 1320
+      oscillator.type = 'sine'
+      gainNode.gain.setValueAtTime(0.5, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5)
 
-    oscillator.start(ctx.currentTime)
-    oscillator.stop(ctx.currentTime + 0.5)
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.5)
+    }
+
+    if (ctx.state === 'running') {
+      doPlay()
+    } else {
+      ctx.resume().then(doPlay).catch(() => {})
+    }
   }, [])
 
   // ── Canvas draw loop ──

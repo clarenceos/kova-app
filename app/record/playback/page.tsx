@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Smartphone, ArrowLeft } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
@@ -16,10 +16,11 @@ import {
 } from '@/components/ui/alert-dialog'
 import { YouTubeUploader } from '@/components/record/YouTubeUploader'
 import { buildYouTubeDescription } from '@/lib/youtube-description'
+import { restoreRecording, clearRecording } from '@/lib/recording-store'
 
 export default function PlaybackPage() {
   const router = useRouter()
-  const { recordedBlob, setRecordedBlob, serial, discipline, disciplineLabel, athleteName, weightKg, mimeType } =
+  const { recordedBlob, setRecordedBlob, serial, discipline, disciplineLabel, athleteName, weightKg, mimeType, setMimeType } =
     useRecord()
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [uploadComplete, setUploadComplete] = useState(false)
@@ -29,37 +30,63 @@ export default function PlaybackPage() {
   const [showLeaveWarning, setShowLeaveWarning] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
   const [uploadFailed, setUploadFailed] = useState(false)
+  const [recovering, setRecovering] = useState(false)
 
-  // Redirect to /record only if there's no blob AND upload hasn't started
+  // Refs to track latest values for delayed redirect timeout check
+  const recordedBlobRef = useRef(recordedBlob)
+  const uploadStartedRef = useRef(uploadStarted)
+  useEffect(() => { recordedBlobRef.current = recordedBlob }, [recordedBlob])
+  useEffect(() => { uploadStartedRef.current = uploadStarted }, [uploadStarted])
+
+  // Redirect guard with IndexedDB recovery fallback
   useEffect(() => {
-    if (!recordedBlob && !uploadStarted) {
-      router.replace('/record')
-      return
-    }
-    if (!recordedBlob) return
+    if (recordedBlob) {
+      // Normal path: blob exists, create URL
+      const url = URL.createObjectURL(recordedBlob)
+      setBlobUrl(url)
 
-    const url = URL.createObjectURL(recordedBlob)
-    setBlobUrl(url)
+      // iOS: always skip playback — canvas-recorded blobs are unreliable on iOS Safari
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      if (isIOS) {
+        setCanPlayback(false)
+        return () => { URL.revokeObjectURL(url) }
+      }
 
-    // iOS: always skip playback — canvas-recorded blobs are unreliable on iOS Safari
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-    if (isIOS) {
-      setCanPlayback(false)
+      // Detect MIME type mismatch on other platforms
+      const testVideo = document.createElement('video')
+      const support = testVideo.canPlayType(mimeType)
+      if (support === '') setCanPlayback(false)
+
       return () => { URL.revokeObjectURL(url) }
     }
 
-    // Detect MIME type mismatch on other platforms
-    const testVideo = document.createElement('video')
-    const support = testVideo.canPlayType(mimeType)
-    if (support === '') {
-      setCanPlayback(false)
-    }
+    if (uploadStarted) return  // Upload in progress, blob consumed -- don't redirect
 
-    return () => {
-      URL.revokeObjectURL(url)
-    }
-  }, [recordedBlob, router, mimeType, uploadStarted])
+    // No blob, no upload -- try IndexedDB recovery
+    let cancelled = false
+    setRecovering(true)
+
+    restoreRecording().then(restored => {
+      if (cancelled) return
+      if (restored) {
+        setRecordedBlob(restored.blob)
+        setMimeType(restored.mimeType)
+        setRecovering(false)
+      } else {
+        // Not in IndexedDB either -- wait 1s for slow context propagation
+        setTimeout(() => {
+          if (cancelled) return
+          setRecovering(false)
+          if (!recordedBlobRef.current && !uploadStartedRef.current) {
+            router.replace('/record')
+          }
+        }, 1000)
+      }
+    })
+
+    return () => { cancelled = true }
+  }, [recordedBlob, router, mimeType, uploadStarted, setRecordedBlob, setMimeType])
 
   // Warn if user tries to close/refresh while upload is in progress
   useEffect(() => {
@@ -87,7 +114,19 @@ export default function PlaybackPage() {
     a.click()
   }
 
-  if (!recordedBlob) return null
+  if (!recordedBlob) {
+    if (recovering) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-forge-black">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-patina-bronze/30 border-t-patina-bronze" />
+            <p className="text-sm text-raw-steel">Recovering recording...</p>
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
 
   const title = `KOVA | ${disciplineLabel ?? 'Lift'} | ${weightKg ?? ''}KG | ${athleteName} | ${serial}`
   const description = buildYouTubeDescription({
@@ -188,7 +227,7 @@ export default function PlaybackPage() {
               athleteName={athleteName}
               discipline={disciplineDb}
               weightKg={weightKg ?? 0}
-              onUploadComplete={(url, id) => setUploadComplete(true)}
+              onUploadComplete={(url, id) => { setUploadComplete(true); void clearRecording() }}
               onUploadError={() => setUploadFailed(true)}
             />
           </div>
@@ -235,7 +274,7 @@ export default function PlaybackPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { setRecordedBlob(null); router.push('/record') }}
+              onClick={() => { void clearRecording(); setRecordedBlob(null); router.push('/record') }}
               className="bg-red-600 text-white hover:bg-red-700"
             >
               Discard

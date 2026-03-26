@@ -46,7 +46,7 @@ export async function createEntry(input: {
 
     return { id }
   } catch (error) {
-    console.error('[createEntry] Failed:', error)
+    console.error('[createEntry] Full error:', JSON.stringify(error, null, 2), error?.message, error?.cause)
     return { error: 'Failed to create entry. Please try again.' }
   }
 }

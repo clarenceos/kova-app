@@ -27,7 +27,7 @@ export async function createEntry(input: {
 
     const id = crypto.randomUUID()
 
-    console.log('[createEntry] db client type:', typeof db, typeof db?.execute)
+    console.log('[createEntry] db client type:', typeof db, typeof db.$client?.execute)
     console.log('[createEntry] Attempting insert with:', JSON.stringify({
       athleteName: input.athleteName,
       discipline: input.discipline,

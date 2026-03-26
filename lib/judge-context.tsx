@@ -15,7 +15,9 @@ export type JudgeSession = {
   entryId: string
 }
 
-export type LastSubmission = JudgeSession & { reps: number }
+export type RepEntry = { time: number | null; type: 'rep' | 'no-rep' }
+
+export type LastSubmission = JudgeSession & { reps: number; repTaps: RepEntry[] }
 
 type JudgeSessionContextValue = {
   session: JudgeSession | null

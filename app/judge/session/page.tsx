@@ -80,7 +80,7 @@ export default function JudgeSessionPage() {
         return
       }
 
-      setLastSubmission({ ...session!, reps: repCount })
+      setLastSubmission({ ...session!, reps: repCount, repTaps: reps })
       router.push('/judge/complete')
     })
   }

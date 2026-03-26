@@ -27,19 +27,34 @@ export async function createEntry(input: {
 
     const id = crypto.randomUUID()
 
-    await db.insert(scores).values({
-      id,
-      athleteName: input.athleteName.trim(),
+    console.log('[createEntry] Attempting insert with:', JSON.stringify({
+      athleteName: input.athleteName,
       discipline: input.discipline,
       weightKg: input.weightKg,
-      reps: 0,
+      serial: input.serial,
+      youtubeId: input.youtubeId,
       youtubeUrl: input.youtubeUrl,
-      youtubeId: input.youtubeId.trim(),
-      serial: input.serial.trim(),
-      status: 'pending',
-      athleteId: userId,
-      createdAt: new Date(),
-    })
+      userId,
+    }, null, 2))
+
+    try {
+      await db.insert(scores).values({
+        id,
+        athleteName: input.athleteName.trim(),
+        discipline: input.discipline,
+        weightKg: input.weightKg,
+        reps: 0,
+        youtubeUrl: input.youtubeUrl,
+        youtubeId: input.youtubeId.trim(),
+        serial: input.serial.trim(),
+        status: 'pending',
+        athleteId: userId,
+        createdAt: new Date(),
+      })
+    } catch (dbError) {
+      console.error('[createEntry] DB insert failed:', (dbError as Error)?.message, (dbError as Error)?.cause)
+      throw dbError
+    }
 
     revalidatePath('/leaderboard')
     revalidatePath('/profile')

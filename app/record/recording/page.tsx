@@ -219,12 +219,9 @@ export default function RecordingPage() {
   }, [isRecording])
 
   // ── AudioContext beep ──
-  const playBeep = useCallback(async () => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext()
-    }
+  const playBeep = useCallback(() => {
     const ctx = audioCtxRef.current
-    if (ctx.state === 'suspended') await ctx.resume()
+    if (!ctx || ctx.state !== 'running') return
 
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
@@ -242,12 +239,9 @@ export default function RecordingPage() {
   }, [])
 
   // ── Start tone (higher pitch for "go" signal) ──
-  const playStartTone = useCallback(async () => {
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContext()
-    }
+  const playStartTone = useCallback(() => {
     const ctx = audioCtxRef.current
-    if (ctx.state === 'suspended') await ctx.resume()
+    if (!ctx || ctx.state !== 'running') return
 
     const oscillator = ctx.createOscillator()
     const gainNode = ctx.createGain()
@@ -481,9 +475,9 @@ export default function RecordingPage() {
     })
     streamRef.current = stream
 
-    // Create AudioContext + destination for recording beeps into the video
-    audioCtxRef.current = new AudioContext()
-    audioDestRef.current = audioCtxRef.current.createMediaStreamDestination()
+    // Create audio destination for recording beeps into the video
+    // (AudioContext was already created synchronously in handleStart's user gesture)
+    audioDestRef.current = audioCtxRef.current!.createMediaStreamDestination()
 
     const video = videoRef.current!
     video.srcObject = stream
@@ -645,6 +639,14 @@ export default function RecordingPage() {
       setCountdownError('Minimum countdown is 5 seconds')
       return
     }
+
+    // Create and unlock AudioContext synchronously while still in the user gesture
+    // call stack — MUST happen before any await or the gesture chain is broken on
+    // mobile (iOS Safari and Android Chrome both suspend AudioContext if created
+    // after the first await boundary)
+    audioCtxRef.current = new AudioContext()
+    void audioCtxRef.current.resume()
+
     const isFront = cameras.find(c => c.deviceId === selectedCamera)?.label === 'Front Camera'
     await startSession(weightNum, countdown, beep, autoStopEnabled, selectedCamera, isFront)
   }

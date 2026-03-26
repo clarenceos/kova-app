@@ -16,12 +16,16 @@ export default function PlaybackPage() {
   const [uploadComplete, setUploadComplete] = useState(false)
   const [showUploader, setShowUploader] = useState(false)
   const [canPlayback, setCanPlayback] = useState(true)
+  const [uploadStarted, setUploadStarted] = useState(false)
 
+  // Redirect to /record only if there's no blob AND upload hasn't started
   useEffect(() => {
-    if (!recordedBlob) {
+    if (!recordedBlob && !uploadStarted) {
       router.replace('/record')
       return
     }
+    if (!recordedBlob) return
+
     const url = URL.createObjectURL(recordedBlob)
     setBlobUrl(url)
 
@@ -35,7 +39,18 @@ export default function PlaybackPage() {
     return () => {
       URL.revokeObjectURL(url)
     }
-  }, [recordedBlob, router, mimeType])
+  }, [recordedBlob, router, mimeType, uploadStarted])
+
+  // Warn if user tries to close/refresh while upload is in progress
+  useEffect(() => {
+    if (!showUploader || uploadComplete) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [showUploader, uploadComplete])
 
   function handleExport() {
     if (!recordedBlob || !blobUrl) return
@@ -100,7 +115,7 @@ export default function PlaybackPage() {
           {!uploadComplete && !showUploader && (
             <>
               <button
-                onClick={() => setShowUploader(true)}
+                onClick={() => { setShowUploader(true); setUploadStarted(true) }}
                 className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
               >
                 Upload to YouTube

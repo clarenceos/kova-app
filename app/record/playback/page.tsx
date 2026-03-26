@@ -4,12 +4,16 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useRecord } from '@/lib/record-context'
 import { GlobalHeader } from '@/components/ui/GlobalHeader'
+import { YouTubeUploader } from '@/components/record/YouTubeUploader'
+import { buildYouTubeDescription } from '@/lib/youtube-description'
 
 export default function PlaybackPage() {
   const router = useRouter()
   const { recordedBlob, serial, discipline, disciplineLabel, athleteName, weightKg, mimeType } =
     useRecord()
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [uploadComplete, setUploadComplete] = useState(false)
+  const [showUploader, setShowUploader] = useState(false)
 
   useEffect(() => {
     if (!recordedBlob) {
@@ -40,6 +44,15 @@ export default function PlaybackPage() {
 
   if (!recordedBlob) return null
 
+  const title = `KOVA | ${disciplineLabel ?? 'Lift'} | ${weightKg ?? ''}KG | ${athleteName} | ${serial}`
+  const description = buildYouTubeDescription({
+    athleteName,
+    disciplineLabel: disciplineLabel ?? '',
+    weightKg: weightKg ?? 0,
+    serial,
+  })
+  const disciplineDb = discipline?.replace('-', '_') ?? 'long_cycle'
+
   return (
     <div className="min-h-screen bg-forge-black">
       <GlobalHeader />
@@ -64,13 +77,57 @@ export default function PlaybackPage() {
             Render and Export
           </button>
 
-          <button
-            onClick={() => router.push('/record/instructions')}
-            className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
-          >
-            Next: Upload to YouTube &rarr;
-          </button>
+          {!uploadComplete && (
+            <>
+              <button
+                onClick={() => setShowUploader(true)}
+                className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
+              >
+                Upload to YouTube
+              </button>
+
+              <button
+                onClick={() => router.push('/record/instructions')}
+                className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+              >
+                Upload Manually
+              </button>
+            </>
+          )}
+
+          {uploadComplete && (
+            <>
+              <a
+                href="/profile"
+                className="block w-full rounded-xl bg-patina-bronze px-6 py-3 text-center font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
+              >
+                Done &mdash; Go to Profile
+              </a>
+              <a
+                href="/dashboard"
+                className="block w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 text-center font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+              >
+                Done &mdash; Go to Dashboard
+              </a>
+            </>
+          )}
         </div>
+
+        {showUploader && recordedBlob && (
+          <div className="mt-4">
+            <YouTubeUploader
+              blob={recordedBlob}
+              mimeType={mimeType}
+              title={title}
+              description={description}
+              serial={serial}
+              athleteName={athleteName}
+              discipline={disciplineDb}
+              weightKg={weightKg ?? 0}
+              onUploadComplete={(url, id) => setUploadComplete(true)}
+            />
+          </div>
+        )}
 
         {(disciplineLabel || weightKg) && (
           <div className="mt-6 space-y-1 rounded-xl border border-raw-steel/20 bg-charcoal p-4 text-sm">

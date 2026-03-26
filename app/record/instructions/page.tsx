@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useRecord } from '@/lib/record-context'
 import { GlobalHeader } from '@/components/ui/GlobalHeader'
+import { buildYouTubeDescription } from '@/lib/youtube-description'
 
 export default function InstructionsPage() {
   const router = useRouter()
@@ -18,16 +19,12 @@ export default function InstructionsPage() {
     }
   }, [recordedBlob, router])
 
-  const today = new Date().toISOString().split('T')[0]
-
-  const description = `Athlete: ${athleteName}
-Discipline: ${disciplineLabel ?? ''}
-Kettlebell Weight: ${weightKg ?? ''} kg
-Date: ${today}
-Serial: ${serial}
-Competition: TBD
-
-Recorded with KOVA — Kettlebell Sport Competition Platform`
+  const description = buildYouTubeDescription({
+    athleteName,
+    disciplineLabel: disciplineLabel ?? '',
+    weightKg: weightKg ?? 0,
+    serial,
+  })
 
   async function handleCopy() {
     await navigator.clipboard.writeText(description)

@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Smartphone, ArrowLeft } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
+import { createEntry } from '@/lib/actions/entries'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +32,11 @@ export default function PlaybackPage() {
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
   const [uploadFailed, setUploadFailed] = useState(false)
   const [recovering, setRecovering] = useState(false)
+  const [manualUrl, setManualUrl] = useState('')
+  const [manualSubmitting, setManualSubmitting] = useState(false)
+  const [manualSubmitted, setManualSubmitted] = useState(false)
+  const [manualError, setManualError] = useState('')
+  const [descriptionCopied, setDescriptionCopied] = useState(false)
 
   // Refs to track latest values for delayed redirect timeout check
   const recordedBlobRef = useRef(recordedBlob)
@@ -125,6 +131,55 @@ export default function PlaybackPage() {
     a.click()
   }
 
+  const handleCopyDescription = useCallback(async () => {
+    const desc = buildYouTubeDescription({
+      athleteName,
+      disciplineLabel: disciplineLabel ?? '',
+      weightKg: weightKg ?? 0,
+      serial,
+    })
+    const titleText = `KOVA | ${disciplineLabel ?? 'Lift'} | ${weightKg ?? ''}KG | ${athleteName} | ${serial}`
+    await navigator.clipboard.writeText(`${titleText}\n\n${desc}`)
+    setDescriptionCopied(true)
+    setTimeout(() => setDescriptionCopied(false), 2000)
+  }, [athleteName, disciplineLabel, weightKg, serial])
+
+  // TODO: Option B — /profile/submit-link page for athletes who uploaded from a desktop computer (serial + YouTube URL form)
+  async function handleManualSubmit() {
+    const url = manualUrl.trim()
+    if (!url) return
+    setManualError('')
+
+    // Extract YouTube video ID from URL
+    const idMatch = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+    if (!idMatch) {
+      setManualError('Please paste a valid YouTube URL')
+      return
+    }
+    const youtubeId = idMatch[1]
+    const disciplineDb = discipline?.replace('-', '_') ?? 'long_cycle'
+
+    setManualSubmitting(true)
+    const result = await createEntry({
+      athleteName,
+      discipline: disciplineDb,
+      weightKg: weightKg ?? 0,
+      serial,
+      youtubeUrl: url,
+      youtubeId,
+    })
+    setManualSubmitting(false)
+
+    if ('error' in result) {
+      setManualError(result.error)
+      return
+    }
+
+    setManualSubmitted(true)
+    void clearRecording()
+    void clearChunks()
+  }
+
   if (!recordedBlob) {
     if (recovering) {
       return (
@@ -207,7 +262,7 @@ export default function PlaybackPage() {
             </>
           )}
 
-          {uploadComplete && (
+          {(uploadComplete || manualSubmitted) && (
             <>
               <a
                 href="/profile"
@@ -215,14 +270,12 @@ export default function PlaybackPage() {
               >
                 Done &mdash; Go to Profile
               </a>
-              {mimeType.includes('webm') && (
-                <button
-                  onClick={handleExport}
-                  className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
-                >
-                  Save video file
-                </button>
-              )}
+              <button
+                onClick={handleExport}
+                className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+              >
+                Save video file
+              </button>
             </>
           )}
         </div>
@@ -244,14 +297,43 @@ export default function PlaybackPage() {
           </div>
         )}
 
-        {uploadFailed && !uploadComplete && (
-          <div className="mt-3">
+        {uploadFailed && !uploadComplete && !manualSubmitted && (
+          <div className="mt-4 flex flex-col gap-3">
             <button
-              onClick={() => router.push('/record/instructions')}
+              onClick={handleExport}
               className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
             >
-              Upload Manually
+              Save video file
             </button>
+            <button
+              onClick={handleCopyDescription}
+              className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+            >
+              {descriptionCopied ? 'Copied!' : 'Copy description'}
+            </button>
+            <div className="rounded-xl border border-raw-steel/20 bg-charcoal p-4 space-y-3">
+              <p className="text-sm font-semibold text-parchment">Submit YouTube link manually</p>
+              <p className="text-xs text-raw-steel">
+                Save the video file above, upload it to YouTube yourself, then paste the link here.
+              </p>
+              <input
+                type="url"
+                value={manualUrl}
+                onChange={e => setManualUrl(e.target.value)}
+                placeholder="Paste YouTube URL after uploading"
+                className="w-full rounded-xl border border-raw-steel/30 bg-forge-black px-4 py-3 text-parchment placeholder-raw-steel/50 focus:border-patina-bronze focus:outline-none transition-colors"
+              />
+              {manualError && (
+                <p className="text-xs text-red-400">{manualError}</p>
+              )}
+              <button
+                onClick={handleManualSubmit}
+                disabled={!manualUrl.trim() || manualSubmitting}
+                className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80 disabled:opacity-40"
+              >
+                {manualSubmitting ? 'Submitting...' : 'Submit link'}
+              </button>
+            </div>
           </div>
         )}
 

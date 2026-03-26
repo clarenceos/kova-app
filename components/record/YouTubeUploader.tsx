@@ -127,43 +127,58 @@ export function YouTubeUploader({
       return
     }
 
-    // Step 3 — Upload blob with progress via XMLHttpRequest
+    // Step 3 — Upload blob with progress via XMLHttpRequest (resumable)
     let videoId: string
     try {
-      videoId = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        xhr.open('PUT', uploadUri)
-        xhr.setRequestHeader('Content-Type', mimeType)
+      let startByte = 0
 
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            setProgress(Math.round((event.loaded / event.total) * 100))
+      const attemptUpload = (): Promise<string> =>
+        new Promise<string>((resolve, reject) => {
+          const chunk = startByte > 0 ? blob.slice(startByte) : blob
+          const xhr = new XMLHttpRequest()
+          xhr.open('PUT', uploadUri)
+          xhr.setRequestHeader('Content-Type', mimeType)
+          if (startByte > 0) {
+            xhr.setRequestHeader(
+              'Content-Range',
+              `bytes ${startByte}-${blob.size - 1}/${blob.size}`,
+            )
           }
-        }
 
-        xhr.onload = () => {
-          if (xhr.status === 200 || xhr.status === 201) {
-            try {
-              const data = JSON.parse(xhr.responseText)
-              if (!data.id) {
-                reject(new Error('YouTube response missing video ID'))
-              } else {
-                resolve(data.id)
-              }
-            } catch {
-              reject(new Error('Failed to parse YouTube response'))
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const totalUploaded = startByte + event.loaded
+              setProgress(Math.round((totalUploaded / blob.size) * 100))
             }
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.statusText}`))
           }
-        }
 
-        xhr.onerror = () => {
-          reject(new Error('Network error during upload'))
-        }
+          xhr.onload = () => {
+            if (xhr.status === 200 || xhr.status === 201) {
+              try {
+                const data = JSON.parse(xhr.responseText)
+                if (!data.id) reject(new Error('YouTube response missing video ID'))
+                else resolve(data.id)
+              } catch {
+                reject(new Error('Failed to parse YouTube response'))
+              }
+            } else if (xhr.status === 308) {
+              // 308 = Resume Incomplete — server received partial data, wants more
+              const range = xhr.getResponseHeader('Range')
+              if (range) {
+                const match = range.match(/bytes=0-(\d+)/)
+                if (match) startByte = parseInt(match[1], 10) + 1
+              }
+              attemptUpload().then(resolve, reject)
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.statusText}`))
+            }
+          }
 
-        xhr.send(blob)
-      })
+          xhr.onerror = () => reject(new Error('Network error during upload'))
+          xhr.send(chunk)
+        })
+
+      videoId = await attemptUpload()
     } catch (err) {
       setStatus('error')
       setErrorMessage(err instanceof Error ? err.message : 'Upload failed. Please try again.')

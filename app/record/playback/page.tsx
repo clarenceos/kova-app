@@ -19,7 +19,7 @@ import { buildYouTubeDescription } from '@/lib/youtube-description'
 
 export default function PlaybackPage() {
   const router = useRouter()
-  const { recordedBlob, serial, discipline, disciplineLabel, athleteName, weightKg, mimeType } =
+  const { recordedBlob, setRecordedBlob, serial, discipline, disciplineLabel, athleteName, weightKg, mimeType } =
     useRecord()
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [uploadComplete, setUploadComplete] = useState(false)
@@ -27,6 +27,7 @@ export default function PlaybackPage() {
   const [canPlayback, setCanPlayback] = useState(true)
   const [uploadStarted, setUploadStarted] = useState(false)
   const [showLeaveWarning, setShowLeaveWarning] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
   // Redirect to /record only if there's no blob AND upload hasn't started
   useEffect(() => {
@@ -147,10 +148,10 @@ export default function PlaybackPage() {
                 Upload to YouTube
               </button>
               <button
-                onClick={() => router.push('/record/instructions')}
-                className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+                onClick={() => setShowDiscardDialog(true)}
+                className="w-full rounded-xl border border-red-600/30 bg-charcoal px-6 py-3 font-semibold text-red-400 transition-colors hover:border-red-600/50 active:opacity-80"
               >
-                Upload Manually
+                Discard recording
               </button>
             </>
           )}
@@ -207,6 +208,26 @@ export default function PlaybackPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard this recording?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This recording will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { setRecordedBlob(null); router.push('/record') }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showLeaveWarning} onOpenChange={setShowLeaveWarning}>
         <AlertDialogContent>

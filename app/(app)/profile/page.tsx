@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getAthleteEntries } from '@/lib/actions/entries'
 import { EntryCard } from '@/components/profile/EntryCard'
+import { SignOutButton } from '@/components/profile/SignOutButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +57,10 @@ export default async function ProfilePage() {
             </Link>
           </div>
         )}
+
+        <div className="mt-12 flex justify-center">
+          <SignOutButton />
+        </div>
       </div>
     </div>
   )

@@ -28,7 +28,7 @@ export default function PlaybackPage() {
     // Detect iOS MIME type mismatch — iOS records H.264 but labels it webm
     const testVideo = document.createElement('video')
     const support = testVideo.canPlayType(mimeType)
-    if (support === '' || support === 'no') {
+    if (support === '') {
       setCanPlayback(false)
     }
 

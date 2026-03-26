@@ -10,7 +10,13 @@ export default async function ProfilePage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  const entries = await getAthleteEntries()
+  let entries: Awaited<ReturnType<typeof getAthleteEntries>> = []
+  let fetchError = false
+  try {
+    entries = await getAthleteEntries()
+  } catch {
+    fetchError = true
+  }
 
   return (
     <div className="min-h-screen bg-forge-black px-4 py-8 pb-24">
@@ -22,6 +28,12 @@ export default async function ProfilePage() {
             {entries.length} submission{entries.length !== 1 ? 's' : ''}
           </p>
         </div>
+
+        {fetchError && (
+          <p className="mb-4 text-center text-sm text-raw-steel">
+            Couldn&apos;t load your submissions. Try refreshing.
+          </p>
+        )}
 
         {/* Entry list */}
         {entries.length > 0 ? (

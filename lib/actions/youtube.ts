@@ -10,7 +10,7 @@ export async function getYouTubeToken(): Promise<{ token: string } | { error: st
     const client = await clerkClient()
     const tokenList = await client.users.getUserOauthAccessToken(userId, 'oauth_google')
 
-    const token = tokenList.data?.[0]?.token ?? tokenList[0]?.token
+    const token = tokenList.data[0]?.token
     if (!token) {
       return { error: 'google_not_connected' }
     }

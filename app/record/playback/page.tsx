@@ -28,6 +28,7 @@ export default function PlaybackPage() {
   const [uploadStarted, setUploadStarted] = useState(false)
   const [showLeaveWarning, setShowLeaveWarning] = useState(false)
   const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+  const [uploadFailed, setUploadFailed] = useState(false)
 
   // Redirect to /record only if there's no blob AND upload hasn't started
   useEffect(() => {
@@ -164,12 +165,14 @@ export default function PlaybackPage() {
               >
                 Done &mdash; Go to Profile
               </a>
-              <button
-                onClick={handleExport}
-                className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
-              >
-                Save video file
-              </button>
+              {mimeType.includes('webm') && (
+                <button
+                  onClick={handleExport}
+                  className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+                >
+                  Save video file
+                </button>
+              )}
             </>
           )}
         </div>
@@ -186,7 +189,19 @@ export default function PlaybackPage() {
               discipline={disciplineDb}
               weightKg={weightKg ?? 0}
               onUploadComplete={(url, id) => setUploadComplete(true)}
+              onUploadError={() => setUploadFailed(true)}
             />
+          </div>
+        )}
+
+        {uploadFailed && !uploadComplete && (
+          <div className="mt-3">
+            <button
+              onClick={() => router.push('/record/instructions')}
+              className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+            >
+              Upload Manually
+            </button>
           </div>
         )}
 

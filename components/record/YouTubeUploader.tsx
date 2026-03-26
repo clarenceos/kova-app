@@ -14,6 +14,7 @@ interface YouTubeUploaderProps {
   discipline: string // underscored format: 'long_cycle'
   weightKg: number
   onUploadComplete: (youtubeUrl: string, youtubeId: string) => void
+  onUploadError?: () => void
 }
 
 type UploadStatus =
@@ -35,6 +36,7 @@ export function YouTubeUploader({
   discipline,
   weightKg,
   onUploadComplete,
+  onUploadError,
 }: YouTubeUploaderProps) {
   const [status, setStatus] = useState<UploadStatus>('idle')
   const [progress, setProgress] = useState(0)
@@ -66,6 +68,7 @@ export function YouTubeUploader({
       }
       setStatus('error')
       setErrorMessage(tokenResult.error)
+      onUploadError?.()
       return
     }
 
@@ -105,6 +108,7 @@ export function YouTubeUploader({
         const text = await initResponse.text()
         setStatus('error')
         setErrorMessage(`Failed to start upload: ${initResponse.status} ${initResponse.statusText}. ${text}`)
+        onUploadError?.()
         return
       }
 
@@ -112,12 +116,14 @@ export function YouTubeUploader({
       if (!location) {
         setStatus('error')
         setErrorMessage('YouTube did not return an upload URI. Please try again.')
+        onUploadError?.()
         return
       }
       uploadUri = location
     } catch (err) {
       setStatus('error')
       setErrorMessage('Network error while starting upload. Check your connection and try again.')
+      onUploadError?.()
       return
     }
 
@@ -161,6 +167,7 @@ export function YouTubeUploader({
     } catch (err) {
       setStatus('error')
       setErrorMessage(err instanceof Error ? err.message : 'Upload failed. Please try again.')
+      onUploadError?.()
       return
     }
 
@@ -181,6 +188,7 @@ export function YouTubeUploader({
     if ('error' in saveResult) {
       setStatus('error')
       setErrorMessage(`Upload succeeded but failed to save entry: ${saveResult.error}`)
+      onUploadError?.()
       return
     }
 

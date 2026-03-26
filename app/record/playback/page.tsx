@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Smartphone } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
 import { GlobalHeader } from '@/components/ui/GlobalHeader'
 import { YouTubeUploader } from '@/components/record/YouTubeUploader'
@@ -14,6 +15,7 @@ export default function PlaybackPage() {
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [uploadComplete, setUploadComplete] = useState(false)
   const [showUploader, setShowUploader] = useState(false)
+  const [canPlayback, setCanPlayback] = useState(true)
 
   useEffect(() => {
     if (!recordedBlob) {
@@ -22,10 +24,18 @@ export default function PlaybackPage() {
     }
     const url = URL.createObjectURL(recordedBlob)
     setBlobUrl(url)
+
+    // Detect iOS MIME type mismatch — iOS records H.264 but labels it webm
+    const testVideo = document.createElement('video')
+    const support = testVideo.canPlayType(mimeType)
+    if (support === '' || support === 'no') {
+      setCanPlayback(false)
+    }
+
     return () => {
       URL.revokeObjectURL(url)
     }
-  }, [recordedBlob, router])
+  }, [recordedBlob, router, mimeType])
 
   function handleExport() {
     if (!recordedBlob || !blobUrl) return
@@ -60,13 +70,23 @@ export default function PlaybackPage() {
         <h1 className="text-2xl font-bold text-parchment">Review Your Recording</h1>
         <p className="mt-1 text-sm text-raw-steel">Serial: {serial}</p>
 
-        {blobUrl && (
+        {blobUrl && canPlayback && (
           <video
             src={blobUrl}
             controls
             playsInline
             className="mt-4 w-full rounded-xl bg-charcoal"
           />
+        )}
+
+        {blobUrl && !canPlayback && (
+          <div className="mt-4 flex flex-col items-center gap-3 rounded-xl bg-charcoal px-6 py-10 text-center">
+            <Smartphone className="h-10 w-10 text-raw-steel" />
+            <p className="text-parchment">Playback not supported on this device</p>
+            <p className="text-sm text-raw-steel">
+              Your video was recorded successfully. Tap Upload to YouTube to save it.
+            </p>
+          </div>
         )}
 
         <div className="mt-6 flex flex-col gap-3">
@@ -77,7 +97,7 @@ export default function PlaybackPage() {
             Render and Export
           </button>
 
-          {!uploadComplete && (
+          {!uploadComplete && !showUploader && (
             <>
               <button
                 onClick={() => setShowUploader(true)}

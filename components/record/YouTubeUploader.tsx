@@ -247,9 +247,9 @@ export function YouTubeUploader({
   if (status === 'google_not_connected') {
     return (
       <div className="rounded-xl border border-raw-steel/20 bg-charcoal p-4 space-y-3">
-        <p className="text-sm text-parchment font-semibold">Google account not connected</p>
+        <p className="text-sm text-parchment font-semibold">Connect your Google account first</p>
         <p className="text-sm text-raw-steel">
-          Connect your Google account to upload directly to YouTube.
+          Link your Google account to enable direct YouTube uploads.
         </p>
         <a
           href="/user-profile"

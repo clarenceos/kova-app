@@ -20,6 +20,12 @@ export default function RecordPage() {
   const [supported, setSupported] = useState<boolean | null>(null)
 
   useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    if (isIOS) {
+      setSupported(false)
+      return
+    }
     const canvas = document.createElement('canvas')
     setSupported(typeof canvas.captureStream === 'function')
   }, [])
@@ -33,7 +39,7 @@ export default function RecordPage() {
         <main className="flex flex-1 flex-col items-center justify-center px-6 pb-20 text-center">
           <h1 className="mb-4 text-2xl font-bold text-parchment">Browser Not Supported</h1>
           <p className="mb-8 text-raw-steel">
-            Kova recorder requires Chrome on Android or a desktop browser. iOS is not supported.
+            Kova recorder requires Chrome on Android or a desktop browser. iOS is not currently supported for recording.
           </p>
           <Link
             href="/dashboard"

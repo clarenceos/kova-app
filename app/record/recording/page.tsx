@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Square } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
-import { saveRecording } from '@/lib/recording-store'
+import { saveRecording, appendChunk, clearChunks } from '@/lib/recording-store'
 import { DISCIPLINE_DURATION_SECONDS } from '@/lib/disciplines'
 import { GlobalHeader } from '@/components/ui/GlobalHeader'
 import {
@@ -406,7 +406,7 @@ export default function RecordingPage() {
   // ── Start MediaRecorder at 5s remaining ──
   useEffect(() => {
     if (pageState !== 'countdown' || countdownDisplay !== 5) return
-    mediaRecorderRef.current?.start()
+    mediaRecorderRef.current?.start(10_000)
     acquireWakeLock()
   }, [countdownDisplay, pageState])
 
@@ -521,8 +521,11 @@ export default function RecordingPage() {
     const recorder = new MediaRecorder(canvasStream, { mimeType })
     chunksRef.current = []
 
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data)
+    recorder.ondataavailable = async (e) => {
+      if (e.data.size > 0) {
+        chunksRef.current.push(e.data)
+        await appendChunk(e.data)
+      }
     }
 
     recorder.onstop = async () => {
@@ -534,11 +537,13 @@ export default function RecordingPage() {
         if (rawBlob.size < 10_000) {
           alert('Recording failed — no video data captured. Please try again.')
           setPageState('setup')
+          await clearChunks()
           return
         }
 
-        // 3. Save to IndexedDB FIRST — before anything else can fail
+        // 3. Chunks already written incrementally — save final assembled blob too
         await saveRecording(rawBlob, mimeType, serial)
+        await clearChunks()
 
         // 4. Update React context
         setRecordedBlob(rawBlob)

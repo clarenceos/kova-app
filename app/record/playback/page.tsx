@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { YouTubeUploader } from '@/components/record/YouTubeUploader'
 import { buildYouTubeDescription } from '@/lib/youtube-description'
-import { restoreRecording, clearRecording } from '@/lib/recording-store'
+import { restoreRecording, clearRecording, assembleChunks, clearChunks } from '@/lib/recording-store'
 
 export default function PlaybackPage() {
   const router = useRouter()
@@ -67,22 +67,33 @@ export default function PlaybackPage() {
     let cancelled = false
     setRecovering(true)
 
-    restoreRecording().then(restored => {
+    restoreRecording().then(async (restored) => {
       if (cancelled) return
       if (restored) {
         setRecordedBlob(restored.blob)
         setMimeType(restored.mimeType)
         setRecovering(false)
-      } else {
-        // Not in IndexedDB either -- wait 1s for slow context propagation
-        setTimeout(() => {
-          if (cancelled) return
-          setRecovering(false)
-          if (!recordedBlobRef.current && !uploadStartedRef.current) {
-            router.replace('/record')
-          }
-        }, 1000)
+        return
       }
+
+      // Secondary fallback: try assembling incremental chunks
+      const assembled = await assembleChunks(mimeType)
+      if (cancelled) return
+      if (assembled && assembled.size >= 10_000) {
+        setRecordedBlob(assembled)
+        await clearChunks()
+        setRecovering(false)
+        return
+      }
+
+      // Not in IndexedDB either -- wait 1s for slow context propagation
+      setTimeout(() => {
+        if (cancelled) return
+        setRecovering(false)
+        if (!recordedBlobRef.current && !uploadStartedRef.current) {
+          router.replace('/record')
+        }
+      }, 1000)
     })
 
     return () => { cancelled = true }
@@ -227,7 +238,7 @@ export default function PlaybackPage() {
               athleteName={athleteName}
               discipline={disciplineDb}
               weightKg={weightKg ?? 0}
-              onUploadComplete={(url, id) => { setUploadComplete(true); void clearRecording() }}
+              onUploadComplete={(url, id) => { setUploadComplete(true); void clearRecording(); void clearChunks() }}
               onUploadError={() => setUploadFailed(true)}
             />
           </div>
@@ -274,7 +285,7 @@ export default function PlaybackPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { void clearRecording(); setRecordedBlob(null); router.push('/record') }}
+              onClick={() => { void clearRecording(); void clearChunks(); setRecordedBlob(null); router.push('/record') }}
               className="bg-red-600 text-white hover:bg-red-700"
             >
               Discard

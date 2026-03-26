@@ -85,6 +85,59 @@ export async function restoreRecording(): Promise<{
   }
 }
 
+export async function appendChunk(chunk: Blob): Promise<void> {
+  try {
+    const db = await openDB()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      const store = tx.objectStore(STORE_NAME)
+      const getReq = store.get('chunks')
+      getReq.onsuccess = () => {
+        const existing: Blob[] = getReq.result ?? []
+        const putReq = store.put([...existing, chunk], 'chunks')
+        putReq.onsuccess = () => resolve()
+        putReq.onerror = () => reject(putReq.error)
+      }
+      getReq.onerror = () => reject(getReq.error)
+    })
+    db.close()
+  } catch {
+    // Never crash the recording
+  }
+}
+
+export async function assembleChunks(mimeType: string): Promise<Blob | null> {
+  try {
+    const db = await openDB()
+    return await new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly')
+      const req = tx.objectStore(STORE_NAME).get('chunks')
+      req.onsuccess = () => {
+        const chunks: Blob[] | undefined = req.result
+        if (!chunks || chunks.length === 0) { resolve(null); return }
+        resolve(new Blob(chunks, { type: mimeType }))
+      }
+      req.onerror = () => resolve(null)
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function clearChunks(): Promise<void> {
+  try {
+    const db = await openDB()
+    await new Promise<void>((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite')
+      tx.objectStore(STORE_NAME).delete('chunks')
+      tx.oncomplete = () => resolve()
+    })
+    db.close()
+  } catch {
+    // Never crash
+  }
+}
+
 export async function clearRecording(): Promise<void> {
   try {
     const db = await openDB()

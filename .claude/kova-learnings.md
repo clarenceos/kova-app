@@ -66,6 +66,14 @@ At the end of significant sessions, update it.
 
 ---
 
+### 2026-03-26 — Recorder + Playback UX Polish
+**What happened:** 9 fixes across recording/page.tsx and playback/page.tsx. Front camera is now the default. Rear camera no longer mirrored. Beeps now captured in the recorded video by routing AudioContext through a MediaStreamDestinationNode mixed into the canvas stream before passing to MediaRecorder. Numpad inputs via inputMode="decimal"/"numeric". Countdown minimum 5s enforced with inline error. iOS always hides the video player (UA detection before canPlayType). Back button on playback shows a leave-warning dialog instead of silently discarding the recording. Upload flow restructured — single tap starts upload, buttons hidden during upload, export offered only after completion.
+**What worked:** `MediaStreamDestinationNode` pattern for capturing audio into video — create in startSession (user gesture), connect gainNode to both `ctx.destination` (speakers) and `audioDestRef.current`, then `new MediaStream([...canvasStream.getVideoTracks(), ...audioDestRef.current.stream.getAudioTracks()])` for MediaRecorder. iOS detection: `/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)`. YouTubeUploader auto-starts on mount via useEffect — no second tap needed.
+**What didn't work:** N/A — clean first execution.
+**Rule going forward:** Always route AudioContext through MediaStreamDestinationNode so beeps land in the recorded file, not just speakers. Always detect iOS before canPlayType — iOS with MP4 mimeType would pass canPlayType but still show a broken player. Never show "Render and Export" before upload — it encourages the wrong flow and risks losing the recording.
+
+---
+
 ### 2026-03-26 — Judge Session UI Overhaul + Complete Page Rep Log
 **What happened:** Redesigned judge session for portrait mobile — removed header, fixed 60vh video height, moved rep count to overlay on right side of video, made 3-button compact row (NO REP | UNDO | REP half-width), submit only visible when paused/ended. Fixed REP button being active before video plays by adding `onStateChange` to YouTubeEmbed, tracking `isPlaying` state, gating buttons with `canJudge = playerReady && isPlaying`. Redesigned complete page with full rep log (timestamps + type icons), rep count hero, and Judge Again / Finalize buttons. Required adding `RepEntry[]` to `LastSubmission` type in `judge-context.tsx`.
 **What worked:** `h-[60vh]` on video container instead of `aspect-[9/16]` — gives predictable height on all phones. YouTube IFrame API `onStateChange` state `1` = playing, used to gate judge buttons. Passing full `repTaps` array through context to the complete page for display.

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getYouTubeToken } from '@/lib/actions/youtube'
 import { createEntry } from '@/lib/actions/entries'
 
@@ -40,6 +40,16 @@ export function YouTubeUploader({
   const [progress, setProgress] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null)
+  const uploadStartedRef = useRef(false)
+
+  // Auto-start upload on mount — no second tap required
+  useEffect(() => {
+    if (!uploadStartedRef.current) {
+      uploadStartedRef.current = true
+      handleUpload()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleUpload() {
     setStatus('authenticating')
@@ -182,10 +192,10 @@ export function YouTubeUploader({
   if (status === 'idle') {
     return (
       <button
-        onClick={handleUpload}
-        className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
+        disabled
+        className="w-full cursor-not-allowed rounded-xl bg-patina-bronze/60 px-6 py-3 font-semibold text-parchment"
       >
-        Upload to YouTube
+        Connecting to YouTube...
       </button>
     )
   }

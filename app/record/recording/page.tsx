@@ -82,14 +82,13 @@ function buildCameraList(devices: MediaDeviceInfo[]): CameraDevice[] {
 
     const result: CameraDevice[] = []
     if (rear[0]) result.push({ deviceId: rear[0].deviceId, label: 'Back Camera (1x)' })
-    if (rear[1]) result.push({ deviceId: rear[1].deviceId, label: 'Back Camera (0.5x)' })
     result.push(...front)
     return result
   }
 
   // No labels — positional fallback, max 3
-  const fallbackLabels = ['Front Camera', 'Back Camera (1x)', 'Back Camera (0.5x)']
-  return videoInputs.slice(0, 3).map((d, i) => ({
+  const fallbackLabels = ['Front Camera', 'Back Camera (1x)']
+  return videoInputs.slice(0, 2).map((d, i) => ({
     deviceId: d.deviceId,
     label: fallbackLabels[i],
   }))
@@ -121,6 +120,7 @@ export default function RecordingPage() {
   const [countdown, setCountdown] = useState<number>(10)
   const [beep, setBeep] = useState<boolean>(false)
   const [autoStopEnabled, setAutoStopEnabled] = useState<boolean>(false)
+  const [countdownError, setCountdownError] = useState<string>('')
 
   // ── Countdown display ──
   const [countdownDisplay, setCountdownDisplay] = useState<number>(10)
@@ -158,7 +158,11 @@ export default function RecordingPage() {
 
   // ── AudioContext ──
   const audioCtxRef = useRef<AudioContext | null>(null)
+  const audioDestRef = useRef<MediaStreamAudioDestinationNode | null>(null)
   const lastBeepMinuteRef = useRef<number>(-1)
+
+  // ── Camera orientation ──
+  const isFrontCameraRef = useRef<boolean>(true)
 
   // Redirect if no discipline selected
   useEffect(() => {
@@ -178,9 +182,9 @@ export default function RecordingPage() {
         const cameraList = buildCameraList(devices)
         setCameras(cameraList)
 
-        // Default to Back Camera (1x); fall back to first
-        const backCamera = cameraList.find(c => c.label === 'Back Camera (1x)')
-        setSelectedCamera(backCamera?.deviceId ?? cameraList[0]?.deviceId ?? '')
+        // Default to Front Camera; fall back to first
+        const frontCamera = cameraList.find(c => c.label === 'Front Camera')
+        setSelectedCamera(frontCamera?.deviceId ?? cameraList[0]?.deviceId ?? '')
       } catch (e) {
         console.error('Camera enumerate failed', e)
       }
@@ -226,6 +230,7 @@ export default function RecordingPage() {
     const gainNode = ctx.createGain()
     oscillator.connect(gainNode)
     gainNode.connect(ctx.destination)
+    if (audioDestRef.current) gainNode.connect(audioDestRef.current)
 
     oscillator.frequency.value = 880
     oscillator.type = 'sine'
@@ -252,13 +257,17 @@ export default function RecordingPage() {
     const canvasW = canvas.width
     const canvasH = canvas.height
 
-    // Layer 1: center-crop camera feed, mirrored horizontally for selfie view
+    // Layer 1: center-crop camera feed, mirrored only for front camera
     const cropX = (video.videoWidth - canvasW) / 2
-    ctx.save()
-    ctx.scale(-1, 1)
-    ctx.translate(-canvasW, 0)
-    ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
-    ctx.restore()
+    if (isFrontCameraRef.current) {
+      ctx.save()
+      ctx.scale(-1, 1)
+      ctx.translate(-canvasW, 0)
+      ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+      ctx.restore()
+    } else {
+      ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+    }
 
     // Layer 2: top gradient — drawn behind discipline label + timer
     const topGrad = ctx.createLinearGradient(0, 0, 0, 120)
@@ -421,6 +430,7 @@ export default function RecordingPage() {
     beepEnabled: boolean,
     autoStopOn: boolean,
     deviceId: string,
+    isFront: boolean,
   ) => {
     setWeightKg(weightNum)
     setCountdownSeconds(countdownSecs)
@@ -430,12 +440,17 @@ export default function RecordingPage() {
     recordWeightRef.current = weightNum
     recordBeepRef.current = beepEnabled
     recordAutoStopRef.current = autoStopOn
+    isFrontCameraRef.current = isFront
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { deviceId: { exact: deviceId } },
       audio: false,
     })
     streamRef.current = stream
+
+    // Create AudioContext + destination for recording beeps into the video
+    audioCtxRef.current = new AudioContext()
+    audioDestRef.current = audioCtxRef.current.createMediaStreamDestination()
 
     const video = videoRef.current!
     video.srcObject = stream
@@ -458,13 +473,19 @@ export default function RecordingPage() {
 
     const canvasStream = canvas.captureStream(30)
 
+    // Mix canvas video tracks with audio destination tracks so beeps are recorded
+    const combinedStream = new MediaStream([
+      ...canvasStream.getVideoTracks(),
+      ...audioDestRef.current!.stream.getAudioTracks(),
+    ])
+
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
       : MediaRecorder.isTypeSupported('video/webm')
         ? 'video/webm'
         : 'video/mp4'
 
-    const recorder = new MediaRecorder(canvasStream, { mimeType })
+    const recorder = new MediaRecorder(combinedStream, { mimeType })
     chunksRef.current = []
 
     recorder.ondataavailable = (e) => {
@@ -503,13 +524,17 @@ export default function RecordingPage() {
       const canvasW = canvas.width
       const canvasH = canvas.height
 
-      // Mirror camera feed — same pattern as drawFrame Layer 1
+      // Mirror camera feed only for front camera — same pattern as drawFrame Layer 1
       const cropX = (video.videoWidth - canvasW) / 2
-      ctx.save()
-      ctx.scale(-1, 1)
-      ctx.translate(-canvasW, 0)
-      ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
-      ctx.restore()
+      if (isFrontCameraRef.current) {
+        ctx.save()
+        ctx.scale(-1, 1)
+        ctx.translate(-canvasW, 0)
+        ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+        ctx.restore()
+      } else {
+        ctx.drawImage(video, cropX, 0, canvasW, canvasH, 0, 0, canvasW, canvasH)
+      }
 
       // Countdown number overlay
       const num = countdownDisplayRef.current
@@ -581,7 +606,12 @@ export default function RecordingPage() {
   async function handleStart() {
     const weightNum = parseFloat(weight)
     if (isNaN(weightNum) || weightNum < 4 || weightNum > 100) return
-    await startSession(weightNum, countdown, beep, autoStopEnabled, selectedCamera)
+    if (countdown < 5) {
+      setCountdownError('Minimum countdown is 5 seconds')
+      return
+    }
+    const isFront = cameras.find(c => c.deviceId === selectedCamera)?.label === 'Front Camera'
+    await startSession(weightNum, countdown, beep, autoStopEnabled, selectedCamera, isFront)
   }
 
   // ── Handle stop button tap — show duration-aware confirmation ──
@@ -637,6 +667,7 @@ export default function RecordingPage() {
                   </label>
                   <input
                     type="number"
+                    inputMode="decimal"
                     min="4"
                     max="100"
                     step="0.5"
@@ -655,12 +686,24 @@ export default function RecordingPage() {
                   </label>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="5"
                     max="60"
                     value={countdown}
-                    onChange={e => setCountdown(Number(e.target.value))}
+                    onChange={e => {
+                      const val = Number(e.target.value)
+                      setCountdown(val)
+                      if (val < 5) {
+                        setCountdownError('Minimum countdown is 5 seconds')
+                      } else {
+                        setCountdownError('')
+                      }
+                    }}
                     className={inputClass}
                   />
+                  {countdownError && (
+                    <p className="mt-1 text-xs text-red-500">{countdownError}</p>
+                  )}
                 </div>
 
                 {/* Beep every minute */}

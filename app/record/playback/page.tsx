@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Smartphone } from 'lucide-react'
+import { Smartphone, ArrowLeft } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
-import { GlobalHeader } from '@/components/ui/GlobalHeader'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { YouTubeUploader } from '@/components/record/YouTubeUploader'
 import { buildYouTubeDescription } from '@/lib/youtube-description'
 
@@ -17,6 +26,7 @@ export default function PlaybackPage() {
   const [showUploader, setShowUploader] = useState(false)
   const [canPlayback, setCanPlayback] = useState(true)
   const [uploadStarted, setUploadStarted] = useState(false)
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false)
 
   // Redirect to /record only if there's no blob AND upload hasn't started
   useEffect(() => {
@@ -29,7 +39,15 @@ export default function PlaybackPage() {
     const url = URL.createObjectURL(recordedBlob)
     setBlobUrl(url)
 
-    // Detect iOS MIME type mismatch — iOS records H.264 but labels it webm
+    // iOS: always skip playback — canvas-recorded blobs are unreliable on iOS Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    if (isIOS) {
+      setCanPlayback(false)
+      return () => { URL.revokeObjectURL(url) }
+    }
+
+    // Detect MIME type mismatch on other platforms
     const testVideo = document.createElement('video')
     const support = testVideo.canPlayType(mimeType)
     if (support === '') {
@@ -80,7 +98,22 @@ export default function PlaybackPage() {
 
   return (
     <div className="min-h-screen bg-forge-black">
-      <GlobalHeader />
+      <div className="flex h-14 items-center border-b border-raw-steel/20 px-4">
+        <button
+          type="button"
+          onClick={() => {
+            if (uploadComplete) {
+              router.push('/record')
+            } else {
+              setShowLeaveWarning(true)
+            }
+          }}
+          className="flex items-center gap-1 text-sm text-raw-steel hover:text-parchment transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+      </div>
       <div className="mx-auto max-w-lg px-4 py-8">
         <h1 className="text-2xl font-bold text-parchment">Review Your Recording</h1>
         <p className="mt-1 text-sm text-raw-steel">Serial: {serial}</p>
@@ -105,14 +138,7 @@ export default function PlaybackPage() {
         )}
 
         <div className="mt-6 flex flex-col gap-3">
-          <button
-            onClick={handleExport}
-            className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
-          >
-            Render and Export
-          </button>
-
-          {!uploadComplete && !showUploader && (
+          {!showUploader && !uploadComplete && (
             <>
               <button
                 onClick={() => { setShowUploader(true); setUploadStarted(true) }}
@@ -120,7 +146,6 @@ export default function PlaybackPage() {
               >
                 Upload to YouTube
               </button>
-
               <button
                 onClick={() => router.push('/record/instructions')}
                 className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
@@ -138,12 +163,12 @@ export default function PlaybackPage() {
               >
                 Done &mdash; Go to Profile
               </a>
-              <a
-                href="/dashboard"
-                className="block w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 text-center font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
+              <button
+                onClick={handleExport}
+                className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
               >
-                Done &mdash; Go to Dashboard
-              </a>
+                Save video file
+              </button>
             </>
           )}
         </div>
@@ -182,6 +207,26 @@ export default function PlaybackPage() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={showLeaveWarning} onOpenChange={setShowLeaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave this page?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your recording will be lost if you go back now.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => router.push('/record')}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Leave anyway
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

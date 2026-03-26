@@ -42,7 +42,9 @@ Work cadence: 1–2 hours/day focused sessions.
 - [x] Serial number format: XXX-0000
 - [x] Canvas recorder — MediaRecorder + canvas compositing, authenticated overlay (name, discipline, weight, serial, timer)
 - [x] Recorder UI — countdown, beep sounds, stop confirmation, duration-aware
+- [x] Recorder UX polish — front camera default, rear camera no-mirror, beeps captured in video, numpad inputs, countdown minimum 5s warning
 - [x] Playback page — review recording, export to file, upload to YouTube
+- [x] Playback UX polish — iOS player hidden, back navigation guard, single-tap upload flow (no double-tap), export only shown post-upload
 - [x] YouTube upload — resumable upload via Google OAuth, progress bar
 - [x] createEntry — saves submission to DB after YouTube upload
 - [x] Athlete profile — lists submissions, mini video player per entry

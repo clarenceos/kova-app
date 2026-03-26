@@ -8,15 +8,16 @@ export async function getYouTubeToken(): Promise<{ token: string } | { error: st
 
   try {
     const client = await clerkClient()
-    const tokens = await client.users.getUserOauthAccessToken(userId, 'oauth_google')
+    const tokenList = await client.users.getUserOauthAccessToken(userId, 'oauth_google')
 
-    if (!tokens.data || tokens.data.length === 0) {
+    const token = tokenList.data?.[0]?.token ?? tokenList[0]?.token
+    if (!token) {
       return { error: 'google_not_connected' }
     }
 
-    return { token: tokens.data[0].token }
-  } catch (err) {
-    console.error('[getYouTubeToken] Failed:', err)
+    return { token }
+  } catch (error) {
+    console.error('[getYouTubeToken] Full error:', JSON.stringify(error, null, 2))
     return { error: 'Failed to retrieve Google token' }
   }
 }

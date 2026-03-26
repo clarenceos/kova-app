@@ -36,40 +36,22 @@ export function RepCounter({ reps, playerReady, isPlaying, onRep, onNoRep, onUnd
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Rep count */}
-      <div className="py-2 text-center">
+      {/* Rep count — desktop only (mobile shows on video overlay) */}
+      <div className="hidden py-2 text-center md:block">
         <span className="text-7xl font-bold tabular-nums leading-none text-parchment">
           {repCount}
         </span>
         <p className="mt-1 text-sm uppercase tracking-widest text-raw-steel">reps</p>
       </div>
 
-      {/* REP — primary action */}
-      <button
-        type="button"
-        onClick={handleRep}
-        disabled={!canJudge}
-        className={cn(
-          'w-full min-h-[72px] rounded-2xl text-2xl font-bold text-parchment select-none touch-manipulation transition-all',
-          !canJudge
-            ? 'bg-patina-bronze opacity-40 cursor-not-allowed'
-            : pulsing
-              ? 'bg-bright-bronze scale-[0.99]'
-              : 'bg-patina-bronze hover:bg-bright-bronze active:scale-[0.98]'
-        )}
-        aria-label="Count rep"
-      >
-        REP
-      </button>
-
-      {/* NO REP + UNDO */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Buttons: [NO REP][UNDO][    REP    ] */}
+      <div className="grid grid-cols-[1fr_1fr_2fr] gap-2">
         <button
           type="button"
           onClick={onNoRep}
           disabled={!canJudge}
           className={cn(
-            'min-h-[48px] rounded-xl border text-sm font-semibold transition-colors touch-manipulation select-none',
+            'min-h-[56px] rounded-xl border text-sm font-semibold transition-colors touch-manipulation select-none',
             !canJudge
               ? 'border-raw-steel/30 text-raw-steel opacity-40 cursor-not-allowed'
               : 'border-raw-steel/50 text-raw-steel hover:border-raw-steel hover:text-parchment active:bg-raw-steel/10'
@@ -82,11 +64,27 @@ export function RepCounter({ reps, playerReady, isPlaying, onRep, onNoRep, onUnd
           type="button"
           onClick={onUndo}
           disabled={reps.length === 0}
-          className="flex min-h-[48px] items-center justify-center gap-1.5 rounded-xl border border-raw-steel/20 text-sm font-medium text-raw-steel/60 transition-colors hover:border-raw-steel/50 hover:text-raw-steel active:bg-raw-steel/5 touch-manipulation select-none disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex min-h-[56px] items-center justify-center gap-1.5 rounded-xl border border-raw-steel/20 text-sm font-medium text-raw-steel/60 transition-colors hover:border-raw-steel/50 hover:text-raw-steel active:bg-raw-steel/5 touch-manipulation select-none disabled:cursor-not-allowed disabled:opacity-30"
           aria-label="Undo last entry"
         >
           <RotateCcw className="h-3.5 w-3.5" />
           UNDO
+        </button>
+        <button
+          type="button"
+          onClick={handleRep}
+          disabled={!canJudge}
+          className={cn(
+            'min-h-[56px] rounded-2xl text-2xl font-bold text-parchment select-none touch-manipulation transition-all',
+            !canJudge
+              ? 'bg-patina-bronze opacity-40 cursor-not-allowed'
+              : pulsing
+                ? 'bg-bright-bronze scale-[0.99]'
+                : 'bg-patina-bronze hover:bg-bright-bronze active:scale-[0.98]'
+          )}
+          aria-label="Count rep"
+        >
+          REP
         </button>
       </div>
 

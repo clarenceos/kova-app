@@ -138,7 +138,7 @@ export default function JudgeSessionPage() {
       </div>
 
       {/* VIDEO — portrait: fixed height, landscape/desktop: left column */}
-      <div className="relative h-[42vh] w-full shrink-0 md:h-full md:w-[45%] md:border-r md:border-raw-steel/20">
+      <div className="relative h-[60vh] w-full shrink-0 md:h-full md:w-[45%] md:border-r md:border-raw-steel/20">
         <YouTubeEmbed
           videoId={session.videoId}
           onPlayerReady={player => {
@@ -147,31 +147,42 @@ export default function JudgeSessionPage() {
           }}
           onPlayingChange={setIsPlaying}
         />
-        {/* Exit button — floats over video top-right */}
+
+        {/* Exit button — floats over video top-right, mobile only */}
         <div className="absolute right-3 top-3 z-10 md:hidden">
           {exitDialog}
         </div>
 
-        {/* Rep log overlay — bottom-right of video, mobile only, last 5 most-recent-on-top */}
-        {reps.length > 0 && (
-          <div className="absolute bottom-3 right-3 z-10 flex flex-col gap-1 md:hidden">
-            {[...reps].slice(-5).reverse().map((rep, i) => {
-              const seqNum = reps.length - i
-              const isRep = rep.type === 'rep'
-              return (
-                <div
-                  key={reps.length - i}
-                  className="flex items-center gap-1.5 rounded-md bg-forge-black/60 px-2 py-0.5 backdrop-blur-sm"
-                >
-                  <span className={isRep ? 'text-[10px] font-bold text-patina-bronze' : 'text-[10px] font-bold text-raw-steel'}>
-                    {isRep ? '✓' : '✗'}
-                  </span>
-                  <span className="font-mono text-[10px] text-parchment/80">
-                    #{seqNum} {fmtTime(rep.time)}
-                  </span>
-                </div>
-              )
-            })}
+        {/* Rep count + log overlay — right side of video, mobile only */}
+        {playerReady && (
+          <div className="absolute right-3 top-[30%] z-10 flex flex-col items-end gap-1 md:hidden">
+            {/* Rep count */}
+            <div className="rounded-lg bg-forge-black/60 px-2.5 py-1 text-right backdrop-blur-sm">
+              <p className="text-3xl font-bold leading-none text-parchment">{repCount}</p>
+              <p className="text-[9px] uppercase tracking-wider text-parchment/50">reps</p>
+            </div>
+            {/* Timestamp pills */}
+            {reps.length > 0 && (
+              <div className="flex flex-col gap-0.5">
+                {[...reps].slice(-5).reverse().map((rep, i) => {
+                  const seqNum = reps.length - i
+                  const isRep = rep.type === 'rep'
+                  return (
+                    <div
+                      key={reps.length - i}
+                      className="flex items-center gap-1.5 rounded-md bg-forge-black/60 px-2 py-0.5 backdrop-blur-sm"
+                    >
+                      <span className={isRep ? 'text-[10px] font-bold text-patina-bronze' : 'text-[10px] font-bold text-raw-steel'}>
+                        {isRep ? '✓' : '✗'}
+                      </span>
+                      <span className="font-mono text-[10px] text-parchment/80">
+                        #{seqNum} {fmtTime(rep.time)}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -189,11 +200,6 @@ export default function JudgeSessionPage() {
           {exitDialog}
         </div>
 
-        {/* Not playing hint — mobile only */}
-        {!isPlaying && playerReady && (
-          <p className="text-center text-xs text-raw-steel md:hidden">Press play to enable judging</p>
-        )}
-
         <RepCounter
           reps={reps}
           playerReady={playerReady}
@@ -203,7 +209,11 @@ export default function JudgeSessionPage() {
           onUndo={handleUndo}
         />
 
-        {submitButton}
+        {/* Submit — only when paused or ended, mobile. Always visible on desktop. */}
+        <div className="md:hidden">
+          {!isPlaying && playerReady && submitButton}
+        </div>
+        <div className="hidden md:block">{submitButton}</div>
       </div>
     </div>
   )

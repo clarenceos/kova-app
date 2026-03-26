@@ -12,7 +12,13 @@ Authenticated video: every submission carries a verified timer, athlete name, di
 
 ### Validated
 
-(None yet — ship to validate)
+**Complete Athlete Loop** (Validated in Phase 05)
+- [x] DB schema supports athlete entries with youtube_id, status, athlete_id, rep_taps
+- [x] Athlete can upload video directly to YouTube from playback page (resumable upload with progress)
+- [x] Judge enters serial number only — session auto-populated from DB lookup
+- [x] Judge submits rep taps array with score (UPDATE-first pattern)
+- [x] Athlete profile page shows submission history with status badges
+- [x] Entry detail page with YouTube embed and ghost replay of judge rep taps
 
 ### Active
 
@@ -97,4 +103,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 after initialization*
+*Last updated: 2026-03-26 after Phase 05 completion*

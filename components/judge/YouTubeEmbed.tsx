@@ -18,9 +18,10 @@ interface YouTubeEmbedProps {
   videoId: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onPlayerReady: (player: any) => void
+  onPlayingChange?: (isPlaying: boolean) => void
 }
 
-export function YouTubeEmbed({ videoId, onPlayerReady }: YouTubeEmbedProps) {
+export function YouTubeEmbed({ videoId, onPlayerReady, onPlayingChange }: YouTubeEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null)
@@ -39,6 +40,12 @@ export function YouTubeEmbed({ videoId, onPlayerReady }: YouTubeEmbedProps) {
         events: {
           onReady: () => {
             if (mountedRef.current) onPlayerReady(playerRef.current)
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onStateChange: (event: any) => {
+            if (mountedRef.current && onPlayingChange) {
+              onPlayingChange(event.data === 1) // 1 = YT.PlayerState.PLAYING
+            }
           },
         },
       })
@@ -72,7 +79,7 @@ export function YouTubeEmbed({ videoId, onPlayerReady }: YouTubeEmbedProps) {
   }, [])
 
   return (
-    <div className="aspect-[9/16] w-full max-w-sm mx-auto bg-charcoal overflow-hidden md:max-w-none md:h-[80vh] md:w-auto">
+    <div className="w-full h-full bg-charcoal overflow-hidden">
       <div ref={containerRef} className="w-full h-full" style={{ width: '100%', height: '100%' }} />
     </div>
   )

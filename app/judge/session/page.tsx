@@ -19,53 +19,12 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog'
 
-function SessionHeader({
-  disciplineLabel,
-  athleteName,
-  weightKg,
-  serial,
-  onExit,
-}: {
-  disciplineLabel: string
-  athleteName: string
-  weightKg: number
-  serial: string
-  onExit: () => void
-}) {
-  return (
-    <>
-      <div>
-        <p className="text-xs tracking-wide text-raw-steel">{disciplineLabel}</p>
-        <h1 className="text-base font-semibold leading-tight text-parchment">{athleteName}</h1>
-        <p className="mt-0.5 font-mono text-[11px] text-raw-steel/60">
-          {weightKg} kg · {serial}
-        </p>
-      </div>
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-raw-steel transition-colors hover:text-parchment active:bg-raw-steel/10"
-            aria-label="Exit session"
-          >
-            <LogOut className="h-4 w-4" />
-            Exit
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Exit Session?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your rep count will be lost. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onExit}>Exit</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  )
+
+function fmtTime(t: number | null): string {
+  if (t === null) return '--:--'
+  const m = Math.floor(t / 60)
+  const s = Math.floor(t % 60)
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 export default function JudgeSessionPage() {
@@ -74,6 +33,7 @@ export default function JudgeSessionPage() {
   const [reps, setReps] = useState<Rep[]>([])
   const playerRef = useRef<unknown>(null)
   const [playerReady, setPlayerReady] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -125,76 +85,125 @@ export default function JudgeSessionPage() {
     })
   }
 
-  return (
-    <div className="relative flex min-h-screen flex-col bg-forge-black md:h-screen md:flex-row md:overflow-hidden">
+  const exitDialog = (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <button
+          className="flex items-center gap-1.5 rounded-lg bg-forge-black/60 px-2.5 py-1.5 text-xs font-medium text-raw-steel backdrop-blur-sm transition-colors hover:text-parchment active:bg-raw-steel/10"
+          aria-label="Exit session"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Exit
+        </button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Exit Session?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Your rep count will be lost. This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={() => router.push('/dashboard')}>Exit</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
 
-      {/* MODE 2: Phone landscape blocking overlay */}
+  const submitButton = (
+    <div>
+      {submitError && (
+        <p className="mb-3 text-center text-sm text-raw-steel">{submitError}</p>
+      )}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={repCount === 0 || isPending}
+        className="w-full rounded-2xl bg-patina-bronze py-3 font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
+      >
+        {isPending ? 'Submitting…' : `Submit Score — ${repCount} rep${repCount === 1 ? '' : 's'}`}
+      </button>
+    </div>
+  )
+
+  return (
+    <div className="h-screen overflow-hidden bg-forge-black flex flex-col md:flex-row">
+
+      {/* Phone landscape blocking overlay */}
       <div className="fixed inset-0 z-50 hidden flex-col items-center justify-center gap-4 bg-forge-black landscape:max-md:flex">
         <RotateCcw className="h-16 w-16 text-raw-steel" />
         <p className="font-semibold text-parchment">Rotate your device</p>
         <p className="text-sm text-raw-steel">Portrait mode only on mobile</p>
       </div>
 
-      {/* Left column — video */}
-      <div className="relative shrink-0 px-2 md:flex md:h-full md:w-[45%] md:flex-col md:items-center md:justify-center md:border-r md:border-raw-steel/20 md:px-6 md:py-6">
-        {/* Portrait header — hidden on tablet/desktop */}
-        <div className="flex items-start justify-between px-2 pb-2 pt-3 md:hidden">
-          <SessionHeader
-            disciplineLabel={session.disciplineLabel}
-            athleteName={session.athleteName}
-            weightKg={session.weightKg}
-            serial={session.serial}
-            onExit={() => router.push('/dashboard')}
-          />
-        </div>
-
+      {/* VIDEO — portrait: fixed height, landscape/desktop: left column */}
+      <div className="relative h-[42vh] w-full shrink-0 md:h-full md:w-[45%] md:border-r md:border-raw-steel/20">
         <YouTubeEmbed
           videoId={session.videoId}
           onPlayerReady={player => {
             playerRef.current = player
             setPlayerReady(true)
           }}
+          onPlayingChange={setIsPlaying}
         />
+        {/* Exit button — floats over video top-right */}
+        <div className="absolute right-3 top-3 z-10 md:hidden">
+          {exitDialog}
+        </div>
 
-        {/* Gradient bridge into action deck — portrait only */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-8 bg-gradient-to-t from-forge-black to-transparent md:hidden" />
+        {/* Rep log overlay — bottom-right of video, mobile only, last 5 most-recent-on-top */}
+        {reps.length > 0 && (
+          <div className="absolute bottom-3 right-3 z-10 flex flex-col gap-1 md:hidden">
+            {[...reps].slice(-5).reverse().map((rep, i) => {
+              const seqNum = reps.length - i
+              const isRep = rep.type === 'rep'
+              return (
+                <div
+                  key={reps.length - i}
+                  className="flex items-center gap-1.5 rounded-md bg-forge-black/60 px-2 py-0.5 backdrop-blur-sm"
+                >
+                  <span className={isRep ? 'text-[10px] font-bold text-patina-bronze' : 'text-[10px] font-bold text-raw-steel'}>
+                    {isRep ? '✓' : '✗'}
+                  </span>
+                  <span className="font-mono text-[10px] text-parchment/80">
+                    #{seqNum} {fmtTime(rep.time)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Right column — action deck */}
-      <div className="flex-1 overflow-y-auto px-4 pb-8 pt-2 md:h-full md:w-[55%] md:px-6 md:pb-8 md:pt-4">
-        {/* Landscape header — hidden on mobile */}
-        <div className="hidden items-start justify-between pb-2 pt-3 md:flex">
-          <SessionHeader
-            disciplineLabel={session.disciplineLabel}
-            athleteName={session.athleteName}
-            weightKg={session.weightKg}
-            serial={session.serial}
-            onExit={() => router.push('/dashboard')}
-          />
+      {/* CONTROLS — portrait: flex-1 below video, desktop: right column */}
+      <div className="flex flex-1 flex-col gap-3 overflow-hidden px-4 pb-4 pt-3 md:h-full md:w-[55%] md:overflow-y-auto md:px-6 md:pb-8 md:pt-4">
+
+        {/* Desktop header with exit — hidden on mobile */}
+        <div className="hidden items-center justify-between md:flex">
+          <div>
+            <p className="text-xs tracking-wide text-raw-steel">{session.disciplineLabel}</p>
+            <h1 className="text-base font-semibold text-parchment">{session.athleteName}</h1>
+            <p className="font-mono text-[11px] text-raw-steel/60">{session.weightKg} kg · {session.serial}</p>
+          </div>
+          {exitDialog}
         </div>
+
+        {/* Not playing hint — mobile only */}
+        {!isPlaying && playerReady && (
+          <p className="text-center text-xs text-raw-steel md:hidden">Press play to enable judging</p>
+        )}
 
         <RepCounter
           reps={reps}
           playerReady={playerReady}
+          isPlaying={isPlaying}
           onRep={handleRep}
           onNoRep={handleNoRep}
           onUndo={handleUndo}
         />
 
-        {/* Submit */}
-        <div className="mt-6">
-          {submitError && (
-            <p className="mb-3 text-center text-sm text-raw-steel">{submitError}</p>
-          )}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={repCount === 0 || isPending}
-            className="w-full rounded-2xl bg-patina-bronze py-3 font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            {isPending ? 'Submitting…' : `Submit Score — ${repCount} rep${repCount === 1 ? '' : 's'}`}
-          </button>
-        </div>
+        {submitButton}
       </div>
     </div>
   )

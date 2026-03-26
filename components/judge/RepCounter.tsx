@@ -15,12 +15,14 @@ function formatMMSS(t: number): string {
 interface RepCounterProps {
   reps: Rep[]
   playerReady: boolean
+  isPlaying: boolean
   onRep: () => void
   onNoRep: () => void
   onUndo: () => void
 }
 
-export function RepCounter({ reps, playerReady, onRep, onNoRep, onUndo }: RepCounterProps) {
+export function RepCounter({ reps, playerReady, isPlaying, onRep, onNoRep, onUndo }: RepCounterProps) {
+  const canJudge = playerReady && isPlaying
   const [pulsing, setPulsing] = useState(false)
 
   const repCount = reps.filter(r => r.type === 'rep').length
@@ -46,10 +48,10 @@ export function RepCounter({ reps, playerReady, onRep, onNoRep, onUndo }: RepCou
       <button
         type="button"
         onClick={handleRep}
-        disabled={!playerReady}
+        disabled={!canJudge}
         className={cn(
           'w-full min-h-[72px] rounded-2xl text-2xl font-bold text-parchment select-none touch-manipulation transition-all',
-          !playerReady
+          !canJudge
             ? 'bg-patina-bronze opacity-40 cursor-not-allowed'
             : pulsing
               ? 'bg-bright-bronze scale-[0.99]'
@@ -65,10 +67,10 @@ export function RepCounter({ reps, playerReady, onRep, onNoRep, onUndo }: RepCou
         <button
           type="button"
           onClick={onNoRep}
-          disabled={!playerReady}
+          disabled={!canJudge}
           className={cn(
             'min-h-[48px] rounded-xl border text-sm font-semibold transition-colors touch-manipulation select-none',
-            !playerReady
+            !canJudge
               ? 'border-raw-steel/30 text-raw-steel opacity-40 cursor-not-allowed'
               : 'border-raw-steel/50 text-raw-steel hover:border-raw-steel hover:text-parchment active:bg-raw-steel/10'
           )}
@@ -88,9 +90,9 @@ export function RepCounter({ reps, playerReady, onRep, onNoRep, onUndo }: RepCou
         </button>
       </div>
 
-      {/* Rep log */}
+      {/* Rep log — desktop only */}
       {reps.length > 0 && (
-        <div className="mt-1 overflow-hidden rounded-xl bg-charcoal">
+        <div className="mt-1 hidden overflow-hidden rounded-xl bg-charcoal md:block">
           <div className="border-b border-raw-steel/10 px-3 py-2">
             <p className="text-[10px] font-medium uppercase tracking-wider text-raw-steel">
               Rep Log

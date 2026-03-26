@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useJudgeSession, DisciplineKey } from '@/lib/judge-context'
+import { lookupEntryBySerial } from '@/lib/actions/entries'
 import { extractYouTubeId } from '@/lib/utils'
 
 const DISCIPLINES: { value: DisciplineKey; label: string }[] = [
@@ -15,61 +16,59 @@ export function JudgeSetupForm() {
   const router = useRouter()
   const { setSession } = useJudgeSession()
 
-  const [youtubeUrl, setYoutubeUrl] = useState('')
-  const [athleteName, setAthleteName] = useState('')
-  const [discipline, setDiscipline] = useState<DisciplineKey | ''>('')
-  const [weightKg, setWeightKg] = useState('')
   const [serial, setSerial] = useState('')
-  const [urlError, setUrlError] = useState('')
+  const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState('')
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setUrlError('')
     setFormError('')
-
-    const videoId = extractYouTubeId(youtubeUrl.trim())
-    if (!videoId) {
-      setUrlError('Invalid YouTube URL. Paste a full youtube.com or youtu.be link.')
-      return
-    }
-
-    if (!athleteName.trim()) {
-      setFormError('Athlete name is required.')
-      return
-    }
-
-    if (!discipline) {
-      setFormError('Please select a discipline.')
-      return
-    }
-
-    const weight = parseFloat(weightKg)
-    if (!weightKg || isNaN(weight) || weight <= 0) {
-      setFormError('Enter a valid kettlebell weight.')
-      return
-    }
 
     if (!serial.trim()) {
       setFormError('Serial number is required.')
       return
     }
 
-    const normalizedSerial = serial.replace(/\s/g, '').toUpperCase()
+    setLoading(true)
+    try {
+      const result = await lookupEntryBySerial(serial.trim())
 
-    const disciplineLabel = DISCIPLINES.find(d => d.value === discipline)!.label
+      if ('error' in result) {
+        if (result.error === 'not_found') {
+          setFormError('No submission found for this serial')
+        } else if (result.error === 'no_video') {
+          setFormError('Video not yet uploaded by athlete')
+        } else {
+          setFormError('An error occurred. Please try again.')
+        }
+        return
+      }
 
-    setSession({
-      youtubeUrl: youtubeUrl.trim(),
-      videoId,
-      athleteName: athleteName.trim(),
-      discipline,
-      disciplineLabel,
-      weightKg: weight,
-      serial: normalizedSerial,
-    })
+      const { entry } = result
+      const videoId = extractYouTubeId(entry.youtubeUrl!)
+      if (!videoId) {
+        setFormError('Could not extract video ID from submission URL.')
+        return
+      }
 
-    router.push('/judge/session')
+      const disciplineMatch = DISCIPLINES.find(d => d.value === entry.discipline)
+      const disciplineLabel = disciplineMatch?.label ?? entry.discipline
+
+      setSession({
+        youtubeUrl: entry.youtubeUrl!,
+        videoId,
+        athleteName: entry.athleteName,
+        discipline: entry.discipline as DisciplineKey,
+        disciplineLabel,
+        weightKg: entry.weightKg,
+        serial: entry.serial!,
+        entryId: entry.id,
+      })
+
+      router.push('/judge/session')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inputClass =
@@ -82,74 +81,21 @@ export function JudgeSetupForm() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-parchment">Judge a Submission</h1>
           <p className="mt-1 text-sm text-raw-steel">
-            Enter the submission details to begin judging.
+            Enter the serial number from the athlete&#39;s submission.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* YouTube URL */}
-          <div className="space-y-1">
-            <label className={labelClass}>YouTube URL</label>
-            <input
-              type="text"
-              value={youtubeUrl}
-              onChange={e => { setYoutubeUrl(e.target.value); setUrlError('') }}
-              placeholder="https://youtube.com/watch?v=..."
-              className={inputClass}
-            />
-            {urlError && <p className="mt-1 text-xs text-raw-steel">{urlError}</p>}
-          </div>
-
-          {/* Athlete Name */}
-          <div className="space-y-1">
-            <label className={labelClass}>Athlete Name</label>
-            <input
-              type="text"
-              value={athleteName}
-              onChange={e => setAthleteName(e.target.value)}
-              placeholder="Full name"
-              className={inputClass}
-            />
-          </div>
-
-          {/* Discipline */}
-          <div className="space-y-1">
-            <label className={labelClass}>Discipline</label>
-            <select
-              value={discipline}
-              onChange={e => setDiscipline(e.target.value as DisciplineKey | '')}
-              className={`${inputClass} appearance-none`}
-            >
-              <option value="">Select discipline…</option>
-              {DISCIPLINES.map(d => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Kettlebell Weight */}
-          <div className="space-y-1">
-            <label className={labelClass}>Kettlebell Weight (kg)</label>
-            <input
-              type="number"
-              value={weightKg}
-              onChange={e => setWeightKg(e.target.value)}
-              placeholder="e.g. 16"
-              min="1"
-              step="0.5"
-              className={inputClass}
-            />
-          </div>
-
           {/* Serial Number */}
           <div className="space-y-1">
             <label className={labelClass}>Serial Number</label>
             <input
               type="text"
               value={serial}
-              onChange={e => setSerial(e.target.value)}
-              placeholder="From the video description"
+              onChange={e => { setSerial(e.target.value); setFormError('') }}
+              placeholder="e.g. ABC-1234"
               className={`${inputClass} font-mono text-sm`}
+              disabled={loading}
             />
           </div>
 
@@ -157,9 +103,10 @@ export function JudgeSetupForm() {
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-2xl bg-patina-bronze py-3 font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
+            disabled={loading}
+            className="mt-2 w-full rounded-2xl bg-patina-bronze py-3 font-bold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Start Judging
+            {loading ? 'Looking up...' : 'Look Up Entry'}
           </button>
         </form>
       </div>

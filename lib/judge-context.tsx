@@ -12,6 +12,7 @@ export type JudgeSession = {
   disciplineLabel: string
   weightKg: number
   serial: string
+  entryId: string
 }
 
 export type LastSubmission = JudgeSession & { reps: number }

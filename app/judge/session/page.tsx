@@ -111,8 +111,8 @@ export default function JudgeSessionPage() {
         discipline: session!.discipline,
         weightKg: session!.weightKg,
         reps: repCount,
-        youtubeUrl: session!.youtubeUrl,
         serial: session!.serial,
+        repTaps: JSON.stringify(reps),
       })
 
       if ('error' in result) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Square } from 'lucide-react'
 import { useRecord } from '@/lib/record-context'
+import { saveRecording } from '@/lib/recording-store'
 import { DISCIPLINE_DURATION_SECONDS } from '@/lib/disciplines'
 import { GlobalHeader } from '@/components/ui/GlobalHeader'
 import {
@@ -525,21 +526,45 @@ export default function RecordingPage() {
     }
 
     recorder.onstop = async () => {
-      const rawBlob = new Blob(chunksRef.current, { type: mimeType })
       try {
-        const { webmFixDuration } = await import('webm-fix-duration')
-        const durationMs = timerMsRef.current
-        const fixedBlob = await webmFixDuration(rawBlob, durationMs)
-        setRecordedBlob(fixedBlob)
-      } catch {
-        setRecordedBlob(rawBlob)
+        // 1. Build blob from chunks
+        const rawBlob = new Blob(chunksRef.current, { type: mimeType })
+
+        // 2. Validate chunks have meaningful data (>10KB)
+        if (rawBlob.size < 10_000) {
+          alert('Recording failed — no video data captured. Please try again.')
+          setPageState('setup')
+          return
+        }
+
+        // 3. Fix duration for WebM
+        let finalBlob = rawBlob
+        try {
+          const { webmFixDuration } = await import('webm-fix-duration')
+          finalBlob = await webmFixDuration(rawBlob, timerMsRef.current)
+        } catch {
+          // Use raw blob if duration fix fails
+        }
+
+        // 4. Save to IndexedDB FIRST (durable backup)
+        await saveRecording(finalBlob, mimeType, serial)
+
+        // 5. Then update React context
+        setRecordedBlob(finalBlob)
+        setMimeType(mimeType)
+
+        // 6. Small delay for context propagation, then navigate
+        await new Promise(r => setTimeout(r, 150))
+        router.push('/record/playback')
+      } catch (err) {
+        console.error('onstop handler error:', err)
+        alert('Something went wrong saving your recording. Please try again.')
+        setPageState('setup')
+      } finally {
+        // Always clean up stream
+        streamRef.current?.getTracks().forEach(t => t.stop())
+        streamRef.current = null
       }
-      setMimeType(mimeType)
-
-      streamRef.current?.getTracks().forEach(t => t.stop())
-      streamRef.current = null
-
-      router.push('/record/playback')
     }
 
     mediaRecorderRef.current = recorder

@@ -66,7 +66,8 @@ export async function createEntry(input: {
     return { id }
   } catch (error) {
     console.error('[createEntry] Full error:', JSON.stringify(error, null, 2), (error as Error)?.message, (error as Error)?.cause)
-    return { error: `DB: ${(error as Error)?.message ?? String(error)}` }
+    const e = error as any
+    return { error: `code=${e?.code ?? '?'} | ${e?.message?.slice(0, 300) ?? String(e)} | cause=${e?.cause?.message ?? 'none'}` }
   }
 }
 

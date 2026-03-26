@@ -8,6 +8,10 @@ export const scores = sqliteTable("scores", {
   reps: integer("reps").notNull(),
   youtubeUrl: text("youtube_url"),
   serial: text("serial"), // UUID from the Kova recording overlay
+  youtubeId: text("youtube_id"),
+  status: text("status").default("pending"), // 'pending' | 'judged'
+  athleteId: text("athlete_id"), // Clerk user ID
+  repTaps: text("rep_taps"), // JSON string of {time: number|null, type: 'rep'|'no-rep'}[]
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 

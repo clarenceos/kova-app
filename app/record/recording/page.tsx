@@ -158,7 +158,6 @@ export default function RecordingPage() {
 
   // ── AudioContext ──
   const audioCtxRef = useRef<AudioContext | null>(null)
-  const audioDestRef = useRef<MediaStreamAudioDestinationNode | null>(null)
   const lastBeepMinuteRef = useRef<number>(-1)
 
   // ── Camera orientation ──
@@ -228,7 +227,6 @@ export default function RecordingPage() {
       const gainNode = ctx.createGain()
       oscillator.connect(gainNode)
       gainNode.connect(ctx.destination)
-      if (audioDestRef.current) gainNode.connect(audioDestRef.current)
 
       oscillator.frequency.value = 880
       oscillator.type = 'sine'
@@ -256,7 +254,6 @@ export default function RecordingPage() {
       const gainNode = ctx.createGain()
       oscillator.connect(gainNode)
       gainNode.connect(ctx.destination)
-      if (audioDestRef.current) gainNode.connect(audioDestRef.current)
 
       oscillator.frequency.value = 1320
       oscillator.type = 'sine'
@@ -491,10 +488,6 @@ export default function RecordingPage() {
     })
     streamRef.current = stream
 
-    // Create audio destination for recording beeps into the video
-    // (AudioContext was already created synchronously in handleStart's user gesture)
-    audioDestRef.current = audioCtxRef.current!.createMediaStreamDestination()
-
     const video = videoRef.current!
     video.srcObject = stream
     await video.play().catch(() => {})
@@ -516,21 +509,15 @@ export default function RecordingPage() {
 
     const canvasStream = canvas.captureStream(30)
 
-    // Mix canvas video tracks with audio destination tracks so beeps are recorded
-    const combinedStream = new MediaStream([
-      ...canvasStream.getVideoTracks(),
-      ...audioDestRef.current!.stream.getAudioTracks(),
-    ])
-
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-      ? 'video/webm;codecs=vp9,opus'
-      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
-        ? 'video/webm;codecs=vp8,opus'
+    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+      ? 'video/webm;codecs=vp9'
+      : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+        ? 'video/webm;codecs=vp8'
         : MediaRecorder.isTypeSupported('video/webm')
           ? 'video/webm'
           : 'video/mp4'
 
-    const recorder = new MediaRecorder(combinedStream, { mimeType })
+    const recorder = new MediaRecorder(canvasStream, { mimeType })
     chunksRef.current = []
 
     recorder.ondataavailable = (e) => {

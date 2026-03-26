@@ -101,8 +101,9 @@ None yet.
 | 260326-umx | Fix beep resume-then-play, add discard, clean up playback buttons | 2026-03-26 | 3ccb73b | [260326-umx-fix-beep-resume-then-play-add-discard-bu](./quick/260326-umx-fix-beep-resume-then-play-add-discard-bu/) |
 | 260326-v24 | Remove audio track from recorded stream (Chrome WebM fix) | 2026-03-26 | 2736f6a | [260326-v24-remove-audio-track-from-recorded-stream-](./quick/260326-v24-remove-audio-track-from-recorded-stream-/) |
 | 260327-10k | IndexedDB backup for recordings to prevent data loss | 2026-03-27 | 7a0c0cd | [260327-10k-indexeddb-backup-for-recordings-to-preve](./quick/260327-10k-indexeddb-backup-for-recordings-to-preve/) |
+| 260327-19q | Remove webmFixDuration from onstop, IndexedDB-first save order | 2026-03-27 | 84b93c5 | [260327-19q-remove-webmfixduration-from-recorder-ons](./quick/260327-19q-remove-webmfixduration-from-recorder-ons/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-10k: IndexedDB backup for recordings to prevent data loss from context resets
+Last activity: 2026-03-27 - Completed quick task 260327-19q: Remove webmFixDuration from onstop, IndexedDB-first save order
 Resume file: None

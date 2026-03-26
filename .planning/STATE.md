@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to execute
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-03-26T04:41:09.973Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-03-26T04:47:55.832Z"
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -52,6 +52,7 @@ Plan: 4 of 4
 | Phase 05-complete-athlete-loop P01 | 3 | 2 tasks | 6 files |
 | Phase 05-complete-athlete-loop P02 | 2 | 2 tasks | 4 files |
 | Phase 05-complete-athlete-loop P03 | 2 | 2 tasks | 2 files |
+| Phase 05-complete-athlete-loop P04 | 4 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 05-02]: discipline converted from hyphenated (long-cycle) to underscored (long_cycle) at playback page level before createEntry
 - [Phase 05-03]: Task 2 (repTaps session submission) was already completed by Plan 01 deviation fix — no duplicate work needed
 - [Phase 05-03]: entryId added to JudgeSession for DB linkage; serial-only judge form replaces manual 5-field form
+- [Phase 05-04]: GhostReplay uses rAF polling against YT getCurrentTime with seek backward detection (0.5s tolerance) — simpler than event callbacks, naturally handles seek
+- [Phase 05-04]: Entry detail page is server component — repTaps JSON parsed server-side, passed as typed Rep[] to GhostReplay client component
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-26T04:41:09.969Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-03-26T04:47:55.829Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None

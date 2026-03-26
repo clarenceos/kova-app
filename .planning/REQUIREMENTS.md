@@ -42,8 +42,8 @@
 - [x] **LOOP-01**: After recording, athlete uploads video to YouTube via YouTube Data API v3 resumable upload with progress bar, using Google OAuth token from Clerk
 - [x] **LOOP-02**: Upload metadata (title, description, tags, category 17, privacyStatus unlisted) set automatically from session data (discipline, weight, athlete name, serial)
 - [x] **LOOP-03**: On upload complete, youtube_url and youtube_id stored in DB; entry created with status 'pending' and athlete_id linked to Clerk user
-- [ ] **LOOP-04**: Profile page (/profile) shows athlete's submission history: serial, discipline, weight, date, status badge (PENDING/JUDGED), rep count when judged
-- [ ] **LOOP-05**: Entry Detail screen with YouTube embed and ghost replay — judge rep_taps animate over video in real time (Check/X icons at each tap's timestamp)
+- [x] **LOOP-04**: Profile page (/profile) shows athlete's submission history: serial, discipline, weight, date, status badge (PENDING/JUDGED), rep count when judged
+- [x] **LOOP-05**: Entry Detail screen with YouTube embed and ghost replay — judge rep_taps animate over video in real time (Check/X icons at each tap's timestamp)
 - [x] **LOOP-06**: Judge setup form: serial lookup auto-fetches entry including youtube_url; YouTube URL input removed entirely
 - [x] **LOOP-07**: If entry has no youtube_url, judge sees "Video not yet uploaded by athlete" error
 - [x] **LOOP-08**: DB schema extended: youtube_id, status, athlete_id, rep_taps columns added; reps made nullable for pending entries
@@ -113,8 +113,8 @@
 | LOOP-01 | Phase 5 | Complete |
 | LOOP-02 | Phase 5 | Complete |
 | LOOP-03 | Phase 5 | Complete |
-| LOOP-04 | Phase 5 | Pending |
-| LOOP-05 | Phase 5 | Pending |
+| LOOP-04 | Phase 5 | Complete |
+| LOOP-05 | Phase 5 | Complete |
 | LOOP-06 | Phase 5 | Complete |
 | LOOP-07 | Phase 5 | Complete |
 | LOOP-08 | Phase 5 | Complete |

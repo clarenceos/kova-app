@@ -106,9 +106,10 @@ None yet.
 | 260327-24f | Remove iOS recording block — allow iOS users to record | 2026-03-27 | 35a7738 | [260327-24f-remove-ios-recording-block-from-app-reco](./quick/260327-24f-remove-ios-recording-block-from-app-reco/) |
 | 260327-2o4 | Fix 308 resume, save-on-failure, manual URL submission | 2026-03-27 | fadb13a | [260327-2o4-fix-308-resume-save-on-failure-manual-ur](./quick/260327-2o4-fix-308-resume-save-on-failure-manual-ur/) |
 | 260327-q38 | Fix save-video-file button triggering back navigation on iOS | 2026-03-27 | 0fdd907 | [260327-q38-fix-save-video-file-button-triggering-ba](./quick/260327-q38-fix-save-video-file-button-triggering-ba/) |
-| 260327-s4j | Show full serial in CompactEntryRow instead of truncated | 2026-03-27 | — | [260327-s4j-show-full-serial-in-compactentryrow-inst](./quick/260327-s4j-show-full-serial-in-compactentryrow-inst/) |
+| 260327-s4j | Show full serial in CompactEntryRow instead of truncated | 2026-03-27 | 5821311 | [260327-s4j-show-full-serial-in-compactentryrow-inst](./quick/260327-s4j-show-full-serial-in-compactentryrow-inst/) |
+| 260327-snv | Redesign entry detail page — portrait mobile layout with rep pills, flash verdict, CSV export | 2026-03-27 | — | [260327-snv-redesign-entry-detail-page-portrait-mobi](./quick/260327-snv-redesign-entry-detail-page-portrait-mobi/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-s4j: Show full serial in CompactEntryRow
+Last activity: 2026-03-27 - Completed quick task 260327-snv: Redesign entry detail page
 Resume file: None

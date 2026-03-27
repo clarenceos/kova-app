@@ -111,44 +111,44 @@ export function EntryDetailClient({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Two-column layout: video + rep log */}
-      <div className="flex gap-2" style={{ height: 'calc(100vh - 180px)', minHeight: '400px' }}>
+      {/* Two-column layout: video + rep log — both top-aligned */}
+      <div className="flex items-start gap-2" style={{ height: 'calc(100vh - 180px)', minHeight: '400px' }}>
         {/* Left: YouTube embed */}
-        <div className="w-[80%] flex-shrink-0 overflow-hidden rounded-xl bg-charcoal">
+        <div className="w-[80%] h-full flex-shrink-0 overflow-hidden rounded-xl bg-charcoal">
           <div className="relative h-full w-full">
             <YouTubeEmbed videoId={videoId} onPlayerReady={handlePlayerReady} />
           </div>
         </div>
 
-        {/* Right: flash verdict + rep pills — top-aligned */}
-        <div className="flex flex-1 flex-col gap-2 min-w-0 items-stretch">
+        {/* Right: flash verdict + rep pills — anchored to top */}
+        <div className="flex h-full flex-1 flex-col gap-1 min-w-0">
           {/* Flash verdict indicator */}
           {lastTap && (
             <div
-              className={`flex h-16 flex-shrink-0 items-center justify-center rounded-xl bg-charcoal transition-opacity duration-500 ${
+              className={`flex h-12 flex-shrink-0 items-center justify-center rounded-lg bg-charcoal transition-opacity duration-500 ${
                 flashVisible ? 'opacity-100' : 'opacity-0'
               }`}
             >
               {lastTap.type === 'rep' ? (
-                <Check className="h-10 w-10 text-green-500" strokeWidth={3} />
+                <Check className="h-8 w-8 text-green-500" strokeWidth={3} />
               ) : (
-                <X className="h-10 w-10 text-red-400" strokeWidth={3} />
+                <X className="h-8 w-8 text-red-400" strokeWidth={3} />
               )}
             </div>
           )}
 
           {/* Rep count header */}
           {isJudged && (
-            <div className="flex-shrink-0 text-center">
-              <span className="text-2xl font-bold text-patina-bronze">{repCount}</span>
-              <span className="ml-1 text-xs uppercase tracking-wider text-raw-steel">reps</span>
+            <div className="flex-shrink-0 text-center py-1">
+              <span className="text-xl font-bold text-patina-bronze">{repCount}</span>
+              <span className="ml-1 text-[10px] uppercase tracking-wider text-raw-steel">reps</span>
             </div>
           )}
 
           {/* Scrollable rep pills */}
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden rounded-xl bg-charcoal">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden rounded-lg bg-charcoal">
             {repTaps.length > 0 ? (
-              <div className="flex flex-col gap-1 p-2">
+              <div className="flex flex-col gap-0.5 p-1">
                 {repTaps.map((tap, idx) => {
                   const isRep = tap.type === 'rep'
                   const isActive = idx === activeRepIdx
@@ -156,32 +156,28 @@ export function EntryDetailClient({
                     <div
                       key={idx}
                       ref={(el) => { pillRefs.current[idx] = el }}
-                      className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
-                        isRep
-                          ? 'bg-green-500/10 border border-green-500/20'
-                          : 'bg-red-400/10 border border-red-400/20'
-                      } ${isActive ? 'ring-2 ring-parchment/60 border-parchment/40' : ''}`}
+                      className={`flex items-center gap-1 rounded-md border border-patina-bronze/15 bg-patina-bronze/5 px-1.5 py-1 transition-all duration-200 ${
+                        isActive ? 'ring-2 ring-parchment/60 border-parchment/40' : ''
+                      }`}
                     >
-                      <div className="flex items-center gap-1.5">
-                        {isRep ? (
-                          <Check className="h-3 w-3 text-green-500 flex-shrink-0" />
-                        ) : (
-                          <X className="h-3 w-3 text-red-400 flex-shrink-0" />
-                        )}
-                        <span className={`text-xs font-medium ${isRep ? 'text-green-400' : 'text-red-300'}`}>
-                          {idx + 1}
+                      {isRep ? (
+                        <Check className="h-2.5 w-2.5 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <X className="h-2.5 w-2.5 text-red-400 flex-shrink-0" />
+                      )}
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[10px] font-medium text-parchment/80">{idx + 1}</span>
+                        <span className="font-mono text-[9px] text-raw-steel/50 leading-none">
+                          {tap.time !== null ? formatMMSS(tap.time) : '--:--'}
                         </span>
                       </div>
-                      <span className="font-mono text-[10px] text-raw-steel/60">
-                        {tap.time !== null ? formatMMSS(tap.time) : '--:--'}
-                      </span>
                     </div>
                   )
                 })}
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center p-4">
-                <p className="text-xs text-raw-steel/40">No rep data</p>
+              <div className="p-2 text-center">
+                <p className="text-[10px] text-raw-steel/40">No rep data</p>
               </div>
             )}
           </div>

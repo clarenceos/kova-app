@@ -20,10 +20,13 @@ import {
 } from '@/components/ui/alert-dialog'
 
 
+const COUNTDOWN_OFFSET = 5
+
 function fmtTime(t: number | null): string {
   if (t === null) return '--:--'
-  const m = Math.floor(t / 60)
-  const s = Math.floor(t % 60)
+  const adjusted = Math.max(0, t - COUNTDOWN_OFFSET)
+  const m = Math.floor(adjusted / 60)
+  const s = Math.floor(adjusted % 60)
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
@@ -194,7 +197,7 @@ export default function JudgeSessionPage() {
       </div>
 
       {/* CONTROLS — portrait: shrink-wrap below video, desktop: right column */}
-      <div className="flex shrink-0 flex-col gap-2 px-4 pb-4 pt-2 md:h-full md:flex-1 md:w-[55%] md:overflow-y-auto md:px-6 md:pb-8 md:pt-4">
+      <div className="flex shrink-0 flex-col gap-2 px-4 pb-6 pt-2 md:h-full md:flex-1 md:w-[55%] md:overflow-y-auto md:px-6 md:pb-8 md:pt-4">
 
         {/* Desktop header with exit — hidden on mobile */}
         <div className="hidden items-center justify-between md:flex">

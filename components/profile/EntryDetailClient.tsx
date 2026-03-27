@@ -21,16 +21,19 @@ const DISCIPLINE_ABBR: Record<string, string> = {
   'Snatch': 'SN',
 }
 
+const COUNTDOWN_OFFSET = 5
+
 function formatMMSS(t: number): string {
-  const m = Math.floor(t / 60)
-  const s = Math.floor(t % 60)
+  const adjusted = Math.max(0, t - COUNTDOWN_OFFSET)
+  const m = Math.floor(adjusted / 60)
+  const s = Math.floor(adjusted % 60)
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 function exportCSV(repTaps: Rep[], serial: string | null) {
   const header = 'Rep,Timestamp,Verdict\n'
   const rows = repTaps.map((tap, i) => {
-    const time = tap.time !== null ? formatMMSS(tap.time) : '--:--'
+    const time = tap.time !== null ? formatMMSS(tap.time) : '--:--' // formatMMSS already applies offset
     const verdict = tap.type === 'rep' ? 'rep' : 'no-rep'
     return `${i + 1},${time},${verdict}`
   }).join('\n')

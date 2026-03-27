@@ -542,7 +542,7 @@ export default function RecordingPage() {
         }
 
         // 3. Chunks already written incrementally — save final assembled blob too
-        await saveRecording(rawBlob, mimeType, serial)
+        await saveRecording(rawBlob, mimeType, serial, recordWeightRef.current, discipline ?? '', disciplineLabel ?? '')
         await clearChunks()
 
         // 4. Update React context

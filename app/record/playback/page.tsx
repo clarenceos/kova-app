@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Smartphone, ArrowLeft } from 'lucide-react'
-import { useRecord } from '@/lib/record-context'
+import { useRecord, type Discipline } from '@/lib/record-context'
 import { createEntry } from '@/lib/actions/entries'
 import {
   AlertDialog,
@@ -21,7 +21,7 @@ import { restoreRecording, clearRecording, assembleChunks, clearChunks } from '@
 
 export default function PlaybackPage() {
   const router = useRouter()
-  const { recordedBlob, setRecordedBlob, serial, discipline, disciplineLabel, athleteName, weightKg, mimeType, setMimeType } =
+  const { recordedBlob, setRecordedBlob, serial, setSerial, discipline, setDiscipline, disciplineLabel, setDisciplineLabel, athleteName, weightKg, setWeightKg, mimeType, setMimeType } =
     useRecord()
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [uploadComplete, setUploadComplete] = useState(false)
@@ -76,8 +76,12 @@ export default function PlaybackPage() {
     restoreRecording().then(async (restored) => {
       if (cancelled) return
       if (restored) {
-        setRecordedBlob(restored.blob)
+        setSerial(restored.serial)
+        if (restored.weightKg > 0) setWeightKg(restored.weightKg)
+        if (restored.discipline) setDiscipline(restored.discipline as Discipline)
+        if (restored.disciplineLabel) setDisciplineLabel(restored.disciplineLabel)
         setMimeType(restored.mimeType)
+        setRecordedBlob(restored.blob)
         setRecovering(false)
         return
       }
@@ -117,7 +121,7 @@ export default function PlaybackPage() {
   }, [showUploader, uploadComplete])
 
   function handleExport() {
-    if (!recordedBlob || !blobUrl) return
+    if (!recordedBlob) return
     const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'
     const nameSlug = athleteName
       .toLowerCase()
@@ -125,10 +129,12 @@ export default function PlaybackPage() {
       .replace(/[^a-z0-9-]/g, '')
     const disciplineSlug = discipline ?? 'unknown'
     const filename = `kova-${disciplineSlug}-${nameSlug}-${serial}.${ext}`
+    const freshUrl = URL.createObjectURL(recordedBlob)
     const a = document.createElement('a')
-    a.href = blobUrl
+    a.href = freshUrl
     a.download = filename
     a.click()
+    setTimeout(() => URL.revokeObjectURL(freshUrl), 5000)
   }
 
   const handleCopyDescription = useCallback(async () => {
@@ -159,11 +165,16 @@ export default function PlaybackPage() {
     const youtubeId = idMatch[1]
     const disciplineDb = discipline?.replace('-', '_') ?? 'long_cycle'
 
+    if (!weightKg || weightKg <= 0) {
+      setManualError('Weight is missing. Please go back and re-record.')
+      return
+    }
+
     setManualSubmitting(true)
     const result = await createEntry({
       athleteName,
       discipline: disciplineDb,
-      weightKg: weightKg ?? 0,
+      weightKg,
       serial,
       youtubeUrl: url,
       youtubeId,
@@ -248,7 +259,14 @@ export default function PlaybackPage() {
           {!showUploader && !uploadComplete && (
             <>
               <button
-                onClick={() => { setShowUploader(true); setUploadStarted(true) }}
+                onClick={() => {
+                  if (!weightKg || weightKg <= 0) {
+                    setUploadFailed(true)
+                    return
+                  }
+                  setShowUploader(true)
+                  setUploadStarted(true)
+                }}
                 className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
               >
                 Upload to YouTube

@@ -17,6 +17,9 @@ interface StoredRecording {
   blob: Blob
   mimeType: string
   serial: string
+  weightKg: number
+  discipline: string
+  disciplineLabel: string
   savedAt: number
 }
 
@@ -40,12 +43,15 @@ export async function saveRecording(
   blob: Blob,
   mimeType: string,
   serial: string,
+  weightKg: number,
+  discipline: string,
+  disciplineLabel: string,
 ): Promise<void> {
   try {
     const db = await openDB()
     const tx = db.transaction(STORE_NAME, 'readwrite')
     const store = tx.objectStore(STORE_NAME)
-    const record: StoredRecording = { blob, mimeType, serial, savedAt: Date.now() }
+    const record: StoredRecording = { blob, mimeType, serial, weightKg, discipline, disciplineLabel, savedAt: Date.now() }
     store.put(record, KEY)
     await new Promise<void>((resolve, reject) => {
       tx.oncomplete = () => resolve()
@@ -61,6 +67,9 @@ export async function restoreRecording(): Promise<{
   blob: Blob
   mimeType: string
   serial: string
+  weightKg: number
+  discipline: string
+  disciplineLabel: string
 } | null> {
   try {
     const db = await openDB()
@@ -78,7 +87,14 @@ export async function restoreRecording(): Promise<{
     if (!result) return null
     if (Date.now() - result.savedAt > TTL_MS) return null
 
-    return { blob: result.blob, mimeType: result.mimeType, serial: result.serial }
+    return {
+      blob: result.blob,
+      mimeType: result.mimeType,
+      serial: result.serial,
+      weightKg: result.weightKg ?? 0,
+      discipline: result.discipline ?? '',
+      disciplineLabel: result.disciplineLabel ?? '',
+    }
   } catch (err) {
     console.warn('recording-store: restoreRecording failed', err)
     return null

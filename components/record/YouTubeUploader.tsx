@@ -42,6 +42,8 @@ export function YouTubeUploader({
   const [progress, setProgress] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
   const [youtubeUrl, setYoutubeUrl] = useState<string | null>(null)
+  const [uploadedVideoId, setUploadedVideoId] = useState<string | null>(null)
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string | null>(null)
   const uploadStartedRef = useRef(false)
 
   // Auto-start upload on mount — no second tap required
@@ -187,6 +189,8 @@ export function YouTubeUploader({
     }
 
     const uploadedUrl = `https://youtube.com/watch?v=${videoId}`
+    setUploadedVideoId(videoId)
+    setUploadedVideoUrl(uploadedUrl)
 
     // Step 4 — Save entry to DB
     setStatus('saving')
@@ -210,6 +214,32 @@ export function YouTubeUploader({
     setStatus('complete')
     setYoutubeUrl(uploadedUrl)
     onUploadComplete(uploadedUrl, videoId)
+  }
+
+  async function handleRetrySave() {
+    if (!uploadedVideoId || !uploadedVideoUrl) return
+    setStatus('saving')
+    setErrorMessage('')
+
+    const saveResult = await createEntry({
+      athleteName,
+      discipline,
+      weightKg,
+      serial,
+      youtubeUrl: uploadedVideoUrl,
+      youtubeId: uploadedVideoId,
+    })
+
+    if ('error' in saveResult) {
+      setStatus('error')
+      setErrorMessage(`Upload succeeded but failed to save entry: ${saveResult.error}`)
+      onUploadError?.()
+      return
+    }
+
+    setStatus('complete')
+    setYoutubeUrl(uploadedVideoUrl)
+    onUploadComplete(uploadedVideoUrl, uploadedVideoId)
   }
 
   if (status === 'idle') {
@@ -305,11 +335,14 @@ export function YouTubeUploader({
       <div className="rounded-xl border border-raw-steel/20 bg-charcoal p-4 space-y-3">
         <p className="text-sm font-semibold text-parchment">Upload failed</p>
         <p className="text-sm text-raw-steel">{errorMessage}</p>
+        {uploadedVideoId && (
+          <p className="text-xs text-raw-steel">Video already uploaded to YouTube. Retrying entry save only.</p>
+        )}
         <button
-          onClick={handleUpload}
+          onClick={uploadedVideoId ? handleRetrySave : handleUpload}
           className="w-full rounded-xl bg-patina-bronze px-6 py-3 font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
         >
-          Retry
+          {uploadedVideoId ? 'Retry save' : 'Retry'}
         </button>
       </div>
     )

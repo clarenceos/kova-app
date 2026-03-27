@@ -7,6 +7,7 @@ export type Discipline = 'long-cycle' | 'jerk' | 'snatch'
 export interface RecordState {
   // Session identity
   serial: string
+  setSerial: (s: string) => void
   // Discipline selection
   discipline: Discipline | null
   setDiscipline: (d: Discipline | null) => void
@@ -40,7 +41,8 @@ interface RecordProviderProps {
   children: React.ReactNode
 }
 
-export function RecordProvider({ athleteName, serial, children }: RecordProviderProps) {
+export function RecordProvider({ athleteName, serial: initialSerial, children }: RecordProviderProps) {
+  const [serial, setSerial] = useState<string>(initialSerial)
   const [discipline, setDiscipline] = useState<Discipline | null>(null)
   const [disciplineLabel, setDisciplineLabel] = useState<string | null>(null)
   const [weightKg, setWeightKg] = useState<number | null>(null)
@@ -53,6 +55,7 @@ export function RecordProvider({ athleteName, serial, children }: RecordProvider
 
   const value: RecordState = {
     serial,
+    setSerial,
     discipline,
     setDiscipline,
     disciplineLabel,

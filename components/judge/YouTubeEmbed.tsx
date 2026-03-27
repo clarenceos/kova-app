@@ -19,9 +19,10 @@ interface YouTubeEmbedProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onPlayerReady: (player: any) => void
   onPlayingChange?: (isPlaying: boolean) => void
+  onEnded?: () => void
 }
 
-export function YouTubeEmbed({ videoId, onPlayerReady, onPlayingChange }: YouTubeEmbedProps) {
+export function YouTubeEmbed({ videoId, onPlayerReady, onPlayingChange, onEnded }: YouTubeEmbedProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null)
@@ -43,9 +44,9 @@ export function YouTubeEmbed({ videoId, onPlayerReady, onPlayingChange }: YouTub
           },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onStateChange: (event: any) => {
-            if (mountedRef.current && onPlayingChange) {
-              onPlayingChange(event.data === 1) // 1 = YT.PlayerState.PLAYING
-            }
+            if (!mountedRef.current) return
+            if (onPlayingChange) onPlayingChange(event.data === 1)
+            if (onEnded && event.data === 0) onEnded() // 0 = YT.PlayerState.ENDED
           },
         },
       })

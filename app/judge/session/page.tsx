@@ -34,8 +34,10 @@ export default function JudgeSessionPage() {
   const playerRef = useRef<unknown>(null)
   const [playerReady, setPlayerReady] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [videoEnded, setVideoEnded] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [showRejudgeDialog, setShowRejudgeDialog] = useState(false)
 
   useEffect(() => {
     if (!session) router.replace('/judge')
@@ -137,15 +139,19 @@ export default function JudgeSessionPage() {
         <p className="text-sm text-raw-steel">Portrait mode only on mobile</p>
       </div>
 
-      {/* VIDEO — portrait: fixed height, landscape/desktop: left column */}
-      <div className="relative h-[60vh] w-full shrink-0 md:h-full md:w-[45%] md:border-r md:border-raw-steel/20">
+      {/* VIDEO — portrait: flex-1 fills space, landscape/desktop: left column */}
+      <div className="relative flex-1 w-full min-h-0 md:flex-none md:h-full md:w-[45%] md:border-r md:border-raw-steel/20">
         <YouTubeEmbed
           videoId={session.videoId}
           onPlayerReady={player => {
             playerRef.current = player
             setPlayerReady(true)
           }}
-          onPlayingChange={setIsPlaying}
+          onPlayingChange={playing => {
+            setIsPlaying(playing)
+            if (playing) setVideoEnded(false)
+          }}
+          onEnded={() => setVideoEnded(true)}
         />
 
         {/* Exit button — floats over video top-right, mobile only */}
@@ -187,8 +193,8 @@ export default function JudgeSessionPage() {
         )}
       </div>
 
-      {/* CONTROLS — portrait: flex-1 below video, desktop: right column */}
-      <div className="flex flex-1 flex-col gap-3 overflow-hidden px-4 pb-4 pt-3 md:h-full md:w-[55%] md:overflow-y-auto md:px-6 md:pb-8 md:pt-4">
+      {/* CONTROLS — portrait: shrink-wrap below video, desktop: right column */}
+      <div className="flex shrink-0 flex-col gap-2 px-4 pb-4 pt-2 md:h-full md:flex-1 md:w-[55%] md:overflow-y-auto md:px-6 md:pb-8 md:pt-4">
 
         {/* Desktop header with exit — hidden on mobile */}
         <div className="hidden items-center justify-between md:flex">
@@ -200,21 +206,61 @@ export default function JudgeSessionPage() {
           {exitDialog}
         </div>
 
-        <RepCounter
-          reps={reps}
-          playerReady={playerReady}
-          isPlaying={isPlaying}
-          onRep={handleRep}
-          onNoRep={handleNoRep}
-          onUndo={handleUndo}
-        />
+        {/* During judging: show rep buttons. After video ends: show submit. */}
+        {!videoEnded ? (
+          <RepCounter
+            reps={reps}
+            playerReady={playerReady}
+            isPlaying={isPlaying}
+            onRep={handleRep}
+            onNoRep={handleNoRep}
+            onUndo={handleUndo}
+          />
+        ) : (
+          <div className="flex flex-col gap-3 transition-opacity duration-300">
+            {submitButton}
+            <button
+              type="button"
+              onClick={() => setShowRejudgeDialog(true)}
+              className="text-xs text-raw-steel/60 hover:text-raw-steel transition-colors"
+            >
+              Re-judge this lift
+            </button>
+          </div>
+        )}
 
-        {/* Submit — only when paused or ended, mobile. Always visible on desktop. */}
-        <div className="md:hidden">
-          {!isPlaying && playerReady && submitButton}
-        </div>
-        <div className="hidden md:block">{submitButton}</div>
+        {/* Submit — desktop always visible below buttons */}
+        {!videoEnded && (
+          <div className="hidden md:block">{submitButton}</div>
+        )}
       </div>
+
+      {/* Re-judge confirmation dialog */}
+      <AlertDialog open={showRejudgeDialog} onOpenChange={setShowRejudgeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Re-judge this lift?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your current rep count ({repCount} rep{repCount === 1 ? '' : 's'}) will be reset. The video will restart.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setReps([])
+                setVideoEnded(false)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ;(playerRef.current as any)?.seekTo?.(0)
+                ;(playerRef.current as any)?.playVideo?.()
+              }}
+              className="bg-red-600 text-white hover:bg-red-700"
+            >
+              Reset &amp; Re-judge
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

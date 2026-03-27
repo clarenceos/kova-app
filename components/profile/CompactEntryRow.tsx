@@ -17,7 +17,7 @@ const DISCIPLINE_ABBR: Record<string, string> = {
 export function CompactEntryRow({ entry, isLast }: CompactEntryRowProps) {
   const abbr = DISCIPLINE_ABBR[entry.discipline] ?? entry.discipline.slice(0, 3).toUpperCase()
   const isJudged = entry.status === 'judged'
-  const serial = entry.serial ? entry.serial.slice(0, 6) : '—'
+  const serial = entry.serial ?? '—'
   const dateStr = entry.createdAt instanceof Date
     ? entry.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : new Date(entry.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -35,13 +35,15 @@ export function CompactEntryRow({ entry, isLast }: CompactEntryRowProps) {
         <span className="text-sm text-raw-steel">{entry.weightKg}kg</span>
       </div>
 
-      {/* Right: reps + serial + date + badge */}
+      {/* Right: reps + serial/date + badge */}
       <div className="flex items-center gap-3 flex-shrink-0">
         {isJudged && entry.reps > 0 && (
           <span className="text-sm font-bold text-patina-bronze">{entry.reps}</span>
         )}
-        <span className="font-mono text-xs text-raw-steel/60">{serial}</span>
-        <span className="text-xs text-raw-steel/40">{dateStr}</span>
+        <div className="flex flex-col items-end">
+          <span className="font-mono text-xs text-raw-steel/60">{serial}</span>
+          <span className="text-[10px] text-raw-steel/40">{dateStr}</span>
+        </div>
         {isJudged ? (
           <span className="rounded-full border border-patina-bronze/40 bg-patina-bronze/20 px-2 py-0.5 text-[10px] font-semibold text-patina-bronze">
             JUDGED

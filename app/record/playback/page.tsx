@@ -133,7 +133,12 @@ export default function PlaybackPage() {
     const a = document.createElement('a')
     a.href = freshUrl
     a.download = filename
+    a.style.display = 'none'
+    a.target = '_blank'
+    a.rel = 'noopener'
+    document.body.appendChild(a)
     a.click()
+    document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(freshUrl), 5000)
   }
 

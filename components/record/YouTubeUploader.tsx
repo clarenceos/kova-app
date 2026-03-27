@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { getYouTubeToken } from '@/lib/actions/youtube'
 import { createEntry } from '@/lib/actions/entries'
 
@@ -314,18 +315,18 @@ export function YouTubeUploader({
         <p className="text-sm text-raw-steel">
           Link your Google account to enable direct YouTube uploads.
         </p>
-        <a
+        <Link
           href="/user-profile"
           className="block w-full rounded-xl bg-patina-bronze px-6 py-3 text-center font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
         >
           Connect Google Account
-        </a>
-        <a
+        </Link>
+        <Link
           href="/record/instructions"
           className="block w-full rounded-xl border border-raw-steel/30 bg-forge-black px-6 py-3 text-center font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"
         >
           Skip — Upload Manually
-        </a>
+        </Link>
       </div>
     )
   }

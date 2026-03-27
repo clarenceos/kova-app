@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Smartphone, ArrowLeft } from 'lucide-react'
 import { useRecord, type Discipline } from '@/lib/record-context'
 import { createEntry } from '@/lib/actions/entries'
@@ -287,12 +288,12 @@ export default function PlaybackPage() {
 
           {(uploadComplete || manualSubmitted) && (
             <>
-              <a
+              <Link
                 href="/profile"
                 className="block w-full rounded-xl bg-patina-bronze px-6 py-3 text-center font-semibold text-parchment transition-colors hover:bg-bright-bronze active:opacity-80"
               >
                 Done &mdash; Go to Profile
-              </a>
+              </Link>
               <button
                 onClick={handleExport}
                 className="w-full rounded-xl border border-raw-steel/30 bg-charcoal px-6 py-3 font-semibold text-parchment transition-colors hover:border-patina-bronze/40 active:opacity-80"

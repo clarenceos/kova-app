@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Check, X, Download } from 'lucide-react'
 import { YouTubeEmbed } from '@/components/judge/YouTubeEmbed'
 import type { Rep } from '@/components/judge/RepCounter'
@@ -56,6 +56,12 @@ export function EntryDetailClient({
   repCount,
 }: EntryDetailClientProps) {
   const [flashVisible, setFlashVisible] = useState(true)
+  const [activeRepIdx, setActiveRepIdx] = useState<number>(-1)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const playerRef = useRef<any>(null)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pillRefs = useRef<(HTMLDivElement | null)[]>([])
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const lastTap = repTaps.length > 0 ? repTaps[repTaps.length - 1] : null
   const abbr = DISCIPLINE_ABBR[disciplineLabel] ?? disciplineLabel.slice(0, 3).toUpperCase()
@@ -67,19 +73,55 @@ export function EntryDetailClient({
     return () => clearTimeout(timer)
   }, [lastTap])
 
+  // Time-sync: poll player time and highlight the current rep
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlePlayerReady = useCallback((player: any) => {
+    playerRef.current = player
+    intervalRef.current = setInterval(() => {
+      try {
+        const currentTime = player.getCurrentTime() as number
+        let lastIdx = -1
+        for (let i = 0; i < repTaps.length; i++) {
+          if (repTaps[i].time !== null && repTaps[i].time! <= currentTime) {
+            lastIdx = i
+          } else {
+            break
+          }
+        }
+        setActiveRepIdx(lastIdx)
+      } catch {
+        // Player not ready or destroyed — ignore
+      }
+    }, 1000)
+  }, [repTaps])
+
+  // Auto-scroll the active pill into view
+  useEffect(() => {
+    if (activeRepIdx >= 0 && pillRefs.current[activeRepIdx] && scrollContainerRef.current) {
+      pillRefs.current[activeRepIdx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }
+  }, [activeRepIdx])
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
+
   return (
     <div className="flex flex-col gap-3">
       {/* Two-column layout: video + rep log */}
       <div className="flex gap-2" style={{ height: 'calc(100vh - 180px)', minHeight: '400px' }}>
-        {/* Left: YouTube embed 9:16 */}
-        <div className="w-[65%] flex-shrink-0 overflow-hidden rounded-xl bg-charcoal">
+        {/* Left: YouTube embed */}
+        <div className="w-[80%] flex-shrink-0 overflow-hidden rounded-xl bg-charcoal">
           <div className="relative h-full w-full">
-            <YouTubeEmbed videoId={videoId} onPlayerReady={() => {}} />
+            <YouTubeEmbed videoId={videoId} onPlayerReady={handlePlayerReady} />
           </div>
         </div>
 
-        {/* Right: flash verdict + rep pills */}
-        <div className="flex flex-1 flex-col gap-2 min-w-0">
+        {/* Right: flash verdict + rep pills — top-aligned */}
+        <div className="flex flex-1 flex-col gap-2 min-w-0 items-stretch">
           {/* Flash verdict indicator */}
           {lastTap && (
             <div
@@ -104,19 +146,21 @@ export function EntryDetailClient({
           )}
 
           {/* Scrollable rep pills */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden rounded-xl bg-charcoal">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto overflow-x-hidden rounded-xl bg-charcoal">
             {repTaps.length > 0 ? (
               <div className="flex flex-col gap-1 p-2">
                 {repTaps.map((tap, idx) => {
                   const isRep = tap.type === 'rep'
+                  const isActive = idx === activeRepIdx
                   return (
                     <div
                       key={idx}
-                      className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 ${
+                      ref={(el) => { pillRefs.current[idx] = el }}
+                      className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
                         isRep
                           ? 'bg-green-500/10 border border-green-500/20'
                           : 'bg-red-400/10 border border-red-400/20'
-                      }`}
+                      } ${isActive ? 'ring-2 ring-parchment/60 border-parchment/40' : ''}`}
                     >
                       <div className="flex items-center gap-1.5">
                         {isRep ? (

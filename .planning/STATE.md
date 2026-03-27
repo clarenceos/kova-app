@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Milestone complete
-last_updated: "2026-03-26T14:11:42.998Z"
-last_activity: "2026-03-27 - Completed quick task 260327-10k: IndexedDB backup for recordings to prevent data loss"
+last_updated: "2026-03-27T10:51:11.725Z"
+last_activity: "2026-03-27 - Completed quick task 260327-2o4: Fix 308 resume, save-on-failure, manual URL submission"
 progress:
   total_phases: 5
   completed_phases: 2
@@ -105,8 +105,9 @@ None yet.
 | 260327-21e | Incremental IndexedDB chunk writes + block iOS recording | 2026-03-27 | cbf188b | [260327-21e-incremental-indexeddb-chunk-writes-durin](./quick/260327-21e-incremental-indexeddb-chunk-writes-durin/) |
 | 260327-24f | Remove iOS recording block — allow iOS users to record | 2026-03-27 | 35a7738 | [260327-24f-remove-ios-recording-block-from-app-reco](./quick/260327-24f-remove-ios-recording-block-from-app-reco/) |
 | 260327-2o4 | Fix 308 resume, save-on-failure, manual URL submission | 2026-03-27 | fadb13a | [260327-2o4-fix-308-resume-save-on-failure-manual-ur](./quick/260327-2o4-fix-308-resume-save-on-failure-manual-ur/) |
+| 260327-q38 | Fix save-video-file button triggering back navigation on iOS | 2026-03-27 | 0fdd907 | [260327-q38-fix-save-video-file-button-triggering-ba](./quick/260327-q38-fix-save-video-file-button-triggering-ba/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-2o4: Fix 308 resume, save-on-failure, manual URL submission
+Last activity: 2026-03-27 - Completed quick task 260327-q38: Fix save-video-file button triggering back navigation on iOS
 Resume file: None

@@ -55,7 +55,6 @@ export function EntryDetailClient({
   isJudged,
   repCount,
 }: EntryDetailClientProps) {
-  const [flashVisible, setFlashVisible] = useState(true)
   const [activeRepIdx, setActiveRepIdx] = useState<number>(-1)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null)
@@ -63,15 +62,7 @@ export function EntryDetailClient({
   const pillRefs = useRef<(HTMLDivElement | null)[]>([])
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const lastTap = repTaps.length > 0 ? repTaps[repTaps.length - 1] : null
   const abbr = DISCIPLINE_ABBR[disciplineLabel] ?? disciplineLabel.slice(0, 3).toUpperCase()
-
-  // Flash the last verdict for 1 second then fade
-  useEffect(() => {
-    if (!lastTap) return
-    const timer = setTimeout(() => setFlashVisible(false), 1000)
-    return () => clearTimeout(timer)
-  }, [lastTap])
 
   // Time-sync: poll player time and highlight the current rep
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -120,23 +111,8 @@ export function EntryDetailClient({
           </div>
         </div>
 
-        {/* Right: flash verdict + rep pills — anchored to top */}
+        {/* Right: rep count + pills — anchored to top */}
         <div className="flex h-full flex-1 flex-col gap-1 min-w-0">
-          {/* Flash verdict indicator */}
-          {lastTap && (
-            <div
-              className={`flex h-12 flex-shrink-0 items-center justify-center rounded-lg bg-charcoal transition-opacity duration-500 ${
-                flashVisible ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
-              {lastTap.type === 'rep' ? (
-                <Check className="h-8 w-8 text-green-500" strokeWidth={3} />
-              ) : (
-                <X className="h-8 w-8 text-red-400" strokeWidth={3} />
-              )}
-            </div>
-          )}
-
           {/* Rep count header */}
           {isJudged && (
             <div className="flex-shrink-0 text-center py-1">

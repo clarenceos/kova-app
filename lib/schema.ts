@@ -17,3 +17,17 @@ export const scores = sqliteTable("scores", {
 
 export type Score = typeof scores.$inferSelect;
 export type NewScore = typeof scores.$inferInsert;
+
+export const profiles = sqliteTable("profiles", {
+  userId: text("user_id").primaryKey(),
+  name: text("name").notNull(),
+  gender: text("gender").notNull(), // 'male' | 'female' | 'other' | 'prefer_not_to_say'
+  bodyWeightKg: real("body_weight_kg"),
+  experienceLevel: text("experience_level").notNull(), // 'beginner' | 'intermediate' | 'advanced' | 'elite' | 'prefer_not_to_say'
+  avatarUrl: text("avatar_url"),
+  onboardingComplete: integer("onboarding_complete").default(0).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;

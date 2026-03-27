@@ -1,16 +1,15 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Video, ClipboardCheck, BarChart2 } from "lucide-react";
+import { getProfile } from "@/lib/actions/profile";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const user = await currentUser();
-  const name = user?.publicMetadata?.name as string | undefined;
-
-  if (!name) redirect("/onboarding");
+  const profile = await getProfile(userId);
+  const name = profile?.name;
 
   return (
     <div className="flex min-h-screen flex-col bg-forge-black px-4 py-8">

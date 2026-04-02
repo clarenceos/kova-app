@@ -1,12 +1,30 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock DB dependencies so the pure deriveSerialPrefix function can be tested
-// without a live database connection (TURSO_AUTH_TOKEN not required in test env).
-vi.mock("@/lib/db", () => ({ db: {} }));
-vi.mock("@/lib/schema", () => ({ registrationEntries: {} }));
-vi.mock("drizzle-orm", () => ({ eq: vi.fn(), count: vi.fn() }));
+// Mock DB dependencies for testing
+// mockWhere is called for each .where() invocation; its return value is what the query returns.
+const mockWhere = vi.fn().mockReturnValue([{ count: 0 }]);
 
-import { deriveSerialPrefix } from "./serial";
+vi.mock("@/lib/db", () => ({
+  db: {
+    select: () => ({
+      from: () => ({
+        where: (...wArgs: unknown[]) => mockWhere(...wArgs),
+      }),
+    }),
+  },
+}));
+vi.mock("@/lib/schema", () => ({
+  registrationEntries: {
+    competitionId: "competition_id",
+    serial: "serial",
+  },
+}));
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn((_col: unknown, val: unknown) => ({ _type: "eq", val })),
+  count: vi.fn(() => ({ _type: "count" })),
+}));
+
+import { deriveSerialPrefix, generateCompetitionSerial } from "./serial";
 
 describe("deriveSerialPrefix", () => {
   // 3+ words: first letter of first 3 words
@@ -56,5 +74,39 @@ describe("deriveSerialPrefix", () => {
   it("short single word pads to 3 characters", () => {
     // "Go" = 1 word, 2 chars -> pad last char -> "GOO"
     expect(deriveSerialPrefix("Go")).toBe("GOO");
+  });
+});
+
+describe("generateCompetitionSerial", () => {
+  beforeEach(() => {
+    mockWhere.mockReset();
+    // Default: 0 existing entries, serial not taken
+    mockWhere.mockReturnValue([{ count: 0 }]);
+  });
+
+  it("returns XXX-0001 when competition has 0 entries and serial is available", async () => {
+    const serial = await generateCompetitionSerial("comp-123", "TST");
+    expect(serial).toBe("TST-0001");
+  });
+
+  it("retries and increments when first candidate serial already exists", async () => {
+    let callCount = 0;
+    // Override mockWhere to simulate: first call = count 0 entries, second call = serial exists, third call = count again, fourth call = serial available
+    mockWhere.mockImplementation(() => {
+      callCount++;
+      if (callCount === 1) return [{ count: 0 }]; // count query: 0 entries
+      if (callCount === 2) return [{ count: 1 }]; // existence check: TST-0001 taken
+      if (callCount === 3) return [{ count: 0 }]; // count query on retry: still 0 entries
+      if (callCount === 4) return [{ count: 0 }]; // existence check: TST-0002 available
+      return [{ count: 0 }];
+    });
+
+    const serial = await generateCompetitionSerial("comp-123", "TST");
+    expect(serial).toBe("TST-0002");
+  });
+
+  it("returns serial matching XXX-0000 format", async () => {
+    const serial = await generateCompetitionSerial("comp-123", "ABC");
+    expect(serial).toMatch(/^[A-Z]{3}-\d{4}$/);
   });
 });

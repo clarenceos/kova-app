@@ -55,7 +55,7 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 ### Data & Infrastructure
 
 - [x] **DATA-01**: Three new Drizzle tables (competitions, registrants, registration_entries) added to lib/schema.ts with cuid2 IDs, no existing tables modified
-- [ ] **DATA-02**: Serial numbers generated server-side in XXX-0000 format with UNIQUE constraint and retry loop on collision
+- [x] **DATA-02**: Serial numbers generated server-side in XXX-0000 format with UNIQUE constraint and retry loop on collision
 - [x] **DATA-03**: All multi-table writes use db.batch() for atomicity (never db.transaction() over Turso HTTP)
 
 ### Competition Management
@@ -181,7 +181,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DATA-01 | Phase 6 | Complete |
-| DATA-02 | Phase 6 | Pending |
+| DATA-02 | Phase 6 | Complete |
 | DATA-03 | Phase 6 | Complete |
 | COMP-01 | Phase 8 | Pending |
 | COMP-02 | Phase 8 | Pending |

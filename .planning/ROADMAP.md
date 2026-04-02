@@ -102,11 +102,11 @@ Plans:
   2. Three new tables (competitions, registrants, registration_entries) exist in the database with all columns, constraints, and cuid2 PKs as specified
   3. A serial number can be generated server-side in XXX-0000 format; generating two serials simultaneously does not produce a duplicate (UNIQUE constraint + retry loop prevents collision)
   4. All multi-table writes in the codebase use db.batch() — no db.transaction() calls exist in any server action
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 06-01-PLAN.md — Fix Drizzle migration journal, add three new tables to schema.ts, install cuid2, generate migration 0003
-- [ ] 06-02-PLAN.md — Competition-scoped serial number generator (deriveSerialPrefix + generateCompetitionSerial) with tests
+- [x] 06-02-PLAN.md — Competition-scoped serial number generator (deriveSerialPrefix + generateCompetitionSerial) with tests
 
 #### Phase 7: Scheduling Pure Logic
 **Goal**: The scheduling algorithm and weight class helper are implemented as zero-dependency pure functions that can be unit-tested with fixture data before any UI or DB integration
@@ -172,7 +172,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Judge Interface | v1.0 | 0/TBD | Not started | - |
 | 4. Leaderboard | v1.0 | 0/TBD | Not started | - |
 | 5. Complete Athlete Loop | v1.0 | 4/4 | Complete | 2026-03-26 |
-| 6. Schema & Foundation | v2.0 | 1/2 | In Progress|  |
+| 6. Schema & Foundation | v2.0 | 2/2 | Complete   | 2026-04-02 |
 | 7. Scheduling Pure Logic | v2.0 | 0/TBD | Not started | - |
 | 8. Competition Creation | v2.0 | 0/TBD | Not started | - |
 | 9. Public Registration | v2.0 | 0/TBD | Not started | - |

@@ -1,30 +1,32 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-03-27T10:51:11.725Z"
-last_activity: "2026-03-27 - Completed quick task 260327-2o4: Fix 308 resume, save-on-failure, manual URL submission"
+milestone: v2.0
+milestone_name: Queue System
+status: Defining requirements
+last_updated: "2026-04-02"
+last_activity: "2026-04-02 — Milestone v2.0 started"
 progress:
-  total_phases: 5
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Phase 05 — complete-athlete-loop
+**Current focus:** Milestone v2.0 — Queue System
 
 ## Current Position
 
-Phase: 05
-Plan: Not started
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-02 — Milestone v2.0 started
 
 ## Performance Metrics
 

@@ -180,40 +180,40 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 | TBD | Pending |
-| DATA-02 | TBD | Pending |
-| DATA-03 | TBD | Pending |
-| COMP-01 | TBD | Pending |
-| COMP-02 | TBD | Pending |
-| COMP-03 | TBD | Pending |
-| REG-01 | TBD | Pending |
-| REG-02 | TBD | Pending |
-| REG-03 | TBD | Pending |
-| REG-04 | TBD | Pending |
-| REG-05 | TBD | Pending |
-| REG-06 | TBD | Pending |
-| REG-07 | TBD | Pending |
-| REG-08 | TBD | Pending |
-| DASH-01 | TBD | Pending |
-| DASH-02 | TBD | Pending |
-| DASH-03 | TBD | Pending |
-| DASH-04 | TBD | Pending |
-| DASH-05 | TBD | Pending |
-| DASH-06 | TBD | Pending |
-| SCHED-01 | TBD | Pending |
-| SCHED-02 | TBD | Pending |
-| SCHED-03 | TBD | Pending |
-| SCHED-04 | TBD | Pending |
-| SCHED-05 | TBD | Pending |
-| SCHED-06 | TBD | Pending |
-| SCHED-07 | TBD | Pending |
-| SCHED-08 | TBD | Pending |
-| SCHED-09 | TBD | Pending |
+| DATA-01 | Phase 6 | Pending |
+| DATA-02 | Phase 6 | Pending |
+| DATA-03 | Phase 6 | Pending |
+| COMP-01 | Phase 8 | Pending |
+| COMP-02 | Phase 8 | Pending |
+| COMP-03 | Phase 8 | Pending |
+| REG-01 | Phase 9 | Pending |
+| REG-02 | Phase 9 | Pending |
+| REG-03 | Phase 9 | Pending |
+| REG-04 | Phase 9 | Pending |
+| REG-05 | Phase 9 | Pending |
+| REG-06 | Phase 9 | Pending |
+| REG-07 | Phase 9 | Pending |
+| REG-08 | Phase 9 | Pending |
+| DASH-01 | Phase 10 | Pending |
+| DASH-02 | Phase 10 | Pending |
+| DASH-03 | Phase 10 | Pending |
+| DASH-04 | Phase 10 | Pending |
+| DASH-05 | Phase 10 | Pending |
+| DASH-06 | Phase 10 | Pending |
+| SCHED-01 | Phase 7 | Pending |
+| SCHED-02 | Phase 7 | Pending |
+| SCHED-03 | Phase 7 | Pending |
+| SCHED-04 | Phase 7 | Pending |
+| SCHED-05 | Phase 7 | Pending |
+| SCHED-06 | Phase 7 | Pending |
+| SCHED-07 | Phase 10 | Pending |
+| SCHED-08 | Phase 10 | Pending |
+| SCHED-09 | Phase 10 | Pending |
 
 **Coverage:**
 - v1.0 requirements: 28 total, 28 mapped, 0 unmapped ✓
-- v2.0 requirements: 27 total, 0 mapped, 27 unmapped (awaiting roadmap)
+- v2.0 requirements: 29 total, 29 mapped, 0 unmapped ✓
 
 ---
 *Requirements defined: 2026-03-24 (v1.0), 2026-04-02 (v2.0)*
-*Last updated: 2026-04-02 after v2.0 requirements definition*
+*Last updated: 2026-04-02 after v2.0 roadmap creation*

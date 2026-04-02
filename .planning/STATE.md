@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Queue System
-status: Defining requirements
+status: Roadmap defined
 last_updated: "2026-04-02"
-last_activity: "2026-04-02 — Milestone v2.0 started"
+last_activity: "2026-04-02 — v2.0 roadmap created (Phases 6-10)"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,14 +19,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Milestone v2.0 — Queue System
+**Current focus:** Milestone v2.0 — Queue System (Phase 6: Schema & Foundation)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 6 — Schema & Foundation
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-02 — Milestone v2.0 started
+Status: Not started
+Last activity: 2026-04-02 — v2.0 roadmap created (Phases 6-10)
+
+```
+v2.0 Progress: [          ] 0/5 phases
+```
 
 ## Performance Metrics
 
@@ -84,6 +88,12 @@ Recent decisions affecting current work:
 - [Phase 05-03]: entryId added to JudgeSession for DB linkage; serial-only judge form replaces manual 5-field form
 - [Phase 05-04]: GhostReplay uses rAF polling against YT getCurrentTime with seek backward detection (0.5s tolerance) — simpler than event callbacks, naturally handles seek
 - [Phase 05-04]: Entry detail page is server component — repTaps JSON parsed server-side, passed as typed Rep[] to GhostReplay client component
+- [v2.0 Roadmap]: db.transaction() is banned over Turso HTTP — all multi-table writes use db.batch() exclusively
+- [v2.0 Roadmap]: weight_class is never stored in DB — derived at render time only from getWeightClass(gender, bodyWeightKg)
+- [v2.0 Roadmap]: Drizzle migration journal must be fixed (Phase 6 first task) before any schema changes — journal is out of sync with 3 existing SQL files
+- [v2.0 Roadmap]: Scheduler is a pure function (lib/queue/scheduler.ts) with zero DB imports — built and tested in Phase 7 before any UI
+- [v2.0 Roadmap]: Organizer routes at app/organizerdb/ and public registration at app/registration/[compId]/ — outside app/(app)/ to avoid mobile-first auth-guarded layout
+- [v2.0 Roadmap]: No auth gate on organizer routes for v2.0 — code structured for Clerk retrofit without rewrite (deferred to future milestone)
 
 ### Pending Todos
 
@@ -94,6 +104,8 @@ None yet.
 - [Phase 2]: canvas.captureStream() unsupported on iOS through iOS 26.4 — real-device test needed to confirm iOS 18.4+ status before finalizing "unsupported browser" UX path
 - [Phase 2]: Blob download via URL.createObjectURL on iOS Safari for WebM/MP4 — needs real-device validation
 - [Phase 3]: YouTube IFrame API iOS autoplay constraints (mute=1&playsinline=1 required) — verify before implementation
+- [Phase 6 pre-work]: Drizzle migration journal out of sync — must fix journal before running drizzle-kit generate. Fix: add journal entries for 0001 and 0002 manually before generating 0003.
+- [Phase 9]: Serial race condition under concurrent load — UNIQUE constraint + retry loop is the prevention; validate with load test (ab -c 20 -n 100) before sharing public registration link
 
 ### Quick Tasks Completed
 
@@ -115,5 +127,5 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-tdw: Entry detail top-align and bronze pills
+Last activity: 2026-04-02 - v2.0 roadmap created. Phases 6-10 defined. Ready to plan Phase 6.
 Resume file: None

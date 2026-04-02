@@ -1,24 +1,16 @@
 # Roadmap: Kova
 
-## Overview
+## Milestones
 
-Kova v1 delivers three interconnected capabilities: an authenticated canvas-based video recorder that bakes proof-of-capture overlays into the video stream, a judge interface where judges paste a YouTube URL and tap-count reps, and a live leaderboard showing all submitted scores by discipline. The build order follows the dependency chain — auth and DB scaffolding first, then the recorder (Kova's core differentiator), then judging, then the leaderboard that surfaces results. Competition management (organizer workflows, entry submission, competition creation) is v2.
+- 🚧 **v1.0 Core Platform** - Phases 1-5 (in progress)
+- 🚧 **v2.0 Queue System** - Phases 6-10 (in progress)
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+<details>
+<summary>v1.0 Core Platform (Phases 1-5)</summary>
 
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [ ] **Phase 1: Foundation & Auth** - DB schema, DAL scaffolding, Clerk auth flow, athlete onboarding, remove next-pwa
-- [x] **Phase 2: Athlete Video Recorder** - Full canvas recording pipeline with authenticated overlays, export, and YouTube instructions (completed 2026-03-24)
-- [ ] **Phase 3: Judge Interface** - YouTube embed, tap counter, score submission to DB
-- [ ] **Phase 4: Leaderboard** - Live scores filterable by discipline, completing the v1 loop
-- [x] **Phase 5: Complete Athlete Loop** - YouTube auto-upload, athlete profile/submissions, ghost replay, serial-based judge lookup (completed 2026-03-26)
-
-## Phase Details
+**Milestone Goal:** Authenticated canvas-based recording, judge interface, leaderboard, and complete athlete-to-judge loop with YouTube auto-upload and ghost replay.
 
 ### Phase 1: Foundation & Auth
 **Goal**: Users can sign in and athletes can complete onboarding, with the DB schema and DAL in place to support all subsequent phases
@@ -93,15 +85,91 @@ Plans:
 
 **UI hint**: yes
 
+</details>
+
+---
+
+### v2.0 Queue System
+
+**Milestone Goal:** Organizers create competitions, athletes self-register via public links, the system auto-generates timetables with conflict detection, and organizers manage registrations from a dashboard.
+
+#### Phase 6: Schema & Foundation
+**Goal**: The database is in a clean, migratable state with three new tables, a correct serial number generator, and the atomicity constraint enforced — giving every subsequent phase a trustworthy data layer to build on
+**Depends on**: Phase 5
+**Requirements**: DATA-01, DATA-02, DATA-03
+**Success Criteria** (what must be TRUE):
+  1. Running `drizzle-kit migrate` against dev produces no "table already exists" errors — migration journal is consistent with actual schema
+  2. Three new tables (competitions, registrants, registration_entries) exist in the database with all columns, constraints, and cuid2 PKs as specified
+  3. A serial number can be generated server-side in XXX-0000 format; generating two serials simultaneously does not produce a duplicate (UNIQUE constraint + retry loop prevents collision)
+  4. All multi-table writes in the codebase use db.batch() — no db.transaction() calls exist in any server action
+**Plans**: TBD
+
+#### Phase 7: Scheduling Pure Logic
+**Goal**: The scheduling algorithm and weight class helper are implemented as zero-dependency pure functions that can be unit-tested with fixture data before any UI or DB integration
+**Depends on**: Phase 6
+**Requirements**: SCHED-01, SCHED-02, SCHED-03, SCHED-04, SCHED-05, SCHED-06
+**Success Criteria** (what must be TRUE):
+  1. Given a fixture array of entries, the scheduler returns time blocks with athletes assigned to platforms in KB sport sort order (LC before Jerk before Snatch, 10min before 5min, Female before Male, weight class alphabetically)
+  2. A REST conflict is flagged when and only when the gap between two blocks for the same athlete is strictly less than minRestBlocks (a gap of exactly minRestBlocks is not flagged)
+  3. A COACH conflict is flagged when an athlete's listed coach name matches another athlete's name and they share a block
+  4. Weight class is correctly derived from body weight at render time for both male and female divisions — the function is never called with a stored weight_class value
+  5. The scheduler produces no output when called with an empty entries array (no crash, no conflict false-positives)
+**Plans**: TBD
+
+#### Phase 8: Competition Creation
+**Goal**: An organizer can create a competition with all configurable rules and immediately receive a shareable registration link — establishing the competition record that gates all downstream registration and scheduling
+**Depends on**: Phase 6
+**Requirements**: COMP-01, COMP-02, COMP-03
+**Success Criteria** (what must be TRUE):
+  1. Organizer fills out the competition form (name, date, platform count, duration rule, allowed bell weights, status, optional max/deadline) and submits — a competition row is created in the database
+  2. The serial prefix is auto-derived from the competition name without any manual input (e.g. "Girya Pilipinas Cup" derives "GPC")
+  3. After creation, organizer is redirected to the dashboard and sees a copyable registration link for the new competition
+**Plans**: TBD
+**UI hint**: yes
+
+#### Phase 9: Public Registration
+**Goal**: Athletes can self-register for a competition via a public link, select their events with bell weights and durations, and receive confirmed serial numbers — with all guard states enforced and multi-event entries created atomically
+**Depends on**: Phase 8
+**Requirements**: REG-01, REG-02, REG-03, REG-04, REG-05, REG-06, REG-07, REG-08
+**Success Criteria** (what must be TRUE):
+  1. Visiting a registration link shows the competition name and date at the top; attempting to register for a closed, deadline-passed, or full competition shows a clear message with no form
+  2. Athlete fills in personal details (last name, first name, gender, body weight, country via searchable dropdown) and selects at least one event
+  3. Each selected event reveals a bell weight dropdown and duration selector populated from the competition's allowed values; unchecking an event clears its selections
+  4. Submitting creates one registrant row and one registration_entries row per event, with serials assigned atomically — partial registrations (athlete row with no events) cannot occur
+  5. Success page shows the athlete's name, competition name, and a table of assigned serials per event, with instruction to screenshot or save the serials
+  6. "Register another athlete" button returns to the blank form — allowing a coach to register their full team in sequence
+  7. An athlete selecting two events (biathlon) receives two separate serial numbers on the success page
+**Plans**: TBD
+**UI hint**: yes
+
+#### Phase 10: Organizer Dashboard & Timetable
+**Goal**: Organizers can review registrations with analytics and filtering, import registrations via CSV, and generate a print-ready timetable with conflict warnings — completing the full competition management workflow
+**Depends on**: Phase 9, Phase 7
+**Requirements**: DASH-01, DASH-02, DASH-03, DASH-04, DASH-05, DASH-06, SCHED-07, SCHED-08, SCHED-09
+**Success Criteria** (what must be TRUE):
+  1. Organizer can switch between competitions using a selector dropdown and see an analytics bar showing total registrations, per-event counts, gender split, spots remaining, and deadline countdown for the selected competition
+  2. Registrations table shows all registrants sortable by name, bodyweight, and registered-at, and filterable by event and gender; organizer can remove a registrant and all their entries in one action
+  3. Organizer can import a CSV file, see a validation summary with any row-level errors reported before committing, and bulk-create registrations without re-entering data
+  4. Clicking "Generate Queue" opens a modal for start time input; confirming redirects to a timetable page that displays a grid with time, block number, and platform columns filled with athlete/event data
+  5. Conflict warnings are visible in a dedicated panel: REST conflicts shown in red with athlete names and block numbers, COACH conflicts shown in amber
+  6. Printing the timetable page hides navigation and buttons, preserves event-tinted row colors, and fits the table to paper width
+**Plans**: TBD
+**UI hint**: yes
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation & Auth | 0/TBD | Not started | - |
-| 2. Athlete Video Recorder | 3/3 | Complete    | 2026-03-24 |
-| 3. Judge Interface | 0/TBD | Not started | - |
-| 4. Leaderboard | 0/TBD | Not started | - |
-| 5. Complete Athlete Loop | 4/4 | Complete   | 2026-03-26 |
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 1. Foundation & Auth | v1.0 | 0/TBD | Not started | - |
+| 2. Athlete Video Recorder | v1.0 | 3/3 | Complete | 2026-03-24 |
+| 3. Judge Interface | v1.0 | 0/TBD | Not started | - |
+| 4. Leaderboard | v1.0 | 0/TBD | Not started | - |
+| 5. Complete Athlete Loop | v1.0 | 4/4 | Complete | 2026-03-26 |
+| 6. Schema & Foundation | v2.0 | 0/TBD | Not started | - |
+| 7. Scheduling Pure Logic | v2.0 | 0/TBD | Not started | - |
+| 8. Competition Creation | v2.0 | 0/TBD | Not started | - |
+| 9. Public Registration | v2.0 | 0/TBD | Not started | - |
+| 10. Organizer Dashboard & Timetable | v2.0 | 0/TBD | Not started | - |

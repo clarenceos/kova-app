@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Phase complete — ready for verification
-last_updated: "2026-04-02T10:42:56.143Z"
+status: Ready to plan
+last_updated: "2026-04-02T11:09:41.801Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 ## Current Position
 
-Phase: 06 (schema-foundation) — EXECUTING
-Plan: 2 of 2
+Phase: 7
+Plan: Not started
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Plan: 2 of 2
 | Phase 05-complete-athlete-loop P04 | 4 | 2 tasks | 6 files |
 | Phase 06-schema-foundation P01 | 3 | 2 tasks | 7 files |
 | Phase 06-schema-foundation P02 | 10 | 1 tasks | 5 files |
+| Phase 06 P03 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 06-02]: Followed D-04 over QUEUE_SPEC example: Hunger Bells -> HUN not HUB (first 3 of first word when < 3 words)
 - [Phase 06-02]: vi.mock pattern for unit-testing pure functions co-located with DB-dependent code
 - [Phase 06-02]: vitest.config.ts required for @/ path alias resolution (vitest does not read tsconfig.json paths)
+- [Phase 06]: Used mockWhere.mockImplementation() with call counter for collision test — simulates 4 sequential DB calls without live DB
+- [Phase 06]: vi.fn().mockReturnValue() is the correct pattern for vitest default mock values; _returnValue property approach breaks when mockImplementation is also used
 
 ### Pending Todos
 

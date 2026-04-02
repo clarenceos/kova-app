@@ -56,17 +56,17 @@ Source: Matches pattern observed in `JudgeSetupForm.tsx` (px-4 py-8, space-y-4, 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
 | Body | 16px | 400 | 1.5 |
-| Label | 14px | 500 | 1.4 |
+| Label | 14px | 400 | 1.4 |
 | Heading | 24px | 700 | 1.2 |
 | Caption / helper | 12px | 400 | 1.4 |
 
 Notes:
 - Body (16px / 400) — form input values, card descriptions, list copy
-- Label (14px / 500) — form field labels, section subheadings within the form, badge text
+- Label (14px / 400) — form field labels, section subheadings within the form, badge text; size distinction from Body (16px) provides hierarchy without a separate weight
 - Heading (24px / 700) — page title ("Create Competition", "Your Competitions")
 - Caption (12px / 400) — serial prefix preview ("Serial prefix: GPC"), helper text under optional fields, inline validation errors
 
-Source: Matches `JudgeSetupForm.tsx` (`text-sm font-medium` labels, `text-2xl font-bold` heading).
+Source: Matches `JudgeSetupForm.tsx` (`text-sm` labels, `text-2xl font-bold` heading). Weight collapsed from 3 to 2 (400, 700) — Label uses size (14px vs 16px) for hierarchy instead of a separate medium weight.
 
 ---
 
@@ -124,7 +124,7 @@ Field order (locked — source: CONTEXT.md D-06, QUEUE_SPEC):
 9. Submit button
 
 Bell Weights section layout:
-- Section heading: "Allowed Bell Weights" at label size (14px / 500)
+- Section heading: "Allowed Bell Weights" at label size (14px / 400)
 - Two subsections: "Double Bell — LC & Jerk" and "Single Bell — Snatch"
 - Each subsection: heading + "Select All / Deselect All" link at right + checkbox grid
 - Checkbox grid: 3 columns on desktop, weights displayed as `2x8`, `2x12`, etc.

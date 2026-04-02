@@ -133,7 +133,12 @@ Plans:
   1. Organizer fills out the competition form (name, date, platform count, duration rule, allowed bell weights, status, optional max/deadline) and submits — a competition row is created in the database
   2. The serial prefix is auto-derived from the competition name without any manual input (e.g. "Girya Pilipinas Cup" derives "GPC")
   3. After creation, organizer is redirected to the dashboard and sees a copyable registration link for the new competition
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Install shadcn form components, create organizer layout, build createCompetition server action
+- [ ] 08-02-PLAN.md — Competition creation form with live serial prefix preview, competition list page with copyable registration links
+
 **UI hint**: yes
 
 #### Phase 9: Public Registration
@@ -179,6 +184,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Complete Athlete Loop | v1.0 | 4/4 | Complete | 2026-03-26 |
 | 6. Schema & Foundation | v2.0 | 2/3 | Gap closure | - |
 | 7. Scheduling Pure Logic | v2.0 | 2/2 | Complete   | 2026-04-02 |
-| 8. Competition Creation | v2.0 | 0/TBD | Not started | - |
+| 8. Competition Creation | v2.0 | 0/2 | Planning complete | - |
 | 9. Public Registration | v2.0 | 0/TBD | Not started | - |
 | 10. Organizer Dashboard & Timetable | v2.0 | 0/TBD | Not started | - |

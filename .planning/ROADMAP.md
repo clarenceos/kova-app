@@ -119,11 +119,11 @@ Plans:
   3. A COACH conflict is flagged when an athlete's listed coach name matches another athlete's name and they share a block
   4. Weight class is correctly derived from body weight at render time for both male and female divisions — the function is never called with a stored weight_class value
   5. The scheduler produces no output when called with an empty entries array (no crash, no conflict false-positives)
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 07-01-PLAN.md — Scheduler type contracts + weight class derivation helper (TDD)
-- [ ] 07-02-PLAN.md — Core scheduling algorithm: sort, block assignment, REST/COACH conflict detection (TDD)
+- [x] 07-02-PLAN.md — Core scheduling algorithm: sort, block assignment, REST/COACH conflict detection (TDD)
 
 #### Phase 8: Competition Creation
 **Goal**: An organizer can create a competition with all configurable rules and immediately receive a shareable registration link — establishing the competition record that gates all downstream registration and scheduling
@@ -178,7 +178,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Leaderboard | v1.0 | 0/TBD | Not started | - |
 | 5. Complete Athlete Loop | v1.0 | 4/4 | Complete | 2026-03-26 |
 | 6. Schema & Foundation | v2.0 | 2/3 | Gap closure | - |
-| 7. Scheduling Pure Logic | v2.0 | 1/2 | In Progress|  |
+| 7. Scheduling Pure Logic | v2.0 | 2/2 | Complete   | 2026-04-02 |
 | 8. Competition Creation | v2.0 | 0/TBD | Not started | - |
 | 9. Public Registration | v2.0 | 0/TBD | Not started | - |
 | 10. Organizer Dashboard & Timetable | v2.0 | 0/TBD | Not started | - |

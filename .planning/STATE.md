@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Ready to execute
-last_updated: "2026-04-02T14:41:57.080Z"
+status: Phase complete — ready for verification
+last_updated: "2026-04-02T14:47:15.216Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 5
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # Project State
@@ -57,6 +57,7 @@ Plan: 2 of 2
 | Phase 06-schema-foundation P02 | 10 | 1 tasks | 5 files |
 | Phase 06 P03 | 2 | 2 tasks | 2 files |
 | Phase 07 P01 | 71 | 1 tasks | 3 files |
+| Phase 07 P02 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,9 @@ Recent decisions affecting current work:
 - [Phase 06]: vi.fn().mockReturnValue() is the correct pattern for vitest default mock values; _returnValue property approach breaks when mockImplementation is also used
 - [Phase 07-01]: SchedulerEntry is the flattened join type — caller constructs from DB query, scheduler receives clean typed array
 - [Phase 07-01]: Super heavyweight label derived from last bracket limit at runtime ('80+kg', '95+kg') — not hardcoded strings
+- [Phase 07]: weightClassSortKey numeric trick: parseFloat + 0.5 for '+' brackets ensures super-heavyweight sorts after bounded counterpart — plain localeCompare breaks this
+- [Phase 07]: REST conflict uses strict gap < minRestBlocks (D-09), not <=; gap == minRestBlocks is acceptable rest, not a conflict
+- [Phase 07]: COACH conflict: student is entry with coach field set, coach is entry whose full name matches (case-insensitive trimmed, D-01)
 
 ### Pending Todos
 

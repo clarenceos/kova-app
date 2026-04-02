@@ -40,8 +40,8 @@ Authenticated video: every submission carries a verified timer, athlete name, di
 - [x] Serial numbers (XXX-0000) assigned server-side per registration entry — Validated in Phase 06
 - [ ] Organizer reviews registrations on dashboard with analytics and filtering
 - [ ] Organizer imports registrations via CSV
-- [ ] System auto-generates timetable from registrations (pure scheduling algorithm)
-- [ ] Scheduler flags rest conflicts (same athlete, insufficient gap) and coach conflicts
+- [x] System auto-generates timetable from registrations (pure scheduling algorithm) — Validated in Phase 07
+- [x] Scheduler flags rest conflicts (same athlete, insufficient gap) and coach conflicts — Validated in Phase 07
 - [ ] Queue/timetable view is print-friendly with conflict warnings
 
 ### Out of Scope
@@ -101,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after Phase 06 completion*
+*Last updated: 2026-04-02 after Phase 07 completion*

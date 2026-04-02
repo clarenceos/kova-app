@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Not started
-last_updated: "2026-04-02T09:40:11.025Z"
-last_activity: 2026-04-02 — v2.0 roadmap created (Phases 6-10)
+status: Ready to execute
+last_updated: "2026-04-02T10:36:02.409Z"
+last_activity: 2026-04-02
 progress:
   total_phases: 5
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 2
+  completed_plans: 1
 ---
 
 # Project State
@@ -19,18 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Milestone v2.0 — Queue System (Phase 6: Schema & Foundation)
+**Current focus:** Phase 06 — schema-foundation
 
 ## Current Position
 
-Phase: 6 — Schema & Foundation
-Plan: —
-Status: Not started
-Last activity: 2026-04-02 — v2.0 roadmap created (Phases 6-10)
-
-```
-v2.0 Progress: [          ] 0/5 phases
-```
+Phase: 06 (schema-foundation) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -59,6 +53,7 @@ v2.0 Progress: [          ] 0/5 phases
 | Phase 05-complete-athlete-loop P02 | 2 | 2 tasks | 4 files |
 | Phase 05-complete-athlete-loop P03 | 2 | 2 tasks | 2 files |
 | Phase 05-complete-athlete-loop P04 | 4 | 2 tasks | 6 files |
+| Phase 06-schema-foundation P01 | 3 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -94,6 +89,9 @@ Recent decisions affecting current work:
 - [v2.0 Roadmap]: Scheduler is a pure function (lib/queue/scheduler.ts) with zero DB imports — built and tested in Phase 7 before any UI
 - [v2.0 Roadmap]: Organizer routes at app/organizerdb/ and public registration at app/registration/[compId]/ — outside app/(app)/ to avoid mobile-first auth-guarded layout
 - [v2.0 Roadmap]: No auth gate on organizer routes for v2.0 — code structured for Clerk retrofit without rewrite (deferred to future milestone)
+- [Phase 06-01]: Migration journal fixed by manually adding idx=1 and idx=2 entries for 0001_phase5_columns and 0002_profiles
+- [Phase 06-01]: cuid2 PKs via $defaultFn(() => createId()) on all new tables; serial UNIQUE constraint prevents race-condition collisions
+- [Phase 06-01]: db.batch() convention documented in schema.ts; db.transaction() banned over Turso HTTP
 
 ### Pending Todos
 
@@ -127,5 +125,5 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-04-02 - v2.0 roadmap created. Phases 6-10 defined. Ready to plan Phase 6.
-Resume file: .planning/phases/06-schema-foundation/06-CONTEXT.md
+Last activity: 2026-04-02
+Resume file: None

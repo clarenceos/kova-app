@@ -22,6 +22,13 @@
       "when": 1774351593222,
       "tag": "0002_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1775126027020,
+      "tag": "0003_new_scarlet_witch",
+      "breakpoints": true
     }
   ]
 }

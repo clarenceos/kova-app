@@ -37,7 +37,7 @@ Authenticated video: every submission carries a verified timer, athlete name, di
 - [ ] Organizer creates a competition with rules (platforms, durations, bell weights)
 - [ ] Organizer shares a registration link with athletes
 - [ ] Athletes register via public link with personal details and event selections
-- [ ] Serial numbers (XXX-0000) assigned server-side per registration entry
+- [x] Serial numbers (XXX-0000) assigned server-side per registration entry — Validated in Phase 06
 - [ ] Organizer reviews registrations on dashboard with analytics and filtering
 - [ ] Organizer imports registrations via CSV
 - [ ] System auto-generates timetable from registrations (pure scheduling algorithm)
@@ -101,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after milestone v2.0 start*
+*Last updated: 2026-04-02 after Phase 06 completion*

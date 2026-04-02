@@ -91,7 +91,7 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 - [ ] **SCHED-03**: Block assignment fills platform slots sequentially (greedy)
 - [ ] **SCHED-04**: REST conflict detection: same athlete in blocks where gap < minRestBlocks (strict less-than)
 - [ ] **SCHED-05**: COACH conflict detection: athlete who is also a listed coach sharing a block with their student
-- [ ] **SCHED-06**: Weight class derived from body weight at render time (never stored in DB)
+- [x] **SCHED-06**: Weight class derived from body weight at render time (never stored in DB)
 - [ ] **SCHED-07**: Timetable grid with time, block number, and platform columns showing athlete name, event, bell weight, weight class, club
 - [ ] **SCHED-08**: Conflict panel showing REST (red) and COACH (amber) warnings with athlete names and block numbers
 - [ ] **SCHED-09**: Print-friendly layout: nav/buttons hidden, background colors preserved, table fits paper width
@@ -205,7 +205,7 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | SCHED-03 | Phase 7 | Pending |
 | SCHED-04 | Phase 7 | Pending |
 | SCHED-05 | Phase 7 | Pending |
-| SCHED-06 | Phase 7 | Pending |
+| SCHED-06 | Phase 7 | Complete |
 | SCHED-07 | Phase 10 | Pending |
 | SCHED-08 | Phase 10 | Pending |
 | SCHED-09 | Phase 10 | Pending |

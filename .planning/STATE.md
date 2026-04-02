@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Ready to plan
-last_updated: "2026-04-02T11:38:44.303Z"
+status: Ready to execute
+last_updated: "2026-04-02T14:41:57.080Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Phase 06 — schema-foundation
+**Current focus:** Phase 07 — scheduling-pure-logic
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
+Phase: 07 (scheduling-pure-logic) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Plan: Not started
 | Phase 06-schema-foundation P01 | 3 | 2 tasks | 7 files |
 | Phase 06-schema-foundation P02 | 10 | 1 tasks | 5 files |
 | Phase 06 P03 | 2 | 2 tasks | 2 files |
+| Phase 07 P01 | 71 | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 06-02]: vitest.config.ts required for @/ path alias resolution (vitest does not read tsconfig.json paths)
 - [Phase 06]: Used mockWhere.mockImplementation() with call counter for collision test — simulates 4 sequential DB calls without live DB
 - [Phase 06]: vi.fn().mockReturnValue() is the correct pattern for vitest default mock values; _returnValue property approach breaks when mockImplementation is also used
+- [Phase 07-01]: SchedulerEntry is the flattened join type — caller constructs from DB query, scheduler receives clean typed array
+- [Phase 07-01]: Super heavyweight label derived from last bracket limit at runtime ('80+kg', '95+kg') — not hardcoded strings
 
 ### Pending Todos
 
@@ -133,4 +136,4 @@ None yet.
 ## Session Continuity
 
 Last activity: 2026-04-02
-Resume file: .planning/phases/07-scheduling-pure-logic/07-CONTEXT.md
+Resume file: None

@@ -102,7 +102,7 @@ export function RegistrationsTable({
     <div className="mt-6">
       {/* Filter bar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        {(['All', 'LC', 'Jerk', 'Snatch'] as const).map(evt => {
+        {(['All', 'LC', 'JERK', 'SNATCH'] as const).map(evt => {
           const value = evt === 'All' ? null : evt
           const isActive = eventFilter === value
           return (
@@ -116,7 +116,7 @@ export function RegistrationsTable({
           )
         })}
         <span className="mx-2 h-4 w-px bg-raw-steel/20" />
-        {(['All', 'M', 'F'] as const).map(gen => {
+        {(['All', 'Male', 'Female'] as const).map(gen => {
           const value = gen === 'All' ? null : gen
           const isActive = genderFilter === value
           return (

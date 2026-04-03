@@ -38,11 +38,11 @@ Authenticated video: every submission carries a verified timer, athlete name, di
 - [ ] Organizer shares a registration link with athletes
 - [x] Athletes register via public link with personal details and event selections — Validated in Phase 09
 - [x] Serial numbers (XXX-0000) assigned server-side per registration entry — Validated in Phase 06
-- [ ] Organizer reviews registrations on dashboard with analytics and filtering
-- [ ] Organizer imports registrations via CSV
+- [x] Organizer reviews registrations on dashboard with analytics and filtering — Validated in Phase 10
+- [x] Organizer imports registrations via CSV — Validated in Phase 10
 - [x] System auto-generates timetable from registrations (pure scheduling algorithm) — Validated in Phase 07
 - [x] Scheduler flags rest conflicts (same athlete, insufficient gap) and coach conflicts — Validated in Phase 07
-- [ ] Queue/timetable view is print-friendly with conflict warnings
+- [x] Queue/timetable view is print-friendly with conflict warnings — Validated in Phase 10
 
 ### Out of Scope
 
@@ -101,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after Phase 09 completion*
+*Last updated: 2026-04-03 after Phase 10 completion*

@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
 status: Phase complete — ready for verification
-last_updated: "2026-04-03T10:38:48.070Z"
+last_updated: "2026-04-03T10:38:59.724Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 5
@@ -132,6 +132,9 @@ Recent decisions affecting current work:
 - [Phase 10-01]: db.batch() cast via unknown for dynamically-built insert array in bulkImportRegistrants — Drizzle requires tuple type; safe with non-empty guard above
 - [Phase 10]: SortableHeader as inner function captures sort state closure without prop drilling
 - [Phase 10]: RemoveRegistrantDialog uses controlled open=true, delegates cancel/close via onRemoved callback to RegistrationsTable
+- [Phase 10-03]: qrcode npm package used for QR generation (offline-capable, no external API dependency)
+- [Phase 10-03]: Self-contained modal pattern: each modal manages its own open state and renders its own trigger — DashboardClient passes props only
+- [Phase 10-03]: Disabled button tooltip requires span wrapper — Radix Tooltip on disabled Button has no pointer events; span restores them
 
 ### Pending Todos
 

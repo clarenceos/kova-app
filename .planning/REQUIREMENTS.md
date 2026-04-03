@@ -81,8 +81,8 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 - [x] **DASH-02**: Analytics bar showing total registrations, per-event counts, gender split, spots remaining, deadline countdown
 - [x] **DASH-03**: Registrations table sortable by name, bodyweight, registered at — filterable by event and gender
 - [x] **DASH-04**: Remove action deletes registrant and all their entries
-- [ ] **DASH-05**: CSV import parses file client-side, shows validation summary with error reporting, bulk-creates registrations via server action
-- [ ] **DASH-06**: Generate Queue button opens modal with start time input, redirects to timetable view
+- [x] **DASH-05**: CSV import parses file client-side, shows validation summary with error reporting, bulk-creates registrations via server action
+- [x] **DASH-06**: Generate Queue button opens modal with start time input, redirects to timetable view
 
 ### Scheduling & Queue
 
@@ -198,8 +198,8 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | DASH-02 | Phase 10 | Complete |
 | DASH-03 | Phase 10 | Complete |
 | DASH-04 | Phase 10 | Complete |
-| DASH-05 | Phase 10 | Pending |
-| DASH-06 | Phase 10 | Pending |
+| DASH-05 | Phase 10 | Complete |
+| DASH-06 | Phase 10 | Complete |
 | SCHED-01 | Phase 7 | Complete |
 | SCHED-02 | Phase 7 | Complete |
 | SCHED-03 | Phase 7 | Complete |

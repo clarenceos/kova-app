@@ -92,9 +92,9 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 - [x] **SCHED-04**: REST conflict detection: same athlete in blocks where gap < minRestBlocks (strict less-than)
 - [x] **SCHED-05**: COACH conflict detection: athlete who is also a listed coach sharing a block with their student
 - [x] **SCHED-06**: Weight class derived from body weight at render time (never stored in DB)
-- [ ] **SCHED-07**: Timetable grid with time, block number, and platform columns showing athlete name, event, bell weight, weight class, club
-- [ ] **SCHED-08**: Conflict panel showing REST (red) and COACH (amber) warnings with athlete names and block numbers
-- [ ] **SCHED-09**: Print-friendly layout: nav/buttons hidden, background colors preserved, table fits paper width
+- [x] **SCHED-07**: Timetable grid with time, block number, and platform columns showing athlete name, event, bell weight, weight class, club
+- [x] **SCHED-08**: Conflict panel showing REST (red) and COACH (amber) warnings with athlete names and block numbers
+- [x] **SCHED-09**: Print-friendly layout: nav/buttons hidden, background colors preserved, table fits paper width
 
 ## Future Requirements
 
@@ -206,9 +206,9 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | SCHED-04 | Phase 7 | Complete |
 | SCHED-05 | Phase 7 | Complete |
 | SCHED-06 | Phase 7 | Complete |
-| SCHED-07 | Phase 10 | Pending |
-| SCHED-08 | Phase 10 | Pending |
-| SCHED-09 | Phase 10 | Pending |
+| SCHED-07 | Phase 10 | Complete |
+| SCHED-08 | Phase 10 | Complete |
+| SCHED-09 | Phase 10 | Complete |
 
 **Coverage:**
 - v1.0 requirements: 28 total, 28 mapped, 0 unmapped ✓

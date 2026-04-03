@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Ready to plan
-last_updated: "2026-04-03T05:59:33.799Z"
+status: Ready to execute
+last_updated: "2026-04-03T10:31:33.761Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 5
   completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 14
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Phase 09 — public-registration
+**Current focus:** Phase 10 — organizer-dashboard-timetable
 
 ## Current Position
 
-Phase: 10
-Plan: Not started
+Phase: 10 (organizer-dashboard-timetable) — EXECUTING
+Plan: 3 of 4
 
 ## Performance Metrics
 
@@ -62,6 +62,8 @@ Plan: Not started
 | Phase 09 P01 | 4 | 2 tasks | 7 files |
 | Phase 09-public-registration P03 | 2 | 1 tasks | 1 files |
 | Phase 09-public-registration P02 | 2 | 2 tasks | 3 files |
+| Phase 10-organizer-dashboard-timetable P04 | 8 | 2 tasks | 6 files |
+| Phase 10-organizer-dashboard-timetable P01 | 10 | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -120,6 +122,12 @@ Recent decisions affecting current work:
 - [Phase 09-03]: notFound() called for both missing registrantId and null return from getRegistrationData — correct 404 in both cases
 - [Phase 09-02]: Guard state logic extracted into getGuardState() helper — status!=open, deadline<now, or count>=maxRegistrants each map to a labeled guard object
 - [Phase 09-02]: Bell weight filtering done server-side by splitting allowedBellWeights JSON on 2x/1x prefix, passed as doubleBells/singleBells props to client component
+- [Phase 10-04]: lib/actions/dashboard.ts created as deviation (Rule 3) — plan referenced getCompetitionDashboard but file did not exist
+- [Phase 10-04]: Conflict lookup built as Map<entryId, Conflict[]> in TimetableGrid — O(1) cell lookup vs O(n*m) per-cell search
+- [Phase 10-04]: Event tint majority rule: majority[1] <= events.length/2 means tied/split blocks get neutral tint (D-16)
+- [Phase 10-01]: Used Popover+Command over shadcn Select for CompetitionSelector — SelectItem renders children as text only, Popover+Command allows custom name/date/badge per item
+- [Phase 10-01]: 3-query + JS grouping for getCompetitionDashboard — cleaner than verbose Drizzle join; sufficient for <=200 registrants per D-09
+- [Phase 10-01]: db.batch() cast via unknown for dynamically-built insert array in bulkImportRegistrants — Drizzle requires tuple type; safe with non-empty guard above
 
 ### Pending Todos
 
@@ -154,4 +162,4 @@ None yet.
 ## Session Continuity
 
 Last activity: 2026-04-03
-Resume file: .planning/phases/10-organizer-dashboard-timetable/10-CONTEXT.md
+Resume file: None

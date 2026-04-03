@@ -60,13 +60,13 @@ Source: Inferred from existing patterns (`px-8 py-12` = 32px/48px page chrome in
 | Role | Size | Weight | Line Height | Font |
 |------|------|--------|-------------|------|
 | Body | 14px | 400 (regular) | 1.5 | Geist Sans |
-| Label / table header | 12px | 500 (medium) | 1.4 | Geist Sans |
+| Label / table header | 12px | 400 (regular) | 1.4 | Geist Sans |
 | Heading (page, section) | 24px | 700 (bold) | 1.2 | Geist Sans |
 | Display / stat number | 28px | 700 (bold) | 1.0 | Geist Sans |
 
 Usage rules:
 - 14px body: table cell content, helper text, modal body text, conflict panel descriptions
-- 12px label: column headers (`text-xs`), analytics card labels, badge text, helper hints (muted)
+- 12px label: column headers (`text-xs text-muted-foreground`), analytics card labels, badge text, helper hints — differentiated from body by size and `text-muted-foreground` color, not by weight
 - 24px heading: page title "Your Competitions", section headers within dashboard
 - 28px display: analytics stat card numbers (total registrants count, gender counts, etc.)
 - `font-tomorrow` class reserved for KOVA brand text only — do not use on dashboard data
@@ -85,7 +85,7 @@ Source: Extracted from `create/page.tsx` patterns (`text-2xl font-bold`, `text-s
 | Accent bright | `bright-bronze` / `accent` | `#C49A5A` | Link text, hover states on CTA, serial prefix preview |
 | Muted text | `raw-steel` / `muted-foreground` | `#7B8C97` | Helper text, table column headers, placeholder copy, disabled states |
 | Foreground text | `parchment` / `foreground` | `#EDE9E2` | All readable body text, headings, table data |
-| Destructive | `destructive` | `#7B8C97` (mapped) — use `text-red-400` for actual removal warnings | Remove button destructive label, confirmation dialog remove action |
+| Destructive | `text-red-400` / `bg-red-600` | `#f87171` / `#dc2626` | Remove button label and destructive confirmation action button — CSS `destructive` semantic variable is not used for this phase's destructive actions |
 | Border | `border` | `rgba(123, 140, 151, 0.2)` | Table dividers, card outlines, modal borders |
 
 Accent (`patina-bronze` / `bright-bronze`) reserved for:
@@ -110,6 +110,20 @@ Conflict indicator colors:
 - COACH conflict: `text-amber-400` / `bg-amber-950/40` pill
 
 Source: All tokens extracted directly from `app/globals.css` — not inferred
+
+---
+
+## Visual Hierarchy / Focal Points
+
+Each screen state must have one declared focal point — the first element that draws the eye and orients the organizer.
+
+| Screen State | Focal Point | Rationale |
+|---|---|---|
+| Dashboard — no competitions exist | "Create Competition" CTA button (centered, primary bronze) | Empty state: only action available; everything else is muted copy below it |
+| Dashboard — competitions exist, none selected | Competition selector dropdown (top of page, full-width trigger) | The selector is the gate to all other content; nothing else is interactive until it is used |
+| Dashboard — competition selected | Analytics bar stat numbers (28px bold, first visible content below selector) | Numbers answer "how many?" immediately; table below provides detail |
+| Timetable view | Time column + first platform column pair (left-anchored) | Organizers scan the schedule top-to-bottom; the time column anchors the eye; the first platform column is where reading begins |
+| Timetable view — conflicts present | Conflict panel (positioned above grid, expanded by default, red/amber text contrast) | Conflict panel renders before the grid in DOM order; high-contrast text color ensures it pulls attention before the grid |
 
 ---
 

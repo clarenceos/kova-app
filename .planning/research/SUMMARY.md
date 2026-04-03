@@ -1,219 +1,226 @@
 # Project Research Summary
 
-**Project:** Kova
-**Domain:** Async kettlebell sport competition PWA with canvas-based authenticated video recording
-**Researched:** 2026-03-24
-**Confidence:** MEDIUM (stack/architecture HIGH; iOS recording support LOW)
+**Project:** Kova — v2.0 Competition Registration and Queue Scheduling
+**Domain:** KB sport competition management — organizer registration, serial assignment, scheduling
+**Researched:** 2026-04-02 (v2.0 queue system); original 2026-03-24 (recorder/judge)
+**Confidence:** HIGH (QUEUE_SPEC.md is fully specified; architecture derived from direct codebase reading; pitfalls sourced from authoritative Drizzle/Turso/WebKit docs)
+
+---
 
 ## Executive Summary
 
-Kova is a multi-role sports competition platform for online kettlebell sport events, combining an authenticated in-browser video recorder, a judge interface, competition management, and a public leaderboard. The recommended approach is a Next.js 16 App Router PWA with route-group-based role isolation (`(athlete)`, `(judge)`, `(organizer)`), a thin Server Action + server-only DAL pattern for all mutations, Turso/Drizzle for the database, and Clerk for auth and athlete name storage via `publicMetadata`. The recording pipeline uses only native browser APIs — `getUserMedia` → canvas compositing → `canvas.captureStream(30)` → `MediaRecorder` — with the overlay (timer, name, discipline, weight, serial) baked into the video frames. YouTube serves as the CDN for all submissions, which eliminates server-side video storage entirely.
+Kova v2.0 adds a complete competition management workflow — competition creation, public athlete registration, organizer dashboard, scheduling algorithm, and timetable output — onto an existing working KB sport PWA. The milestone is well-specified: QUEUE_SPEC.md locks the serial format, scheduling algorithm interface, DB table schemas, and route structure. Research confirms the recommended approach is entirely additive: three new tables, three new route groups, one pure-function scheduler, and four new npm packages. Zero modifications to the existing recorder, judge, or auth infrastructure.
 
-The architecture's most important insight is the dependency chain: athlete name must exist before recording can begin, a recording serial must be generated before recording starts, and a competition with divisions must exist before an athlete can submit an entry. This drives a strictly sequential build order: DB schema → auth/roles → recorder → competition management → entry submission → judge interface → leaderboard. Every phase depends on the one before it.
+The single highest-risk area is DB atomicity for registration. The Turso HTTP client does not support `db.transaction()` reliably — `db.batch()` is the correct tool for the combined registrant + entries insert, and a UNIQUE constraint on `serial` with a retry loop is mandatory to handle concurrent registrations at competition launch. Every other implementation risk (CSV BOM handling, print CSS color adjustment, scheduler boundary conditions, conditional form field cleanup) is well-understood and preventable with one-time defensive coding patterns documented in the pitfalls research.
 
-The single highest-risk area is iOS Safari: `canvas.captureStream()` is confirmed unsupported on iOS (Can I Use, March 2026), meaning the recording pipeline does not work on any iPhone or iPad. The screen wake lock, WebM duration metadata, and `proxy.ts` Clerk integration are additional Phase 1 concerns that cannot be deferred without breaking the core product. iOS recording support should be explicitly documented as out of scope for v1, with a clear in-app message directing iOS users to Chrome on Android or desktop.
+The scheduling algorithm is the most algorithmically interesting piece but is structurally simple: a pure sort-and-assign function with two conflict types (rest gap and coach overlap). Building it as a zero-dependency pure function that receives a typed array makes it trivially testable and decoupled from the DB. The recommended build order — schema first, pure logic second, server actions third, routes last — respects the data dependency chain and ensures each layer can be validated in isolation before the next is built on top of it. No phase in this milestone requires exploratory research before implementation; QUEUE_SPEC.md and the codebase provide all needed patterns.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The full core stack is already installed and correctly chosen. The only required change is replacing the abandoned `next-pwa@5.6.0` (last release December 2022, incompatible with Next.js 16) with either a hand-rolled `public/sw.js` or Serwist (`@serwist/next ^9.0.0`). For Kova's minimal offline needs (cache the app shell; the recording flow needs no network), a hand-rolled service worker is simpler and avoids the `--webpack` build flag that Serwist requires. The PWA manifest should use Next.js 16's built-in `app/manifest.ts` — no library needed.
+The existing stack (Next.js 16.2.1, Clerk, Turso + Drizzle, shadcn/ui, Tailwind v4, Vercel) requires no changes for v2.0. Three new npm packages and four shadcn components are the entire scope of dependency additions.
 
-**Core technologies:**
-- Next.js 16.2.1 (App Router) — framework; recording flow is entirely `'use client'` so no SSR conflict
-- React 19.2.4 — UI library; already in place
-- Clerk ^7.0.6 — auth + `publicMetadata.name` athlete identity; avoids a users table
-- Turso + Drizzle ORM (drizzle ^0.45.1, @libsql/client ^0.17.2) — edge-compatible SQLite; correct for this scale
-- shadcn/ui + Tailwind CSS v4 — accessible component primitives; already in place
-- Vercel — deployment; no extra config needed for client-side recording
-- Native browser APIs (MediaRecorder, Canvas, AudioContext, Screen Wake Lock) — no recording libraries; project constraint
-- `webm-fix-duration` (mat-sz/webm-fix-duration) — post-processing for seekable WebM exports; must add
+**New packages for this milestone:**
+- `@paralleldrive/cuid2` ^2.2.2 — collision-resistant IDs for all new table PKs; QUEUE_SPEC explicitly mandates cuid2
+- `papaparse` ^5.5.3 — client-side CSV parsing for organizer import; zero deps, 5M weekly downloads
+- `countries-list` ^3.3.0 — ISO country data for registration form; ESM-only v3, static array at module level
+- `@types/papaparse` — TypeScript types (PapaParse does not bundle types)
 
-**Remove:** `next-pwa@5.6.0` — incompatible with Next.js 16, breaks service worker.
+**New shadcn components (CLI install, not npm):**
+- `calendar` + `popover` — date picker for competition date field
+- `command` + `combobox` — searchable dropdown for 200-country list (plain `<select>` is unusable at that scale)
 
-**Add:** `webm-fix-duration` (required for export quality), optionally `@serwist/next` + `serwist` if full offline caching is needed beyond the app shell.
+**Critical DB constraint:** `db.transaction()` over Turso HTTP is unreliable — each statement is a separate HTTP request and `BEGIN`/`COMMIT` fail with "no transaction is active." Use `db.batch()` for all multi-table atomic writes. This is the single most important stack constraint for this milestone.
+
+**Schema patterns for new tables:**
+- `$defaultFn(() => createId())` for cuid2 PKs
+- `text({ mode: 'json' }).$type<string[]>()` for JSON array columns (`allowed_bell_weights`)
+- ISO string timestamps (`text NOT NULL`) per QUEUE_SPEC — intentionally different from existing `integer timestamp` convention
+- Foreign key enforcement at application layer (libSQL HTTP does not set `PRAGMA foreign_keys = ON` automatically)
 
 ### Expected Features
 
-The feature set splits cleanly into two independent flows that merge at the leaderboard: the athlete recording flow (record → review → export → YouTube upload → submit URL) and the competition flow (competition creation → entry management → judge assignment → scoring → results). Both flows are required for v1.
+All features below are P1 — they form a complete organizer workflow and must ship together. The five route groups are interdependent; partial delivery is not useful to organizers.
 
-**Must have (table stakes):**
-- Athlete onboarding: name capture on first login (gates the recorder)
-- Discipline + weight + countdown setup before recording
-- Canvas recorder with overlay (timer, name, discipline, weight, serial, KOVA branding) at 30fps
-- Auto-stop at 10:10; minute beep via AudioContext; configurable countdown (5–60s)
-- Playback review before export; WebM export with serial in filename
-- YouTube instructions with pre-filled description and copy-to-clipboard
-- Competition creation with name, date, disciplines, weight/gender divisions
-- Athlete self-registration and YouTube URL submission for entries
-- Organizer: manually add athlete entries; assign judges to entries
-- Judge interface: YouTube-embedded video + tap counter + score submit
-- Live leaderboard (unofficial) segmented by division; official results publication
+**Must have (table stakes — ships in v2.0):**
+- Competition creation form (`/organizerdb/create`) — name, date, platform count, allowed bell weights, serial prefix auto-derived from competition name
+- Public registration form (`/registration/[compId]`) — four guard states (not found, closed, deadline passed, full), per-event bell weight + duration selectors, server-side serial assignment
+- Registration success page — serial table per event, "screenshot your serials" instruction
+- Organizer dashboard (`/organizerdb`) — competition selector, analytics bar, sortable/filterable registrations table, remove action, CSV import, Generate Queue button with start time modal
+- Timetable view (`/organizerdb/queue`) — event-tinted rows, weight class derived at render, platform columns, conflict panel (REST + COACH), print-friendly CSS
 
-**Should have (competitive advantage):**
-- Authenticated video overlay with unique serial — Kova's core trust differentiator; no competing KB platform does this
-- Pre-filled YouTube description with serial number — reduces athlete upload errors
-- PWA installability via manifest + service worker — no App Store distribution needed
+**Should have (differentiators — ships in v2.0):**
+- KB sport sort order encoded by default (LC → Jerk → Snatch, 10min before 5min, Female first) — removes the organizer's primary manual step
+- Weight class auto-derived from body weight at render, never stored — no staleness risk, no organizer data entry
+- Biathlon/Triathlon handled natively — one form submission, multiple serials
+- CSV import for pre-existing registration spreadsheets — immediately useful for competitions that began on Google Forms
+- Copyable registration link surfaced on redirect after competition creation
 
-**Defer to v1.x:**
-- Age divisions (Junior/Open/Masters/Veterans) — add when organizers request it
-- Multi-judge per entry with head judge override — add at competition volume
-- Push notifications — add when users complain about checking manually
+**Defer to v1.x (post-validation with one real competition):**
+- Email confirmations to athletes
+- Age divisions (Junior/Open/Masters/Veterans)
+- Public queue view for athletes (read-only start list)
+- Clerk auth gate on organizer routes (R1 defers this intentionally; code structured for retrofit without rewrite)
 
 **Defer to v2+:**
-- Athlete competition history, biathlon scoring (coefficient-based), organizer analytics, public leaderboard embeds
+- Payment collection (PCI scope)
+- Drag-and-drop schedule editing
+- Multi-organizer access per competition
 
-**Anti-features to avoid building:**
-- Server-side video storage (YouTube provides this for free; S3/R2 adds GDPR/cost/transcoding complexity)
-- Real-time WebSocket leaderboard (async competition; polling/SSE is sufficient)
-- Video trimming/editing (undermines the authenticated overlay's validity)
-- AI rep counting (unreliable for KB sport no-rep calls; undermines trust)
+**Anti-features — do not build:**
+- `weight_class` stored in DB (QUEUE_SPEC explicitly: "display only, never stored")
+- Registration editing by athletes after serial assignment (breaks serial trust model)
+- `db.transaction()` for multi-table writes (unreliable over Turso HTTP — use `db.batch()`)
 
 ### Architecture Approach
 
-The recommended architecture uses Next.js App Router route groups for role isolation, a thin Server Action layer that delegates to a `server-only` DAL, and local React state for the recording flow with no global state library. The recording pipeline is entirely client-side — no server contact until the athlete submits a YouTube URL. The DB schema has five tables: `competitions`, `divisions`, `entries`, `scores`, and uses Clerk `publicMetadata` in place of a users table. Athlete names are denormalized into `entries.athleteName` at submission time to avoid joins on the leaderboard.
+New routes live entirely outside `app/(app)/`, which enforces a mobile-first auth-guarded layout unsuitable for the organizer's desktop-first workflow. Organizer routes at `app/organizerdb/` and public registration at `app/registration/[compId]/` each have their own layout context. Three new tables are purely additive — no existing tables are modified. Two existing files are extended without touching existing functionality: `lib/schema.ts` (append tables) and `lib/serial.ts` (add `generateCompetitionSerial` export).
 
 **Major components:**
-1. `(athlete)` route group + `components/recorder/RecorderCanvas.tsx` — canvas recording state machine; the heaviest client-side work
-2. `(judge)` route group + `TapCounter.tsx` + `YouTubeEmbed.tsx` — embedded video playback, tap-to-count, score submit
-3. `(organizer)` route group — competition CRUD, entry management, judge assignment, result publication (mostly server components + server action forms)
-4. `(public)` route group — public leaderboard (server components, cached)
-5. `lib/dal/` (`server-only`) — all DB queries and Clerk metadata mutations; authorization enforced here
-6. `app/actions/` — thin `'use server'` entry points: validate → delegate to DAL → revalidatePath
-7. `public/sw.js` — hand-rolled service worker caching app shell
+1. `lib/queue/scheduler.ts` — pure function: sort entries by KB sport protocol → assign to time blocks → detect REST and COACH conflicts. Zero DB imports. Fully testable with fixture data before any UI exists.
+2. `lib/queue/weightClass.ts` — pure helper: `getWeightClass(gender, bodyWeightKg) → string`. Never stored, derived at render time only.
+3. `lib/actions/registration.ts` — `createRegistration` using `db.batch()` for atomic registrant + entries insert; serial assignment with retry loop on UNIQUE collision.
+4. `app/registration/[compId]/page.tsx` — server component enforces all guard states; passes competition as props to `RegistrationForm` client component.
+5. `app/organizerdb/queue/page.tsx` — server component reads `compId` + `startTime` query params, fetches entries, runs scheduler, renders `TimetableGrid` + `ConflictPanel`.
+6. `components/registration/RegistrationForm.tsx` — client component with conditional event subfields; must manually call `unregister()` on event uncheck to prevent stale value submission.
+7. `components/organizerdb/RegistrationsTable.tsx` — client component with client-side sort/filter (all data in props from server, no round-trip for sort operations).
 
-**Key patterns to follow:**
-- Discriminated union state machine in `RecorderCanvas.tsx` drives the multi-step recording flow
-- `requireRole(role)` helper in each layout.tsx for role guard (redirect, not 403)
-- DAL functions are the single authorization enforcement point — every mutation checks `auth().userId` and ownership before touching the DB
-- Drizzle client created at module scope (singleton) for connection reuse in warm serverless instances
-- All timestamps as Unix integers (SQLite has no native datetime)
+**Architectural patterns:**
+- Server Component shell + Client Island: page routes fetch data server-side, pass as props; client components own interactivity only
+- `searchParams` read in `page.tsx` Server Components only — never re-read in Client Components via `useSearchParams()` without a `<Suspense>` boundary
+- Server actions defined in `lib/actions/` files with `'use server'` at file level — never inline within a `'use client'` file (breaks Clerk `auth()` header forwarding)
+- Queue page state held in URL (`?compId=&startTime=`) making timetable bookmarkable and printable
 
 ### Critical Pitfalls
 
-1. **`canvas.captureStream()` not supported on iOS** — `HTMLCanvasElement.captureStream` is absent on all iOS Safari versions through iOS 26.4 (confirmed Can I Use, March 2026). Add a capability check on recorder mount and show a clear "recording is not supported on iOS — use Chrome on Android or desktop" message. Do not attempt silent degradation.
+1. **Serial number race condition under concurrent registration** — Two simultaneous registrations read the same entry count, compute the same serial, and collide at the UNIQUE constraint. At a real competition launch with 30 athletes registering simultaneously, this is near-certain without a retry wrapper. Prevention: UNIQUE constraint on `registration_entries.serial` (spec mandates this) + retry loop (max 3) that recounts and reinserts on collision. Phase 1 work.
 
-2. **Screen dims during 10-minute recording set** — rAF loop stops when screen locks; recorded video will have a frozen or audio-only segment. Request the Screen Wake Lock API immediately when recording starts. Handle the `release` event with a visible in-app warning. Must be in the initial recorder implementation, not retrofitted.
+2. **`db.transaction()` fails silently over Turso HTTP** — The HTTP client cannot maintain stateful transactions; `BEGIN`/`COMMIT` fail with "no transaction is active." Without `db.batch()`, partial registrations create orphan registrant rows (athlete with no events) on any entry insert failure. Use `db.batch()` for all multi-table atomic writes. Never use `db.transaction()` with Turso HTTP client. Phase 1 work.
 
-3. **WebM export has no duration metadata and cannot seek** — `MediaRecorder` produces WebM files with `duration: Infinity`; scrubbing is broken everywhere. Use `webm-fix-duration` to post-process the Blob before download. Add this to the export step before shipping the recorder.
+3. **Drizzle migration journal out of sync with production** — The journal currently records only one entry despite three SQL migration files existing. `drizzle-kit migrate` against production will attempt to replay already-applied migrations ("table already exists" errors). Fix: add journal entries for `0001` and `0002` before generating new migrations. This is Phase 0 pre-work — must be the first task before any schema changes.
 
-4. **`proxy.ts` not `middleware.ts` (Next.js 16 breaking change)** — The existing `proxy.ts` is correctly configured; the risk is future developers copying Clerk docs that reference `middleware.ts`. Every server function must individually call `auth()` — the proxy is not a sufficient auth gate for mutations.
+4. **Conditional form field stale values on submit** — RHF's default `shouldUnregister: false` retains values for hidden event fields. An athlete who checks LC, enters values, then unchecks LC still submits LC data; the server creates an unintended entry with a serial. Prevention: call `unregister()` explicitly in the event toggle handler, plus server-side validation treating the events checkbox array as the source of truth. Phase 1 (Registration Form).
 
-5. **Server actions defined inside `'use client'` files lose Clerk request context** — `auth()` returns null when `'use server'` functions are defined inline within client components. All server actions must be defined in dedicated `app/actions/` files with `'use server'` at the file level, not inline.
+5. **CSV BOM corruption from Excel** — Excel UTF-8 CSVs prepend a U+FEFF BOM that corrupts the first header cell name, causing all column lookups to fail silently. Prevention: `text.replace(/^\uFEFF/, '')` before PapaParse. One line; skip it and every Excel import silently fails. Phase 3 (CSV Import).
+
+6. **Print CSS: background colors suppressed and overflow tables clipped** — Browsers strip background colors in print by default. Event-tinted rows and conflict pills become invisible. `overflow-x-auto` tables clip at paper width. Prevention: `[print-color-adjust:exact]` on tinted elements, `print:table-fixed` on table container, `print:hidden` on nav and buttons. Apply during initial timetable build — retrofitting print onto a complex Tailwind layout is disproportionately hard. Phase 3 (Timetable).
+
+7. **Scheduler boundary condition: `<=` vs `<` for rest conflict** — `block2 - block1 <= minRestBlocks` incorrectly flags an athlete in blocks 1 and 3 (with `minRestBlocks=2`) as a conflict. A gap of exactly 2 blocks is the minimum acceptable rest, not a violation. Use `< minRestBlocks` (strictly less than). Write unit tests for boundary conditions before wiring scheduler to any UI. Phase 1 (Pure Logic).
+
+---
 
 ## Implications for Roadmap
 
-Based on the dependency chain and pitfall mapping, the build order is strictly sequential. Each phase unblocks the next and cannot be parallelized.
+Based on the data dependency chain and pitfall mapping, the build order follows: schema before anything, pure logic before server actions (to isolate testability), server actions before routes (routes are shells that call actions), competition creation before registration (registration requires a valid `compId`).
 
-### Phase 1: Foundation and Auth
-**Rationale:** DB schema and Clerk role model are the root dependencies for every other phase. Without schema + DAL, no data can be written. Without role guards, route groups cannot be protected. This phase has no prerequisites.
-**Delivers:** Complete DB schema, Drizzle migrations, DAL scaffolding (typed functions, even with stub bodies), `lib/db.ts` singleton, role guard pattern (`requireRole` helper), athlete onboarding (name capture → Clerk `publicMetadata`).
-**Addresses:** Athlete onboarding (table stakes); serial generation infrastructure
-**Avoids:** `proxy.ts` breaking change (document convention); inline server actions anti-pattern; Turso Edge import variant (`@libsql/client` vs `/web`)
+### Phase 0: Migration Pre-work
+**Rationale:** The Drizzle migration journal is out of sync with production schema. This is a blocker — generating new migrations against a broken journal produces SQL that includes already-applied tables. Must be the first task before any code changes.
+**Delivers:** Correct journal baseline; three new tables in `lib/schema.ts`; migration file `drizzle/0003_queue_system.sql` applied to dev DB
+**Avoids:** Pitfall 8 (journal out of sync — "table already exists" on next migration run)
+**Research flag:** None. Pattern fully documented in PITFALLS.md and Drizzle docs.
 
-### Phase 2: Athlete Video Recorder
-**Rationale:** The recorder is Kova's core differentiator and the most complex client-side component. It has one server-side dependency (Clerk userId for serial generation) which Phase 1 provides. Building it early surfaces the iOS limitation before anything else is built on top.
-**Delivers:** Full recording pipeline (getUserMedia → canvas compositing → captureStream → MediaRecorder), countdown, 10-minute timer overlay, minute beep, auto-stop at 10:10, playback review, WebM export with `webm-fix-duration` post-processing, YouTube instructions screen with copy-to-clipboard.
-**Addresses:** Canvas overlay recorder (P1); YouTube instructions + export (P1); PWA installability groundwork
-**Avoids:** Screen Wake Lock (must be in initial implementation); WebM duration bug (apply fix before export); iOS capability check (show unsupported message before any recording UI); `facingMode` vs `deviceId` for rear camera on iOS
+### Phase 1: Pure Logic Layer
+**Rationale:** The scheduler and weight class helper are pure functions with no external dependencies. Building them before any UI or actions means they can be tested with fixture data immediately. The scheduler is the most algorithmically complex piece; catching boundary condition bugs early is far cheaper than finding them post-integration.
+**Delivers:** `lib/queue/scheduler.ts` (full sort + assignment + conflict detection), `lib/queue/weightClass.ts`, `generateCompetitionSerial` export in `lib/serial.ts`
+**Addresses:** KB sport sort order (LC → Jerk → Snatch, 10min before 5min, Female first), REST and COACH conflict types, weight class boundary tables per QUEUE_SPEC
+**Avoids:** Pitfall 9 (biathlon self-conflict off-by-one: use `< minRestBlocks` not `<=`), Pitfall 10 (coach name normalization: lowercase + trim both sides)
+**Research flag:** None. Algorithm fully specified in QUEUE_SPEC.md.
 
-### Phase 3: Competition Management (Organizer)
-**Rationale:** Competition and division records must exist in the DB before athletes can register entries. Organizer CRUD is the unblocking dependency for athlete entry submission and all downstream phases.
-**Delivers:** Competition creation form (name, date, disciplines, divisions with gender + weight class), competition list, competition dashboard, organizer can manually add athlete entries.
-**Addresses:** Competition creation (P1); weight/gender divisions (P1); manual entry addition (P1)
-**Avoids:** Division schema correctness (divisions as first-class rows, not JSON arrays — enables clean leaderboard filtering)
+### Phase 2: Server Actions
+**Rationale:** Server actions are the data write layer. Building before UI means routes can be wired immediately and tested end-to-end. The `createRegistration` action's atomicity requirements must be designed in here — not retrofitted after discovering orphan rows.
+**Delivers:** `lib/actions/competitions.ts` (`createCompetition`, `removeRegistrant`, `importCSV`), `lib/actions/registration.ts` (`createRegistration` using `db.batch()` + serial UNIQUE + retry loop)
+**Uses:** cuid2 for IDs, Drizzle batch API, serial helper from Phase 1
+**Avoids:** Pitfall 7 (serial race condition — UNIQUE constraint + retry), Pitfall 15 (orphan registrant — `db.batch()` atomicity, never `db.transaction()`)
+**Research flag:** None. `db.batch()` vs `db.transaction()` decision is settled.
 
-### Phase 4: Athlete Entry Submission
-**Rationale:** Athletes can now register for competitions and submit YouTube URLs. Depends on Phase 3 (competitions must exist) and Phase 1 (athlete must have a name and role).
-**Delivers:** Competition browse/discovery, entry registration, YouTube URL submission, entry status tracking (`pending` → `submitted`).
-**Addresses:** Athlete self-registration (P1); YouTube URL submission (P1)
-**Avoids:** YouTube URL validation (basic format check before storing); entry uniqueness (one entry per competition per discipline per athlete)
+### Phase 3: Competition Creation Route
+**Rationale:** A competition record must exist before registration or dashboard can be meaningfully tested. This is the entry point for the entire data dependency chain.
+**Delivers:** `app/organizerdb/create/page.tsx`, `components/organizerdb/CompetitionForm.tsx` with bell weight checkbox matrix, serial prefix display
+**Addresses:** Competition creation with all fields per QUEUE_SPEC; redirect to dashboard with copyable registration link
+**Research flag:** None. Standard server component + client form pattern.
 
-### Phase 5: Judge Interface
-**Rationale:** Judges can only score entries that have YouTube URLs. Depends on Phase 4 (submitted entries). Organizer judge assignment (`entries.assignedJudgeId`) is the last step before judging begins.
-**Delivers:** Organizer judge assignment UI, judge entry list (assigned entries only), YouTube embed with IFrame API, tap counter (80×80px minimum tap target, 200ms debounce), score submission with confirmation step.
-**Addresses:** Judge assignment (P1); judge interface with tap counter (P1); score submission (P1)
-**Avoids:** YouTube autoplay on iOS (`mute=1&playsinline=1` required); YouTube IFrame API race with React hydration (use `next/dynamic` with `ssr: false`); IDOR on score submission (verify `assignedJudgeId === auth().userId` in DAL)
+### Phase 4: Public Registration Flow
+**Rationale:** Most complex client component — conditional event subfields, country combobox, four guard states. Depends on schema (Phase 0), serial helper (Phase 1), and `createRegistration` action (Phase 2). Building after competition creation means there is a competition to register for during testing.
+**Delivers:** `app/registration/[compId]/page.tsx`, `app/registration/[compId]/success/page.tsx`, `components/registration/RegistrationForm.tsx`
+**Uses:** shadcn Combobox + `countries-list`, conditional `unregister()` on event toggle, server-side guard state enforcement
+**Avoids:** Pitfall 12 (stale conditional form values — unregister on uncheck + server-side source-of-truth validation)
+**Research flag:** None. Well-specified. Combobox + countries-list pattern fully documented in STACK.md.
 
-### Phase 6: Leaderboard and Results
-**Rationale:** Leaderboard requires scored entries. This phase completes the competition lifecycle from submission to official results.
-**Delivers:** Unofficial live leaderboard (segmented by division, sorted by repCount DESC), organizer publish action (transitions competition to `official` status), official results display.
-**Addresses:** Live leaderboard (P1); official results publication (P1)
-**Avoids:** Leaderboard query performance (add indexes on `entries.competition_id`, `entries.division_id`, `scores.entry_id` from day one); exposing raw Drizzle results to client (define DTO types)
+### Phase 5: Organizer Dashboard
+**Rationale:** Orchestrates all organizer-facing data. Depends on competitions (Phase 3) and registration data (Phase 4). CSV import belongs here — same DB rows as self-registration form.
+**Delivers:** `app/organizerdb/page.tsx`, `CompetitionSelector`, `AnalyticsBar`, `RegistrationsTable` (sortable/filterable + remove), `CsvImport`, `GenerateQueueModal` with start time input
+**Uses:** PapaParse client-side parse + server action, `revalidatePath` after mutations
+**Avoids:** Pitfall 11 (CSV BOM — strip U+FEFF before PapaParse call; validate expected headers before processing rows)
+**Research flag:** None. All patterns established.
 
-### Phase 7: PWA Shell
-**Rationale:** Can be added after core routes exist without affecting product functionality. Deferred to avoid complicating the dev setup during earlier phases.
-**Delivers:** `app/manifest.ts` (Next.js built-in), `public/sw.js` (hand-rolled, cache-first for static assets), remove `next-pwa@5.6.0`, service worker registration in `instrumentation-client.ts`.
-**Addresses:** PWA installability (P2)
-**Avoids:** `next-pwa@5.6.0` with Next.js 16 (incompatible — remove the package); caching auth/YouTube/Clerk endpoints in the service worker; iOS standalone mode camera permission loss (document: recommend regular Safari tab for recording, not Add to Home Screen)
+### Phase 6: Timetable and Queue View
+**Rationale:** Final deliverable. Depends on all previous phases. Print CSS must be applied during initial build — retrofitting print onto a complex layout is the documented pitfall.
+**Delivers:** `app/organizerdb/queue/page.tsx`, `components/queue/TimetableGrid.tsx`, `components/queue/ConflictPanel.tsx`
+**Implements:** Server component reads `searchParams`, runs pure scheduler, passes `timeBlocks` + `conflicts` to render components. `print:hidden` on nav/buttons, `[print-color-adjust:exact]` on event-tinted rows and conflict pills, `print:table-fixed` on table container.
+**Avoids:** Pitfall 13 (print CSS — apply during initial build), Pitfall 14 (searchParams in layout vs page — read only in `page.tsx` server component)
+**Research flag:** None. Architecture pattern fully specified.
 
 ### Phase Ordering Rationale
 
-- **Sequential dependency chain:** Each phase outputs data (DB records, auth identities, recordings, entries, scores) that the next phase consumes. No phase can be safely parallelized at the start of the project.
-- **Recorder early:** The iOS limitation, Wake Lock requirement, and WebM duration fix all need real-device validation before competition management is built. Discovering iOS is unsupported late would require significant UX rework.
-- **PWA last:** Service worker complexity can corrupt the dev environment if introduced too early. Manifest alone (installability) is low-risk and can be done whenever; full offline caching is not needed until the app is otherwise complete.
-- **No global state library needed:** The recording state machine is local to `RecorderCanvas.tsx`. The rest of the app is server-component-first with server actions and DAL. Introducing Redux/Zustand would add bundle weight for no benefit.
+- Schema before everything: no UI, action, or test can exist without DB types
+- Pure logic before server actions: scheduler can be unit-tested the moment schema types exist; boundary condition bugs found early are cheap
+- Server actions before routes: routes are shells that call actions; wiring order ensures testability
+- Competition creation before registration: `/registration/[compId]` requires a valid `compId`
+- Dashboard before timetable: queue page renders data populated by dashboard workflows
 
 ### Research Flags
 
-Phases needing deeper research during planning:
-- **Phase 2 (Recorder):** iOS canvas.captureStream support status on iOS 18.4+ needs real-device validation before finalizing the "unsupported" message. The WebKit bug status is uncertain — field test a physical device before committing to the iOS-unsupported UX path.
-- **Phase 5 (Judge Interface):** YouTube IFrame API integration details (loading, player initialization, iOS autoplay constraints) benefit from specific API review before implementation.
+**No phase in this milestone requires `/gsd:research-phase` during planning.** QUEUE_SPEC.md is fully specified. Architecture is derived from direct codebase reading. All stack patterns are documented with exact code examples. Proceed directly to execution.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (Foundation):** DB schema, Drizzle setup, Clerk role guards — well-documented, established patterns; architecture file provides complete examples.
-- **Phase 3 (Competition Management):** Standard server component forms with server actions + DAL pattern; no novel integrations.
-- **Phase 4 (Entry Submission):** Standard form submission; architecture examples cover this pattern completely.
-- **Phase 6 (Leaderboard):** Read-only server component with Drizzle join query; no novel patterns.
-- **Phase 7 (PWA Shell):** Hand-rolled service worker pattern is well-documented; architecture file provides a complete working example.
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Core stack already installed and verified against Next.js 16 local docs. `next-pwa` removal confirmed against maintainer repo and Next.js issues. Serwist recommendation from official Next.js 16 PWA guide. |
-| Features | MEDIUM-HIGH | KB sport conventions well-documented; CrossFit and Competition Corner patterns verified at HIGH confidence. KB federation-specific weight classes and rules are MEDIUM due to limited public documentation from IKMF/WKSF. |
-| Architecture | HIGH | Patterns sourced from Next.js 16 local `node_modules/next/dist/docs/` directly. Clerk v7 type signatures verified. `proxy.ts` convention confirmed against local docs. DB schema design is conventional for this domain. |
-| Pitfalls | HIGH | iOS `canvas.captureStream` confirmed unsupported via Can I Use (March 2026) and WebKit bug tracker. WebM duration issue is a known spec limitation. Wake Lock support table verified against MDN. `proxy.ts` convention verified against local docs. |
+| Stack | HIGH | Core stack unchanged and already working. New packages sourced from official docs and project spec. `db.batch()` vs `db.transaction()` confirmed by Drizzle docs and Turso MVCC documentation. Version compatibility verified. |
+| Features | HIGH | QUEUE_SPEC.md is the authoritative source with complete feature definitions. Competitor analysis (Competition Corner, OpenLifter, ManageMyComp) confirms table stakes. Anti-features clearly justified by scope impact. |
+| Architecture | HIGH | Derived from direct codebase reading of all relevant files + QUEUE_SPEC.md. Component boundaries, data flow, and build order are unambiguous. All patterns have code examples. |
+| Pitfalls | HIGH | Sourced from Drizzle GitHub issues, Turso MVCC blog, WebKit bug tracker, MDN, Next.js 16 local docs. The `db.batch()` transaction pitfall is especially well-documented. Each pitfall has concrete prevention code. |
 
-**Overall confidence:** MEDIUM-HIGH
+**Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **iOS canvas.captureStream on iOS 18.4+ specifically:** Can I Use says "not supported" but the WebKit 18.4 release notes added WebM MediaRecorder. The exact state of `captureStream` on iOS 18.4+ requires a real-device test. If it works on 18.4+, the "unsupported" message should be version-conditional. Validate in Phase 2 before finalizing the unsupported-browser UX.
-- **Blob download on iOS Safari:** Whether `URL.createObjectURL` + anchor click works for a recorded MP4/WebM Blob on iOS Safari is not definitively confirmed. Test this in Phase 2 alongside the captureStream check.
-- **Clerk v7 breaking changes from prior versions:** The project has `@clerk/nextjs ^7.0.6` installed. The `clerkClient()` is now an async factory (not a static import). Verify against Clerk v7 changelog before writing any DAL metadata code in Phase 1.
-- **Turso Edge import variant:** If any route ever uses Vercel Edge Runtime, `@libsql/client/web` must be used instead of `@libsql/client`. Verify the import path before deploying if Edge runtime is ever enabled. Standard Node.js serverless (Vercel default) uses `@libsql/client` — no issue for the default config.
-- **KB federation weight class variations:** WKSF weight classes used as defaults (Men: 58/63/68/73/78/85/95/105/105+ kg; Women: 58/63/68/68+kg). These may vary by federation. Competition setup should allow organizers to define custom divisions rather than relying on hardcoded defaults.
+- **`db.batch()` serial retry under real concurrent load:** Research confirms the approach is correct, but no load test has run. Validate with `ab -c 20 -n 100` against the registration endpoint before sharing any public registration link with athletes.
+- **Drizzle journal fix is a pre-work blocker:** The journal inconsistency is documented and the fix procedure is clear (PITFALLS.md Pitfall 8). Must be verified in development before `drizzle-kit generate` is run. Skipping this corrupts the migration history.
+- **iOS canvas.captureStream() on iOS 18.4+:** Unresolved from original recorder research. Does not affect v2.0 (no recorder changes in this milestone) but remains open for the existing recorder feature.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- Next.js 16 local docs (`node_modules/next/dist/docs/`) — App Router patterns, proxy.ts convention, PWA guide, data security guide, authentication guide
-- Can I Use — Media Capture from DOM Elements (canvas.captureStream): https://caniuse.com/mediacapture-fromelement — iOS: Not Supported (March 2026)
-- WebKit Blog — MediaRecorder API: https://webkit.org/blog/11353/mediarecorder-api/ — Safari MP4 support from iOS 14.3
-- WebKit Blog — Safari 18.4: https://webkit.org/blog/16574/webkit-features-in-safari-18-4/ — WebM MediaRecorder added
-- MDN — MediaRecorder API: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream_Recording_API
-- MDN — Screen Wake Lock API: https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API
-- CrossFit Video Submission Best Practices: https://games.crossfit.com/article/video-submission-best-practices
-- Competition Corner Features: https://about.competitioncorner.net/features
-- JudgeMate Features: https://www.judgemate.com/en
-- mat-sz/webm-fix-duration: https://github.com/mat-sz/webm-fix-duration
-- Serwist getting started: https://serwist.pages.dev/docs/next/getting-started
-- next-pwa abandoned (GitHub issue #503): https://github.com/shadowwalker/next-pwa/issues/503
+- `QUEUE_SPEC.md` — full requirements brief; locked conventions for serial format, scheduling algorithm, table schemas — HIGH confidence (project document)
+- `.planning/PROJECT.md` — milestone context and out-of-scope constraints — HIGH confidence (project document)
+- Direct codebase reading: `lib/schema.ts`, `lib/db.ts`, `lib/serial.ts`, `lib/actions/entries.ts`, `lib/actions/scores.ts`, `app/(app)/layout.tsx`, `components/ui/GlobalHeader.tsx`, `components/ui/BottomNav.tsx`, `drizzle.config.ts`
+- [Drizzle ORM Batch API](https://orm.drizzle.team/docs/batch-api) — atomic batch semantics over libSQL HTTP — HIGH confidence
+- [Drizzle ORM SQLite column types](https://orm.drizzle.team/docs/column-types/sqlite) — `text({ mode: 'json' }).$type<T>()` pattern — HIGH confidence
+- [@paralleldrive/cuid2 GitHub](https://github.com/paralleldrive/cuid2) — `createId()` API, `$defaultFn` Drizzle pattern — HIGH confidence
+- [PapaParse official docs](https://www.papaparse.com/) — browser API, header mode, BOM handling — HIGH confidence
+- [countries-list GitHub](https://github.com/annexare/Countries) — v3.3.0 ESM exports, `countries` object structure — HIGH confidence
+- [shadcn/ui Combobox docs](https://ui.shadcn.com/docs/components/radix/combobox) — Command + Popover internals — HIGH confidence
+- [shadcn/ui Calendar docs](https://ui.shadcn.com/docs/components/radix/calendar) — react-day-picker v9 — HIGH confidence
 
 ### Secondary (MEDIUM confidence)
-- WebKit Bug 181663 (canvas captureStream on iOS) — open, years old
-- WebKit Bug 215884 (recurring camera permission prompts in PWA standalone mode)
-- STRICH Knowledge Base — iOS PWA Camera Issues: https://kb.strich.io/article/29-camera-access-issues-in-ios-pwa
-- KB World League Video Submission Instructions — YouTube URL submission pattern
-- WKSF weight classes and federation rules — weight class defaults
-- LogRocket: Next.js 16 PWA with Serwist — confirmed working pattern
+- [Competition Corner Features](https://about.competitioncorner.net/features) — registrations table, heat schedule print, one-click start list — MEDIUM confidence (direct fetch)
+- [OpenLifter](https://www.openlifter.com/en/) — start list, flight order, printable results — MEDIUM confidence
+- [WebKit Blog: Safari 18.4](https://webkit.org/blog/16574/webkit-features-in-safari-18-4/) — WebM MediaRecorder added — HIGH confidence (relevant to recorder, not v2.0)
+- [Tailwind CSS print styles](https://www.jacobparis.com/content/css-print-styles) — `print:hidden`, `print-color-adjust` utilities — MEDIUM confidence
 
 ### Tertiary (LOW confidence)
-- WebKit Bug 252465 (PWA getUserMedia black screen) — "fixed" but community reports persist through iOS 18.4.1; needs real-device validation
-- iOS 18.4+ canvas.captureStream support — WebKit 18.4 release did not explicitly confirm captureStream fix; inference from MediaRecorder WebM support only
+- [G2: Athletic Competition Management Software](https://www.g2.com/categories/athletic-competition-management) — category overview only; no specific claims relied upon
+- Community reports re: WebKit bug #252465 persisting through iOS 18.4.1 — anecdotal, needs real-device verification for recorder feature (not v2.0 scope)
 
 ---
-*Research completed: 2026-03-24*
+
+*Research completed: 2026-04-02 (v2.0 queue system)*
 *Ready for roadmap: yes*

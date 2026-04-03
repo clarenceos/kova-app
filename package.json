@@ -13,8 +13,10 @@
   "dependencies": {
     "@clerk/nextjs": "^7.0.6",
     "@libsql/client": "^0.17.2",
+    "@paralleldrive/cuid2": "^3.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^1.0.1",
     "next": "16.2.1",
@@ -35,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.2"
   }
 }

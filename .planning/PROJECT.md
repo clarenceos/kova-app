@@ -8,6 +8,17 @@ Kova is a PWA for online asynchronous kettlebell sport competitions. Athletes re
 
 Authenticated video: every submission carries a verified timer, athlete name, discipline, and unique serial number baked in via canvas — no video can be judged without a Kova watermark, making results trustworthy without a referee present.
 
+## Current Milestone: v2.0 Queue System
+
+**Goal:** Competition registration and queue scheduling — organizers create competitions, athletes self-register via public links, and the system auto-generates timetables with conflict detection.
+
+**Target features:**
+- Competition creation with configurable rules (platforms, durations, bell weights)
+- Public athlete registration form with serial number assignment
+- Organizer dashboard with registrations table, analytics, CSV import
+- Scheduling algorithm (pure function) that auto-generates timetables and flags rest/coach conflicts
+- Queue/timetable view (print-friendly, conflict warnings)
+
 ## Requirements
 
 ### Validated
@@ -22,29 +33,16 @@ Authenticated video: every submission carries a verified timer, athlete name, di
 
 ### Active
 
-**Athlete Video Recorder**
-- [ ] Athlete completes onboarding (full name → Clerk publicMetadata.name) on first login
-- [ ] Athlete selects discipline (Long Cycle, Jerk, Snatch — 10 min each)
-- [ ] Athlete configures lift setup: kettlebell weight (kg), countdown duration (5–60s), beep every minute, auto-stop 10s after 10:00, camera (front/rear — locked after setup)
-- [ ] Canvas-based recorder overlays timer (0:00→10:00), athlete name, discipline, weight, KOVA branding + serial number onto live camera feed every frame
-- [ ] Countdown before recording starts; MediaRecorder records canvas stream at 30fps
-- [ ] Auto-stop and beep-every-minute options function correctly
-- [ ] Playback screen shows recorded video; athlete can review before exporting
-- [ ] Export downloads WebM file: `kova-[discipline-slug]-[athlete-name-slug]-[serial].webm`
-- [ ] YouTube instructions screen provides step-by-step upload guide + pre-filled description (name, discipline, weight, date, serial, tagline) with copy-to-clipboard
-
-**Judge Interface**
-- [ ] Judge watches YouTube-embedded video for an assigned entry
-- [ ] Judge taps to count reps (tap counter, mobile-optimized)
-- [ ] Judge submits final rep count as score
-
-**Competition Management**
-- [ ] Organizer creates competition with name, date, disciplines, and weight/gender divisions
-- [ ] Athlete self-registers for a competition and submits YouTube URL for their entry
-- [ ] Organizer can also manually add athlete entries
-- [ ] Organizer assigns judges to entries
-- [ ] Live leaderboard shows results marked "Unofficial" until organizer publishes
-- [ ] Organizer publishes official results
+**Queue System (v2.0)**
+- [ ] Organizer creates a competition with rules (platforms, durations, bell weights)
+- [ ] Organizer shares a registration link with athletes
+- [x] Athletes register via public link with personal details and event selections — Validated in Phase 09
+- [x] Serial numbers (XXX-0000) assigned server-side per registration entry — Validated in Phase 06
+- [ ] Organizer reviews registrations on dashboard with analytics and filtering
+- [ ] Organizer imports registrations via CSV
+- [x] System auto-generates timetable from registrations (pure scheduling algorithm) — Validated in Phase 07
+- [x] Scheduler flags rest conflicts (same athlete, insufficient gap) and coach conflicts — Validated in Phase 07
+- [ ] Queue/timetable view is print-friendly with conflict warnings
 
 ### Out of Scope
 
@@ -103,4 +101,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-26 after Phase 05 completion*
+*Last updated: 2026-04-03 after Phase 09 completion*

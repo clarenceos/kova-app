@@ -1,30 +1,30 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-03-27T10:51:11.725Z"
-last_activity: "2026-03-27 - Completed quick task 260327-2o4: Fix 308 resume, save-on-failure, manual URL submission"
+milestone_name: Core Platform
+status: Ready to execute
+last_updated: "2026-04-03T10:31:38.772Z"
+last_activity: 2026-04-03
 progress:
   total_phases: 5
-  completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  completed_phases: 4
+  total_plans: 14
+  completed_plans: 12
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Phase 05 — complete-athlete-loop
+**Current focus:** Phase 10 — organizer-dashboard-timetable
 
 ## Current Position
 
-Phase: 05
-Plan: Not started
+Phase: 10 (organizer-dashboard-timetable) — EXECUTING
+Plan: 3 of 4
 
 ## Performance Metrics
 
@@ -53,6 +53,17 @@ Plan: Not started
 | Phase 05-complete-athlete-loop P02 | 2 | 2 tasks | 4 files |
 | Phase 05-complete-athlete-loop P03 | 2 | 2 tasks | 2 files |
 | Phase 05-complete-athlete-loop P04 | 4 | 2 tasks | 6 files |
+| Phase 06-schema-foundation P01 | 3 | 2 tasks | 7 files |
+| Phase 06-schema-foundation P02 | 10 | 1 tasks | 5 files |
+| Phase 06 P03 | 2 | 2 tasks | 2 files |
+| Phase 07 P01 | 71 | 1 tasks | 3 files |
+| Phase 07 P02 | 2 | 2 tasks | 2 files |
+| Phase 08-competition-creation P01 | 2 | 2 tasks | 6 files |
+| Phase 09 P01 | 4 | 2 tasks | 7 files |
+| Phase 09-public-registration P03 | 2 | 1 tasks | 1 files |
+| Phase 09-public-registration P02 | 2 | 2 tasks | 3 files |
+| Phase 10-organizer-dashboard-timetable P04 | 8 | 2 tasks | 6 files |
+| Phase 10-organizer-dashboard-timetable P01 | 10 | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -82,6 +93,41 @@ Recent decisions affecting current work:
 - [Phase 05-03]: entryId added to JudgeSession for DB linkage; serial-only judge form replaces manual 5-field form
 - [Phase 05-04]: GhostReplay uses rAF polling against YT getCurrentTime with seek backward detection (0.5s tolerance) — simpler than event callbacks, naturally handles seek
 - [Phase 05-04]: Entry detail page is server component — repTaps JSON parsed server-side, passed as typed Rep[] to GhostReplay client component
+- [v2.0 Roadmap]: db.transaction() is banned over Turso HTTP — all multi-table writes use db.batch() exclusively
+- [v2.0 Roadmap]: weight_class is never stored in DB — derived at render time only from getWeightClass(gender, bodyWeightKg)
+- [v2.0 Roadmap]: Drizzle migration journal must be fixed (Phase 6 first task) before any schema changes — journal is out of sync with 3 existing SQL files
+- [v2.0 Roadmap]: Scheduler is a pure function (lib/queue/scheduler.ts) with zero DB imports — built and tested in Phase 7 before any UI
+- [v2.0 Roadmap]: Organizer routes at app/organizerdb/ and public registration at app/registration/[compId]/ — outside app/(app)/ to avoid mobile-first auth-guarded layout
+- [v2.0 Roadmap]: No auth gate on organizer routes for v2.0 — code structured for Clerk retrofit without rewrite (deferred to future milestone)
+- [Phase 06-01]: Migration journal fixed by manually adding idx=1 and idx=2 entries for 0001_phase5_columns and 0002_profiles
+- [Phase 06-01]: cuid2 PKs via $defaultFn(() => createId()) on all new tables; serial UNIQUE constraint prevents race-condition collisions
+- [Phase 06-01]: db.batch() convention documented in schema.ts; db.transaction() banned over Turso HTTP
+- [Phase 06-02]: Followed D-04 over QUEUE_SPEC example: Hunger Bells -> HUN not HUB (first 3 of first word when < 3 words)
+- [Phase 06-02]: vi.mock pattern for unit-testing pure functions co-located with DB-dependent code
+- [Phase 06-02]: vitest.config.ts required for @/ path alias resolution (vitest does not read tsconfig.json paths)
+- [Phase 06]: Used mockWhere.mockImplementation() with call counter for collision test — simulates 4 sequential DB calls without live DB
+- [Phase 06]: vi.fn().mockReturnValue() is the correct pattern for vitest default mock values; _returnValue property approach breaks when mockImplementation is also used
+- [Phase 07-01]: SchedulerEntry is the flattened join type — caller constructs from DB query, scheduler receives clean typed array
+- [Phase 07-01]: Super heavyweight label derived from last bracket limit at runtime ('80+kg', '95+kg') — not hardcoded strings
+- [Phase 07]: weightClassSortKey numeric trick: parseFloat + 0.5 for '+' brackets ensures super-heavyweight sorts after bounded counterpart — plain localeCompare breaks this
+- [Phase 07]: REST conflict uses strict gap < minRestBlocks (D-09), not <=; gap == minRestBlocks is acceptable rest, not a conflict
+- [Phase 07]: COACH conflict: student is entry with coach field set, coach is entry whose full name matches (case-insensitive trimmed, D-01)
+- [Phase 08-competition-creation]: deriveSerialPrefix called server-side in createCompetition — server is source of truth for prefix derivation (COMP-02, D-07)
+- [Phase 08-competition-creation]: Organizer layout has no auth gate — structured for Clerk retrofit (v2.0 roadmap, deferred to future milestone)
+- [Phase 08]: Competition creation form uses native input with inputClass string (JudgeSetupForm pattern) rather than shadcn Input component — className override for bg-charcoal/border-raw-steel tokens is cleaner with native input
+- [Phase 08]: CopyLinkButton isolated in app/organizerdb/_components/ to keep list page as a pure server component — clipboard requires client JS
+- [Phase 09-01]: Serial numbers generated in a for-loop before db.batch() so registrantId can be pre-generated and returned from the server action
+- [Phase 09-01]: COUNTRIES array has 240 ISO 3166-1 entries — 193 sovereign states plus territories to exceed the 240 minimum requirement
+- [Phase 09-03]: Success page is a pure server component — no 'use client' required since there is zero interactivity
+- [Phase 09-03]: notFound() called for both missing registrantId and null return from getRegistrationData — correct 404 in both cases
+- [Phase 09-02]: Guard state logic extracted into getGuardState() helper — status!=open, deadline<now, or count>=maxRegistrants each map to a labeled guard object
+- [Phase 09-02]: Bell weight filtering done server-side by splitting allowedBellWeights JSON on 2x/1x prefix, passed as doubleBells/singleBells props to client component
+- [Phase 10-04]: lib/actions/dashboard.ts created as deviation (Rule 3) — plan referenced getCompetitionDashboard but file did not exist
+- [Phase 10-04]: Conflict lookup built as Map<entryId, Conflict[]> in TimetableGrid — O(1) cell lookup vs O(n*m) per-cell search
+- [Phase 10-04]: Event tint majority rule: majority[1] <= events.length/2 means tied/split blocks get neutral tint (D-16)
+- [Phase 10-01]: Used Popover+Command over shadcn Select for CompetitionSelector — SelectItem renders children as text only, Popover+Command allows custom name/date/badge per item
+- [Phase 10-01]: 3-query + JS grouping for getCompetitionDashboard — cleaner than verbose Drizzle join; sufficient for <=200 registrants per D-09
+- [Phase 10-01]: db.batch() cast via unknown for dynamically-built insert array in bulkImportRegistrants — Drizzle requires tuple type; safe with non-empty guard above
 
 ### Pending Todos
 
@@ -92,6 +138,8 @@ None yet.
 - [Phase 2]: canvas.captureStream() unsupported on iOS through iOS 26.4 — real-device test needed to confirm iOS 18.4+ status before finalizing "unsupported browser" UX path
 - [Phase 2]: Blob download via URL.createObjectURL on iOS Safari for WebM/MP4 — needs real-device validation
 - [Phase 3]: YouTube IFrame API iOS autoplay constraints (mute=1&playsinline=1 required) — verify before implementation
+- [Phase 6 pre-work]: Drizzle migration journal out of sync — must fix journal before running drizzle-kit generate. Fix: add journal entries for 0001 and 0002 manually before generating 0003.
+- [Phase 9]: Serial race condition under concurrent load — UNIQUE constraint + retry loop is the prevention; validate with load test (ab -c 20 -n 100) before sharing public registration link
 
 ### Quick Tasks Completed
 
@@ -113,5 +161,5 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-tdw: Entry detail top-align and bronze pills
+Last activity: 2026-04-03
 Resume file: None

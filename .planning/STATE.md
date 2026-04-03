@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Ready to execute
-last_updated: "2026-04-03T10:31:38.772Z"
+status: Phase complete — ready for verification
+last_updated: "2026-04-03T10:38:48.070Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 14
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 ## Current Position
 
 Phase: 10 (organizer-dashboard-timetable) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 
 ## Performance Metrics
 
@@ -64,6 +64,8 @@ Plan: 3 of 4
 | Phase 09-public-registration P02 | 2 | 2 tasks | 3 files |
 | Phase 10-organizer-dashboard-timetable P04 | 8 | 2 tasks | 6 files |
 | Phase 10-organizer-dashboard-timetable P01 | 10 | 2 tasks | 14 files |
+| Phase 10-organizer-dashboard-timetable P02 | 15 | 2 tasks | 2 files |
+| Phase 10-organizer-dashboard-timetable P03 | 12 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -128,6 +130,8 @@ Recent decisions affecting current work:
 - [Phase 10-01]: Used Popover+Command over shadcn Select for CompetitionSelector — SelectItem renders children as text only, Popover+Command allows custom name/date/badge per item
 - [Phase 10-01]: 3-query + JS grouping for getCompetitionDashboard — cleaner than verbose Drizzle join; sufficient for <=200 registrants per D-09
 - [Phase 10-01]: db.batch() cast via unknown for dynamically-built insert array in bulkImportRegistrants — Drizzle requires tuple type; safe with non-empty guard above
+- [Phase 10]: SortableHeader as inner function captures sort state closure without prop drilling
+- [Phase 10]: RemoveRegistrantDialog uses controlled open=true, delegates cancel/close via onRemoved callback to RegistrationsTable
 
 ### Pending Todos
 

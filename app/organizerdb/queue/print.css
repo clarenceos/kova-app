@@ -1,0 +1,62 @@
+@media print {
+  /* Page setup — landscape A4 */
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  /* Reset backgrounds for B&W */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove event tint backgrounds */
+  tr {
+    background-color: transparent !important;
+  }
+
+  /* Table styling for print */
+  table {
+    width: 100% !important;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border: 1px solid #333 !important;
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    color: black !important;
+  }
+
+  th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Cell text colors reset to black */
+  p,
+  span {
+    color: black !important;
+  }
+
+  /* Header print styling */
+  h1 {
+    font-size: 16px !important;
+    color: black !important;
+  }
+
+  /* Remove rounded corners and shadows */
+  div {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure conflict panel border is visible */
+  .conflict-panel {
+    border: 1px solid #333 !important;
+    background: white !important;
+  }
+}

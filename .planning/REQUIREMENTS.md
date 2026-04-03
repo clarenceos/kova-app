@@ -77,8 +77,8 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 
 ### Organizer Dashboard
 
-- [ ] **DASH-01**: Competition selector dropdown showing name, date, and status badge with "New Competition" button
-- [ ] **DASH-02**: Analytics bar showing total registrations, per-event counts, gender split, spots remaining, deadline countdown
+- [x] **DASH-01**: Competition selector dropdown showing name, date, and status badge with "New Competition" button
+- [x] **DASH-02**: Analytics bar showing total registrations, per-event counts, gender split, spots remaining, deadline countdown
 - [ ] **DASH-03**: Registrations table sortable by name, bodyweight, registered at — filterable by event and gender
 - [ ] **DASH-04**: Remove action deletes registrant and all their entries
 - [ ] **DASH-05**: CSV import parses file client-side, shows validation summary with error reporting, bulk-creates registrations via server action
@@ -194,8 +194,8 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | REG-06 | Phase 9 | Complete |
 | REG-07 | Phase 9 | Complete |
 | REG-08 | Phase 9 | Complete |
-| DASH-01 | Phase 10 | Pending |
-| DASH-02 | Phase 10 | Pending |
+| DASH-01 | Phase 10 | Complete |
+| DASH-02 | Phase 10 | Complete |
 | DASH-03 | Phase 10 | Pending |
 | DASH-04 | Phase 10 | Pending |
 | DASH-05 | Phase 10 | Pending |

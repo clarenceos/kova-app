@@ -133,7 +133,7 @@ min-h-screen bg-background px-8 py-12
         │     └── form.space-y-6
         │           ├── Last Name field
         │           ├── First Name field  ← helper text below
-        │           ├── Gender field      ← RadioGroup (Male / Female / Other)
+        │           ├── Gender field      ← RadioGroup (Male / Female)
         │           ├── Body Weight field ← number input, "kg" suffix in placeholder
         │           ├── Country field     ← Combobox (Popover + Command)
         │           ├── Events section    ← Checkbox per discipline; inline expand on check

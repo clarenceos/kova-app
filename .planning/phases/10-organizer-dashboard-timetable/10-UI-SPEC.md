@@ -47,8 +47,8 @@ Declared values (must be multiples of 4):
 | 3xl | 64px | Page-level vertical margin |
 
 Exceptions:
-- Analytics stat cards: 12px internal padding (between xs and sm) — compact data display
-- Timetable cell internal padding: 8px vertical / 12px horizontal — dense grid layout
+- Analytics stat cards: 8px internal padding — compact data display
+- Timetable cell internal padding: 8px vertical / 8px horizontal — dense grid layout
 - Touch target minimum: 44px height for all interactive table row actions (desktop-first but accessible)
 
 Source: Inferred from existing patterns (`px-8 py-12` = 32px/48px page chrome in `organizerdb/page.tsx`) + 8-point scale defaults
@@ -149,7 +149,7 @@ Each screen state must have one declared focal point — the first element that 
 - `RegistrationsTable` — client-side sort/filter table; columns: #, Full Name, Gender, Bodyweight, Country, Events, Club, Coach, Registered At, Actions
 - `SortableColumnHeader` — table column header with sort indicator (Lucide `ArrowUpDown` icon)
 - `EventFilterBar` — filter buttons: All / LC / Jerk / Snatch / Male / Female (inline toggle pills)
-- `RemoveRegistrantDialog` — Dialog with confirmation copy, serial list, Cancel + Remove (destructive) buttons
+- `RemoveRegistrantDialog` — Dialog with confirmation copy, serial list, Cancel + Remove Registrant (destructive) buttons
 - `CSVImportModal` — Dialog: file drop zone + preview table (valid rows green, invalid rows red) + summary + "Import N valid rows" button
 - `QRCodeModal` — Dialog: QR code canvas/image + "Download QR as PNG" button
 - `GenerateQueueModal` — Dialog: start time input + registrant/platform summary + estimated finish + Confirm button
@@ -188,7 +188,7 @@ Each screen state must have one declared focal point — the first element that 
 ### Remove Registrant (DASH-04)
 - Dialog trigger: `Trash2` icon in table Actions column (tooltip: "Remove registrant")
 - Dialog content: "Remove [Full Name]?" heading + "This will delete their registration and all serial numbers ([SER-0001, SER-0002]). This cannot be undone." body
-- Buttons: Cancel (left, secondary style) | Remove (right, `bg-red-600 hover:bg-red-700 text-white`)
+- Buttons: Cancel (left, secondary style) | Remove Registrant (right, `bg-red-600 hover:bg-red-700 text-white`)
 - On confirm: server action call, optimistic row removal, show toast/inline success
 - On error: show inline error within dialog, keep dialog open
 
@@ -260,7 +260,7 @@ Each screen state must have one declared focal point — the first element that 
 | Copy Link button contextual hint | "Share this link with your athletes" (12px muted, below the buttons) |
 | Remove confirmation heading | "Remove [Full Name]?" |
 | Remove confirmation body | "This will delete their registration and all serial numbers ([SER-0001, SER-0002]). This cannot be undone." |
-| Remove button label | "Remove" |
+| Remove button label | "Remove Registrant" |
 | CSV drop zone | "Drop CSV here or click to select" |
 | CSV validation summary (with errors) | "[N] valid, [N] errors" |
 | CSV import button | "Import [N] valid rows" |

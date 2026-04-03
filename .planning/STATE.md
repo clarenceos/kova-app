@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
 status: Ready to execute
-last_updated: "2026-04-03T03:13:02.212Z"
+last_updated: "2026-04-03T03:17:04.842Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 5
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 7
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # Project State
@@ -109,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 07]: COACH conflict: student is entry with coach field set, coach is entry whose full name matches (case-insensitive trimmed, D-01)
 - [Phase 08-competition-creation]: deriveSerialPrefix called server-side in createCompetition — server is source of truth for prefix derivation (COMP-02, D-07)
 - [Phase 08-competition-creation]: Organizer layout has no auth gate — structured for Clerk retrofit (v2.0 roadmap, deferred to future milestone)
+- [Phase 08]: Competition creation form uses native input with inputClass string (JudgeSetupForm pattern) rather than shadcn Input component — className override for bg-charcoal/border-raw-steel tokens is cleaner with native input
+- [Phase 08]: CopyLinkButton isolated in app/organizerdb/_components/ to keep list page as a pure server component — clipboard requires client JS
 
 ### Pending Todos
 

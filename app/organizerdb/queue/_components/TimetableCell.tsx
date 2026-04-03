@@ -1,0 +1,50 @@
+'use client'
+
+import type { PlatformSlot, Conflict } from '@/lib/queue/types'
+
+interface TimetableCellProps {
+  slot: PlatformSlot
+  conflicts: Conflict[]
+}
+
+export function TimetableCell({ slot, conflicts }: TimetableCellProps) {
+  const eventLabel =
+    slot.event === 'LC' ? 'LC' : slot.event === 'JERK' ? 'JK' : 'SN'
+
+  return (
+    <div className="relative min-w-[140px]">
+      {/* Conflict pills — top-right float */}
+      {conflicts.length > 0 && (
+        <div className="absolute -top-1 -right-1 flex gap-0.5">
+          {conflicts.map((c, i) => (
+            <span
+              key={i}
+              className={`rounded px-1 py-0.5 text-[10px] font-medium ${
+                c.type === 'REST'
+                  ? 'bg-red-950/40 text-red-400'
+                  : 'bg-amber-950/40 text-amber-400'
+              }`}
+            >
+              {c.type}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Line 1: LAST, First (bold) */}
+      <p className="text-sm font-bold text-parchment">
+        {slot.lastName.toUpperCase()}, {slot.firstName}
+      </p>
+
+      {/* Line 2: Event · bellWeight · weightClass */}
+      <p className="text-xs text-raw-steel">
+        {eventLabel} · {slot.bellWeight} · {slot.weightClass}
+      </p>
+
+      {/* Line 3: Club (muted, conditional) */}
+      {slot.club && (
+        <p className="text-xs text-raw-steel/60">{slot.club}</p>
+      )}
+    </div>
+  )
+}

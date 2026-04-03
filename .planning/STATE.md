@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
 status: Ready to execute
-last_updated: "2026-04-03T04:46:15.432Z"
+last_updated: "2026-04-03T05:29:44.224Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 5
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 10
+  completed_plans: 8
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Phase 08 — competition-creation
+**Current focus:** Phase 09 — public-registration
 
 ## Current Position
 
-Phase: 08 (competition-creation) — EXECUTING
-Plan: 2 of 2
+Phase: 09 (public-registration) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Plan: 2 of 2
 | Phase 07 P01 | 71 | 1 tasks | 3 files |
 | Phase 07 P02 | 2 | 2 tasks | 2 files |
 | Phase 08-competition-creation P01 | 2 | 2 tasks | 6 files |
+| Phase 09 P01 | 4 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,8 @@ Recent decisions affecting current work:
 - [Phase 08-competition-creation]: Organizer layout has no auth gate — structured for Clerk retrofit (v2.0 roadmap, deferred to future milestone)
 - [Phase 08]: Competition creation form uses native input with inputClass string (JudgeSetupForm pattern) rather than shadcn Input component — className override for bg-charcoal/border-raw-steel tokens is cleaner with native input
 - [Phase 08]: CopyLinkButton isolated in app/organizerdb/_components/ to keep list page as a pure server component — clipboard requires client JS
+- [Phase 09-01]: Serial numbers generated in a for-loop before db.batch() so registrantId can be pre-generated and returned from the server action
+- [Phase 09-01]: COUNTRIES array has 240 ISO 3166-1 entries — 193 sovereign states plus territories to exceed the 240 minimum requirement
 
 ### Pending Todos
 
@@ -145,4 +148,4 @@ None yet.
 ## Session Continuity
 
 Last activity: 2026-04-03
-Resume file: .planning/phases/09-public-registration/09-CONTEXT.md
+Resume file: None

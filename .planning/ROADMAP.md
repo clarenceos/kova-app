@@ -153,10 +153,10 @@ Plans:
   5. Success page shows the athlete's name, competition name, and a table of assigned serials per event, with instruction to screenshot or save the serials
   6. "Register another athlete" button returns to the blank form — allowing a coach to register their full team in sequence
   7. An athlete selecting two events (biathlon) receives two separate serial numbers on the success page
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 09-01-PLAN.md — Install shadcn combobox components, create countries constant, build registerAthlete server action with atomic db.batch()
+- [x] 09-01-PLAN.md — Install shadcn combobox components, create countries constant, build registerAthlete server action with atomic db.batch()
 - [ ] 09-02-PLAN.md — Registration form page with guard states, personal details, country combobox, event selection with inline bell weight/duration config
 - [ ] 09-03-PLAN.md — Registration success page showing assigned serial numbers with "Register another athlete" button
 
@@ -191,5 +191,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Schema & Foundation | v2.0 | 2/3 | Gap closure | - |
 | 7. Scheduling Pure Logic | v2.0 | 2/2 | Complete   | 2026-04-02 |
 | 8. Competition Creation | v2.0 | 2/2 | Complete   | 2026-04-03 |
-| 9. Public Registration | v2.0 | 0/3 | Planning complete | - |
+| 9. Public Registration | v2.0 | 1/3 | In Progress|  |
 | 10. Organizer Dashboard & Timetable | v2.0 | 0/TBD | Not started | - |

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Ready to execute
-last_updated: "2026-04-03T05:29:44.224Z"
+status: Phase complete — ready for verification
+last_updated: "2026-04-03T05:34:22.383Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 5
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 10
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 ## Current Position
 
 Phase: 09 (public-registration) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -60,6 +60,8 @@ Plan: 2 of 3
 | Phase 07 P02 | 2 | 2 tasks | 2 files |
 | Phase 08-competition-creation P01 | 2 | 2 tasks | 6 files |
 | Phase 09 P01 | 4 | 2 tasks | 7 files |
+| Phase 09-public-registration P03 | 2 | 1 tasks | 1 files |
+| Phase 09-public-registration P02 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -114,6 +116,10 @@ Recent decisions affecting current work:
 - [Phase 08]: CopyLinkButton isolated in app/organizerdb/_components/ to keep list page as a pure server component — clipboard requires client JS
 - [Phase 09-01]: Serial numbers generated in a for-loop before db.batch() so registrantId can be pre-generated and returned from the server action
 - [Phase 09-01]: COUNTRIES array has 240 ISO 3166-1 entries — 193 sovereign states plus territories to exceed the 240 minimum requirement
+- [Phase 09-03]: Success page is a pure server component — no 'use client' required since there is zero interactivity
+- [Phase 09-03]: notFound() called for both missing registrantId and null return from getRegistrationData — correct 404 in both cases
+- [Phase 09-02]: Guard state logic extracted into getGuardState() helper — status!=open, deadline<now, or count>=maxRegistrants each map to a labeled guard object
+- [Phase 09-02]: Bell weight filtering done server-side by splitting allowedBellWeights JSON on 2x/1x prefix, passed as doubleBells/singleBells props to client component
 
 ### Pending Todos
 

@@ -66,14 +66,14 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 
 ### Registration
 
-- [ ] **REG-01**: Public registration form displays competition name and date at top
-- [ ] **REG-02**: Guard states prevent registration when competition not found (404), not open, deadline passed, or capacity reached
+- [x] **REG-01**: Public registration form displays competition name and date at top
+- [x] **REG-02**: Guard states prevent registration when competition not found (404), not open, deadline passed, or capacity reached
 - [x] **REG-03**: Athlete enters last name, first name, gender, body weight (kg), and country (searchable dropdown)
-- [ ] **REG-04**: Each selected event reveals bell weight dropdown and duration selector based on competition's allowed values
+- [x] **REG-04**: Each selected event reveals bell weight dropdown and duration selector based on competition's allowed values
 - [x] **REG-05**: Submitting creates 1 registrant + N entry rows with serials assigned atomically via db.batch()
-- [ ] **REG-06**: Success page shows registrant name, competition name, and table of assigned serials per event
+- [x] **REG-06**: Success page shows registrant name, competition name, and table of assigned serials per event
 - [x] **REG-07**: Multi-event submissions (biathlon/triathlon) create separate entries with separate serials
-- [ ] **REG-08**: "Register another athlete" button on success page returns to form
+- [x] **REG-08**: "Register another athlete" button on success page returns to form
 
 ### Organizer Dashboard
 
@@ -186,14 +186,14 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | COMP-01 | Phase 8 | Complete |
 | COMP-02 | Phase 8 | Complete |
 | COMP-03 | Phase 8 | Pending |
-| REG-01 | Phase 9 | Pending |
-| REG-02 | Phase 9 | Pending |
+| REG-01 | Phase 9 | Complete |
+| REG-02 | Phase 9 | Complete |
 | REG-03 | Phase 9 | Complete |
-| REG-04 | Phase 9 | Pending |
+| REG-04 | Phase 9 | Complete |
 | REG-05 | Phase 9 | Complete |
-| REG-06 | Phase 9 | Pending |
+| REG-06 | Phase 9 | Complete |
 | REG-07 | Phase 9 | Complete |
-| REG-08 | Phase 9 | Pending |
+| REG-08 | Phase 9 | Complete |
 | DASH-01 | Phase 10 | Pending |
 | DASH-02 | Phase 10 | Pending |
 | DASH-03 | Phase 10 | Pending |

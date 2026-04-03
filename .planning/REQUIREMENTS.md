@@ -60,8 +60,8 @@ Requirements for the Queue System milestone. Each maps to roadmap phases 6+.
 
 ### Competition Management
 
-- [ ] **COMP-01**: Organizer can create a competition with name, date, platform count, duration rules, allowed bell weights, status, and optional max registrants/deadline
-- [ ] **COMP-02**: Serial prefix auto-derived from competition name (first letter of each word, uppercased, max 3 chars)
+- [x] **COMP-01**: Organizer can create a competition with name, date, platform count, duration rules, allowed bell weights, status, and optional max registrants/deadline
+- [x] **COMP-02**: Serial prefix auto-derived from competition name (first letter of each word, uppercased, max 3 chars)
 - [ ] **COMP-03**: Copyable registration link shown on redirect after competition creation
 
 ### Registration
@@ -183,8 +183,8 @@ Deferred to post-v2.0. Tracked but not in current roadmap.
 | DATA-01 | Phase 6 | Complete |
 | DATA-02 | Phase 6 | Complete |
 | DATA-03 | Phase 6 | Complete |
-| COMP-01 | Phase 8 | Pending |
-| COMP-02 | Phase 8 | Pending |
+| COMP-01 | Phase 8 | Complete |
+| COMP-02 | Phase 8 | Complete |
 | COMP-03 | Phase 8 | Pending |
 | REG-01 | Phase 9 | Pending |
 | REG-02 | Phase 9 | Pending |

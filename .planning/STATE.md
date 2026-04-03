@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: Core Platform
-status: Ready to plan
-last_updated: "2026-04-02T15:16:00.728Z"
-last_activity: 2026-04-02
+status: Ready to execute
+last_updated: "2026-04-03T03:13:02.212Z"
+last_activity: 2026-04-03
 progress:
   total_phases: 5
   completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
+  total_plans: 7
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** Authenticated video — canvas overlays (timer, name, discipline, serial) baked into every frame make async kettlebell competition results trustworthy without a referee present
-**Current focus:** Phase 07 — scheduling-pure-logic
+**Current focus:** Phase 08 — competition-creation
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (competition-creation) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Plan: Not started
 | Phase 06 P03 | 2 | 2 tasks | 2 files |
 | Phase 07 P01 | 71 | 1 tasks | 3 files |
 | Phase 07 P02 | 2 | 2 tasks | 2 files |
+| Phase 08-competition-creation P01 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,8 @@ Recent decisions affecting current work:
 - [Phase 07]: weightClassSortKey numeric trick: parseFloat + 0.5 for '+' brackets ensures super-heavyweight sorts after bounded counterpart — plain localeCompare breaks this
 - [Phase 07]: REST conflict uses strict gap < minRestBlocks (D-09), not <=; gap == minRestBlocks is acceptable rest, not a conflict
 - [Phase 07]: COACH conflict: student is entry with coach field set, coach is entry whose full name matches (case-insensitive trimmed, D-01)
+- [Phase 08-competition-creation]: deriveSerialPrefix called server-side in createCompetition — server is source of truth for prefix derivation (COMP-02, D-07)
+- [Phase 08-competition-creation]: Organizer layout has no auth gate — structured for Clerk retrofit (v2.0 roadmap, deferred to future milestone)
 
 ### Pending Todos
 
@@ -139,5 +142,5 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-04-02
-Resume file: .planning/phases/08-competition-creation/08-CONTEXT.md
+Last activity: 2026-04-03
+Resume file: None

@@ -173,7 +173,14 @@ Plans:
   4. Clicking "Generate Queue" opens a modal for start time input; confirming redirects to a timetable page that displays a grid with time, block number, and platform columns filled with athlete/event data
   5. Conflict warnings are visible in a dedicated panel: REST conflicts shown in red with athlete names and block numbers, COACH conflicts shown in amber
   6. Printing the timetable page hides navigation and buttons, preserves event-tinted row colors, and fits the table to paper width
-**Plans**: TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — Server actions + dashboard page shell with competition selector, analytics bar, and component stubs
+- [ ] 10-02-PLAN.md — Registrations table with sort, filter, event pills, and remove registrant dialog
+- [ ] 10-03-PLAN.md — CSV import modal, QR code modal, and Generate Queue modal
+- [ ] 10-04-PLAN.md — Timetable page with scheduler integration, conflict panel, and print CSS
+
 **UI hint**: yes
 
 ## Progress
@@ -192,4 +199,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Scheduling Pure Logic | v2.0 | 2/2 | Complete   | 2026-04-02 |
 | 8. Competition Creation | v2.0 | 2/2 | Complete   | 2026-04-03 |
 | 9. Public Registration | v2.0 | 3/3 | Complete   | 2026-04-03 |
-| 10. Organizer Dashboard & Timetable | v2.0 | 0/TBD | Not started | - |
+| 10. Organizer Dashboard & Timetable | v2.0 | 0/4 | Planning complete | - |

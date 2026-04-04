@@ -1,8 +1,12 @@
 'use client'
 
+import { useTransition } from 'react'
 import Link from 'next/link'
+import { RefreshCw } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import type { Competition } from '@/lib/schema'
 import type { RegistrantWithEntries } from '@/lib/actions/dashboard'
+import { updateCompetitionStatus } from '@/lib/actions/competitions'
 import { CompetitionSelector } from './CompetitionSelector'
 import { AnalyticsBar } from './AnalyticsBar'
 import { RegistrationsTable } from './RegistrationsTable'
@@ -10,6 +14,22 @@ import { CSVImportModal } from './CSVImportModal'
 import { QRCodeModal } from './QRCodeModal'
 import { GenerateQueueModal } from './GenerateQueueModal'
 import { CopyLinkButton } from './CopyLinkButton'
+
+const STATUS_CYCLE: Record<string, 'draft' | 'open' | 'closed'> = {
+  draft: 'open',
+  open: 'closed',
+  closed: 'draft',
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (status === 'open') {
+    return <Badge className="bg-green-700 text-white">open</Badge>
+  }
+  if (status === 'closed') {
+    return <Badge className="bg-red-700 text-white">closed</Badge>
+  }
+  return <Badge className="bg-raw-steel text-parchment">draft</Badge>
+}
 
 interface DashboardClientProps {
   competitions: Competition[]
@@ -26,6 +46,18 @@ export function DashboardClient({
   selectedCompId,
   dashboardData,
 }: DashboardClientProps) {
+  const [isPending, startTransition] = useTransition()
+
+  function handleStatusCycle() {
+    if (!dashboardData) return
+    const currentStatus = dashboardData.competition.status
+    const nextStatus = STATUS_CYCLE[currentStatus] ?? 'draft'
+    startTransition(async () => {
+      await updateCompetitionStatus(dashboardData.competition.id, nextStatus)
+      window.location.reload()
+    })
+  }
+
   return (
     <div>
       {/* Top row: Competition selector + New Competition button */}
@@ -75,6 +107,26 @@ export function DashboardClient({
                 <QRCodeModal compId={dashboardData.competition.id} />
               </div>
               <p className="text-xs text-raw-steel">Share this link with your athletes</p>
+              <div className="flex items-center gap-4 mt-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-raw-steel">Status:</span>
+                  <StatusBadge status={dashboardData.competition.status} />
+                  <button
+                    onClick={handleStatusCycle}
+                    disabled={isPending}
+                    title="Cycle competition status"
+                    className="rounded p-1 text-raw-steel transition-colors hover:text-parchment disabled:opacity-50"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                  </button>
+                </div>
+                <span className="text-xs text-raw-steel">
+                  Serial prefix:{' '}
+                  <span className="font-mono text-parchment">
+                    {dashboardData.competition.serialPrefix}
+                  </span>
+                </span>
+              </div>
             </div>
             <CSVImportModal
               competitionId={dashboardData.competition.id}

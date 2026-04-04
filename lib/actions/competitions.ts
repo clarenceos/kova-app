@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { competitions } from '@/lib/schema'
 import { deriveSerialPrefix } from '@/lib/queue/serial'
@@ -54,7 +55,33 @@ export async function createCompetition(input: {
 
     return { id: row.id }
   } catch (error) {
-    console.error('[createCompetition] Failed:', error)
-    return { error: 'Failed to create competition. Please try again.' }
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[createCompetition] Failed:', msg, error)
+    return { error: `Failed to create competition: ${msg}` }
+  }
+}
+
+export async function updateCompetitionStatus(
+  compId: string,
+  newStatus: 'draft' | 'open' | 'closed'
+): Promise<{ success: true } | { error: string }> {
+  try {
+    if (!compId?.trim()) return { error: 'Competition ID is required' }
+    if (!['draft', 'open', 'closed'].includes(newStatus)) {
+      return { error: 'Invalid status value' }
+    }
+
+    await db
+      .update(competitions)
+      .set({ status: newStatus })
+      .where(eq(competitions.id, compId))
+
+    revalidatePath('/organizerdb')
+
+    return { success: true }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[updateCompetitionStatus] Failed:', msg, error)
+    return { error: `Failed to update status: ${msg}` }
   }
 }

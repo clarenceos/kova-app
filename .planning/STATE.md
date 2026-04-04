@@ -169,5 +169,5 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-04-04
+Last activity: 2026-04-04 - Completed quick task 260404-lg4: Fix UAT bugs: QR code blank, no status toggle, serial prefix hidden
 Resume file: None

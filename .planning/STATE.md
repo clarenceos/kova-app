@@ -167,8 +167,9 @@ None yet.
 | 260327-tdw | Entry detail: top-align columns, bronze pill styling, remove centering | 2026-03-27 | — | [260327-tdw-entry-detail-top-align-columns-bronze-pi](./quick/260327-tdw-entry-detail-top-align-columns-bronze-pi/) |
 | 260404-lg4 | Fix UAT bugs: QR code blank, missing status toggle, hidden serial prefix | 2026-04-04 | 6745402 | [260404-lg4-fix-uat-bugs-qr-code-blank-no-status-tog](./quick/260404-lg4-fix-uat-bugs-qr-code-blank-no-status-tog/) |
 | 260404-mj1 | Fix registration bugs and UX: multi-discipline batch, CSV template, status dropdown, form control visibility | 2026-04-04 | f3a77e3 | [260404-mj1-fix-registration-bugs-and-ux-improvement](./quick/260404-mj1-fix-registration-bugs-and-ux-improvement/) |
+| 260404-r98 | Fix serial collision on multi-event batch insert and add BIATHLON event to CSV importer | 2026-04-04 | d706d74 | [260404-r98-fix-serial-collision-on-multi-event-batc](./quick/260404-r98-fix-serial-collision-on-multi-event-batc/) |
 
 ## Session Continuity
 
-Last activity: 2026-04-04 - Completed quick task 260404-mj1: Fix registration bugs and UX improvements
+Last activity: 2026-04-04 - Completed quick task 260404-r98: Fix serial collision on multi-event batch insert and add BIATHLON event
 Resume file: None

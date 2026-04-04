@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Trash2 } from 'lucide-react'
 import type { TimeBlock, Conflict, PlatformSlot, JudgeCandidate } from '@/lib/queue/types'
 import { detectConflicts } from '@/lib/queue/detectConflicts'
 import { assignJudges } from '@/lib/queue/assignJudges'
@@ -170,6 +171,37 @@ export function TimetableGrid({
     setDragOver(null)
   }
 
+  function handleDeleteBlock(blockIdx: number) {
+    const newBlocks = structuredClone(timeBlocks)
+    newBlocks.splice(blockIdx, 1)
+
+    // Renumber sequentially
+    for (let i = 0; i < newBlocks.length; i++) {
+      newBlocks[i].blockNumber = i + 1
+    }
+
+    const blockDuration =
+      newBlocks.length > 0 && newBlocks[0].endTime > newBlocks[0].startTime
+        ? newBlocks[0].endTime - newBlocks[0].startTime
+        : 10
+    const transitionDuration = 5
+
+    // Recalculate times: first block keeps its original startTime/endTime
+    for (let i = 1; i < newBlocks.length; i++) {
+      newBlocks[i].startTime = newBlocks[i - 1].endTime + transitionDuration
+      newBlocks[i].endTime = newBlocks[i].startTime + blockDuration
+    }
+
+    const { blocks: reassigned, conflicts: newConflicts } = recalculate(
+      newBlocks,
+      minRestBlocks,
+      judgeCandidates
+    )
+    setTimeBlocks(reassigned)
+    setConflicts(newConflicts)
+    setIsDirty(true)
+  }
+
   function handleInsertBlock(afterIndex: number) {
     const newBlocks = structuredClone(timeBlocks)
 
@@ -336,7 +368,19 @@ export function TimetableGrid({
                     {formatTime(block.startTime)}
                   </td>
                   <td className="px-2 py-2 text-xs text-raw-steel align-top">
-                    {block.blockNumber}
+                    <span className="flex items-center gap-1">
+                      {block.blockNumber}
+                      {timeBlocks.length > 1 && (
+                        <button
+                          type="button"
+                          title="Delete block"
+                          onClick={() => handleDeleteBlock(blockIdx)}
+                          className="opacity-60 hover:opacity-100 text-raw-steel hover:text-red-400 transition-colors print:hidden"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      )}
+                    </span>
                   </td>
                   {block.platforms.map((slot: PlatformSlot | null, platformIdx: number) => {
                     const isSource = isDragSource(blockIdx, platformIdx)

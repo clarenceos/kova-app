@@ -177,8 +177,9 @@ None yet.
 | 260404-ruf | Conflict-aware scheduler (1-lookahead COACH avoidance), DnD slot swap, coach name on cells | 2026-04-04 | 0d6f3fa | [260404-ruf-conflict-aware-scheduler-manual-slot-swa](./quick/260404-ruf-conflict-aware-scheduler-manual-slot-swa/) |
 | 260404-us8 | Queue legend/save/edit-competition/judge-assignment with OWN_STUDENT+SAME_CLUB conflict detection | 2026-04-04 | f81b126 | [260404-us8-queue-legend-save-edit-comp-judge-assign](./quick/260404-us8-queue-legend-save-edit-comp-judge-assign/) |
 | 260405-0hx | Judging status column and edit pencil icon + EditRegistrantDialog + updateRegistrant server action | 2026-04-05 | 6e0b9dc | [260405-0hx-add-judging-status-column-and-edit-penci](./quick/260405-0hx-add-judging-status-column-and-edit-penci/) |
+| 260405-0uq | Delete block from queue timetable and Add Entry dialog on organizer dashboard | 2026-04-05 | b22c723 | [260405-0uq-delete-block-in-queue-manager-and-add-en](./quick/260405-0uq-delete-block-in-queue-manager-and-add-en/) |
 
 ## Session Continuity
 
-Last activity: 2026-04-05 - Completed quick task 260405-0hx: Judging status column and edit registrant dialog
+Last activity: 2026-04-05 - Completed quick task 260405-0uq: Delete block from queue timetable and Add Entry dialog on organizer dashboard
 Resume file: None

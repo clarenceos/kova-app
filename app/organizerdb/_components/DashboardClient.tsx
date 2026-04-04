@@ -2,11 +2,17 @@
 
 import { useTransition } from 'react'
 import Link from 'next/link'
-import { RefreshCw } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Download } from 'lucide-react'
 import type { Competition } from '@/lib/schema'
 import type { RegistrantWithEntries } from '@/lib/actions/dashboard'
 import { updateCompetitionStatus } from '@/lib/actions/competitions'
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from '@/components/ui/select'
 import { CompetitionSelector } from './CompetitionSelector'
 import { AnalyticsBar } from './AnalyticsBar'
 import { RegistrationsTable } from './RegistrationsTable'
@@ -15,20 +21,13 @@ import { QRCodeModal } from './QRCodeModal'
 import { GenerateQueueModal } from './GenerateQueueModal'
 import { CopyLinkButton } from './CopyLinkButton'
 
-const STATUS_CYCLE: Record<string, 'draft' | 'open' | 'closed'> = {
-  draft: 'open',
-  open: 'closed',
-  closed: 'draft',
-}
+const CSV_TEMPLATE_HEADERS = 'Last Name,First Name,Gender,Body Weight (kg),Country,Events,Bell Weights,Duration,Club,Coach'
+const CSV_TEMPLATE_EXAMPLE = 'Dela Cruz,Juan,Male,72.5,Philippines,"LC,JERK","2x16,2x16",10,Girya Manila,Coach Name'
 
-function StatusBadge({ status }: { status: string }) {
-  if (status === 'open') {
-    return <Badge className="bg-green-700 text-white">open</Badge>
-  }
-  if (status === 'closed') {
-    return <Badge className="bg-red-700 text-white">closed</Badge>
-  }
-  return <Badge className="bg-raw-steel text-parchment">draft</Badge>
+function statusSelectClass(status: string): string {
+  if (status === 'open') return 'h-7 w-28 text-xs bg-green-700/20 text-green-400 border-green-700/40'
+  if (status === 'closed') return 'h-7 w-28 text-xs bg-red-700/20 text-red-400 border-red-700/40'
+  return 'h-7 w-28 text-xs'
 }
 
 interface DashboardClientProps {
@@ -48,14 +47,15 @@ export function DashboardClient({
 }: DashboardClientProps) {
   const [isPending, startTransition] = useTransition()
 
-  function handleStatusCycle() {
-    if (!dashboardData) return
-    const currentStatus = dashboardData.competition.status
-    const nextStatus = STATUS_CYCLE[currentStatus] ?? 'draft'
-    startTransition(async () => {
-      await updateCompetitionStatus(dashboardData.competition.id, nextStatus)
-      window.location.reload()
-    })
+  function handleExportTemplate() {
+    const csv = `${CSV_TEMPLATE_HEADERS}\n${CSV_TEMPLATE_EXAMPLE}`
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'registration-template.csv'
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -110,15 +110,28 @@ export function DashboardClient({
               <div className="flex items-center gap-4 mt-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-raw-steel">Status:</span>
-                  <StatusBadge status={dashboardData.competition.status} />
-                  <button
-                    onClick={handleStatusCycle}
+                  <Select
+                    value={dashboardData.competition.status}
+                    onValueChange={(val: string) => {
+                      startTransition(async () => {
+                        await updateCompetitionStatus(
+                          dashboardData.competition.id,
+                          val as 'draft' | 'open' | 'closed'
+                        )
+                        window.location.reload()
+                      })
+                    }}
                     disabled={isPending}
-                    title="Cycle competition status"
-                    className="rounded p-1 text-raw-steel transition-colors hover:text-parchment disabled:opacity-50"
                   >
-                    <RefreshCw className="h-3 w-3" />
-                  </button>
+                    <SelectTrigger className={statusSelectClass(dashboardData.competition.status)}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <span className="text-xs text-raw-steel">
                   Serial prefix:{' '}
@@ -136,6 +149,15 @@ export function DashboardClient({
                 window.location.reload()
               }}
             />
+            <button
+              type="button"
+              onClick={handleExportTemplate}
+              title="Download a blank CSV template for bulk registration import"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-raw-steel/30 px-3 py-1.5 text-xs text-raw-steel transition-colors hover:border-parchment/50 hover:text-parchment"
+            >
+              <Download className="h-3 w-3" />
+              CSV Template
+            </button>
             <GenerateQueueModal
               compId={dashboardData.competition.id}
               registrantCount={dashboardData.totalCount}

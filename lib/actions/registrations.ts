@@ -95,8 +95,11 @@ export async function registerAthlete(input: {
     }
 
     // Atomic insert via db.batch() (Phase 6 D-08 — db.transaction() banned over Turso HTTP)
+    // Cast via unknown — Drizzle requires tuple type; dynamic spread breaks TS with >1 entry.
+    // Same pattern as bulkImportRegistrants (Phase 10-01 decision).
+    type BatchStatement = Parameters<typeof db.batch>[0][number]
     const now = new Date()
-    await db.batch([
+    const statements: BatchStatement[] = [
       db.insert(registrants).values({
         id: registrantId,
         competitionId: input.competitionId,
@@ -108,7 +111,7 @@ export async function registerAthlete(input: {
         club: input.club?.trim() || null,
         coach: input.coach?.trim() || null,
         createdAt: now,
-      }),
+      }) as unknown as BatchStatement,
       ...input.events.map((evt, i) =>
         db.insert(registrationEntries).values({
           registrantId,
@@ -118,9 +121,10 @@ export async function registerAthlete(input: {
           duration: evt.duration,
           serial: serials[i],
           createdAt: now,
-        })
+        }) as unknown as BatchStatement
       ),
-    ])
+    ]
+    await db.batch(statements as unknown as Parameters<typeof db.batch>[0])
 
     revalidatePath('/organizerdb')
 

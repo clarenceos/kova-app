@@ -165,8 +165,9 @@ None yet.
 | 260327-snv | Redesign entry detail page — portrait mobile layout with rep pills, flash verdict, CSV export | 2026-03-27 | 2ee6f5e | [260327-snv-redesign-entry-detail-page-portrait-mobi](./quick/260327-snv-redesign-entry-detail-page-portrait-mobi/) |
 | 260327-sxi | Entry detail: 80% video width, top-align rep column, time-sync rep highlighting | 2026-03-27 | — | [260327-sxi-entry-detail-80-video-width-top-align-re](./quick/260327-sxi-entry-detail-80-video-width-top-align-re/) |
 | 260327-tdw | Entry detail: top-align columns, bronze pill styling, remove centering | 2026-03-27 | — | [260327-tdw-entry-detail-top-align-columns-bronze-pi](./quick/260327-tdw-entry-detail-top-align-columns-bronze-pi/) |
+| 260404-lg4 | Fix UAT bugs: QR code blank, missing status toggle, hidden serial prefix | 2026-04-04 | 6745402 | [260404-lg4-fix-uat-bugs-qr-code-blank-no-status-tog](./quick/260404-lg4-fix-uat-bugs-qr-code-blank-no-status-tog/) |
 
 ## Session Continuity
 
-Last activity: 2026-04-03
+Last activity: 2026-04-04
 Resume file: None

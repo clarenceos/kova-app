@@ -19,7 +19,7 @@ export type CSVRow = {
   bodyWeightKg: number
   country: string
   events: Array<{
-    event: 'LC' | 'JERK' | 'SNATCH'
+    event: 'LC' | 'JERK' | 'SNATCH' | 'BIATHLON'
     bellWeight: string
     duration: number
   }>

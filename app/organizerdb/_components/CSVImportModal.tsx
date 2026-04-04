@@ -67,7 +67,7 @@ function parseCSV(text: string): ParsedRow[] {
     const duration = parseInt(raw['duration'] || '10', 10)
     if (duration !== 5 && duration !== 10) errors.push('Duration must be 5 or 10')
 
-    const validEvents = ['LC', 'JERK', 'SNATCH']
+    const validEvents = ['LC', 'JERK', 'SNATCH', 'BIATHLON']
     const events: CSVRow['events'] = []
     for (let i = 0; i < eventNames.length; i++) {
       if (!validEvents.includes(eventNames[i])) {
@@ -79,7 +79,7 @@ function parseCSV(text: string): ParsedRow[] {
         continue
       }
       events.push({
-        event: eventNames[i] as 'LC' | 'JERK' | 'SNATCH',
+        event: eventNames[i] as 'LC' | 'JERK' | 'SNATCH' | 'BIATHLON',
         bellWeight: bellWeights[i],
         duration,
       })

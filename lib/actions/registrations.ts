@@ -18,7 +18,7 @@ export async function registerAthlete(input: {
   club: string | null
   coach: string | null
   events: Array<{
-    event: 'LC' | 'JERK' | 'SNATCH'
+    event: 'LC' | 'JERK' | 'SNATCH' | 'BIATHLON'
     bellWeight: string
     duration: number
   }>
@@ -73,7 +73,7 @@ export async function registerAthlete(input: {
 
     // 13. Each event must have valid fields
     for (const evt of input.events) {
-      if (!['LC', 'JERK', 'SNATCH'].includes(evt.event)) {
+      if (!['LC', 'JERK', 'SNATCH', 'BIATHLON'].includes(evt.event)) {
         return { error: `Invalid event: ${evt.event}` }
       }
       if (!evt.bellWeight?.trim()) {

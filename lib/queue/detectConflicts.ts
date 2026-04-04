@@ -1,4 +1,4 @@
-import type { TimeBlock, PlatformSlot, Conflict, RestConflict, CoachConflict } from './types';
+import type { TimeBlock, PlatformSlot, Conflict, RestConflict, CoachConflict, JudgeConflict } from './types';
 
 /**
  * Pure conflict detection function — no DB imports, safe to use from 'use client' components.
@@ -11,7 +11,11 @@ import type { TimeBlock, PlatformSlot, Conflict, RestConflict, CoachConflict } f
  * This is extracted from scheduler.ts Phase C so the same logic can be run after
  * manual drag-and-drop swaps in the UI without re-running the full schedule().
  */
-export function detectConflicts(timeBlocks: TimeBlock[], minRestBlocks: number = 2): Conflict[] {
+export function detectConflicts(
+  timeBlocks: TimeBlock[],
+  minRestBlocks: number = 2,
+  judgeConflicts: JudgeConflict[] = []
+): Conflict[] {
   const conflicts: Conflict[] = [];
 
   // --- REST conflict detection (SCHED-04, D-09) ---
@@ -88,6 +92,9 @@ export function detectConflicts(timeBlocks: TimeBlock[], minRestBlocks: number =
       }
     }
   }
+
+  // Merge judge conflicts from assignJudges (if provided)
+  conflicts.push(...judgeConflicts);
 
   return conflicts;
 }

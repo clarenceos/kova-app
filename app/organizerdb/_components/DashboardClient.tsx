@@ -139,6 +139,12 @@ export function DashboardClient({
                     {dashboardData.competition.serialPrefix}
                   </span>
                 </span>
+                <Link
+                  href={`/organizerdb/edit?compId=${dashboardData.competition.id}`}
+                  className="text-xs text-bright-bronze hover:underline"
+                >
+                  Edit
+                </Link>
               </div>
             </div>
             <CSVImportModal

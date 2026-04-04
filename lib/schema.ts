@@ -48,6 +48,8 @@ export const competitions = sqliteTable("competitions", {
   serialPrefix: text("serial_prefix").notNull(), // 3-char uppercase e.g. "GPC"
   status: text("status").notNull().default("draft"), // 'draft' | 'open' | 'closed'
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(), // D-06: integer timestamp
+  queueJson: text("queue_json"), // nullable — JSON.stringify(TimeBlock[]) for persisted queue
+  queueSavedAt: integer("queue_saved_at", { mode: "timestamp" }), // nullable — last saved timestamp
 });
 
 export type Competition = typeof competitions.$inferSelect;
@@ -63,6 +65,7 @@ export const registrants = sqliteTable("registrants", {
   country: text("country").notNull(),
   club: text("club"), // nullable
   coach: text("coach"), // nullable
+  isJudging: integer("is_judging").notNull().default(0), // 0=not judging, 1=judge-only, 2=competing+judging
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(), // D-06: integer timestamp
 });
 

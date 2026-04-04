@@ -169,6 +169,22 @@ export function RegistrationsTable({
                         {entry.event}
                       </Badge>
                     ))}
+                    {reg.isJudging === 1 && (
+                      <Badge
+                        className="bg-violet-950/40 text-violet-400 text-xs border-violet-700/30"
+                        variant="outline"
+                      >
+                        Judge only
+                      </Badge>
+                    )}
+                    {reg.isJudging === 2 && (
+                      <Badge
+                        className="bg-violet-950/40 text-violet-400 text-xs border-violet-700/30"
+                        variant="outline"
+                      >
+                        + Judge
+                      </Badge>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-raw-steel">{reg.club ?? '—'}</TableCell>

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import type { TimeBlock, Conflict, PlatformSlot } from '@/lib/queue/types'
+import type { TimeBlock, Conflict, PlatformSlot, JudgeCandidate } from '@/lib/queue/types'
 import { detectConflicts } from '@/lib/queue/detectConflicts'
+import { assignJudges } from '@/lib/queue/assignJudges'
 import { saveQueue, clearQueue } from '@/lib/actions/competitions'
 import { TimetableCell } from './TimetableCell'
 import { ConflictPanel } from './ConflictPanel'
@@ -15,6 +16,7 @@ interface TimetableGridProps {
   minRestBlocks: number
   compId: string
   savedAt: Date | null
+  judgeCandidates: JudgeCandidate[]
 }
 
 function formatTime(minutes: number): string {
@@ -29,8 +31,7 @@ function getRowTintClass(block: TimeBlock): string {
   const counts: Record<string, number> = {}
   for (const e of events) counts[e] = (counts[e] ?? 0) + 1
   const majority = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
-  // Only tint if majority > 50% of filled slots
-  if (majority[1] <= events.length / 2) return '' // mixed block — neutral
+  if (majority[1] <= events.length / 2) return ''
   switch (majority[0]) {
     case 'LC': return 'bg-blue-950/40'
     case 'JERK': return 'bg-amber-950/40'
@@ -41,6 +42,20 @@ function getRowTintClass(block: TimeBlock): string {
 
 type CellCoords = { blockIdx: number; platformIdx: number }
 
+/** After any mutation: re-run assignJudges + detectConflicts and return merged results. */
+function recalculate(
+  blocks: TimeBlock[],
+  minRestBlocks: number,
+  judgeCandidates: JudgeCandidate[]
+): { blocks: TimeBlock[]; conflicts: Conflict[] } {
+  const { timeBlocks: reassigned, judgeConflicts } = assignJudges(
+    structuredClone(blocks),
+    judgeCandidates
+  )
+  const allConflicts = detectConflicts(reassigned, minRestBlocks, judgeConflicts)
+  return { blocks: reassigned, conflicts: allConflicts }
+}
+
 export function TimetableGrid({
   initialTimeBlocks,
   numPlatforms,
@@ -48,6 +63,7 @@ export function TimetableGrid({
   minRestBlocks,
   compId,
   savedAt: initialSavedAt,
+  judgeCandidates,
 }: TimetableGridProps) {
   const [timeBlocks, setTimeBlocks] = useState(initialTimeBlocks)
   const [conflicts, setConflicts] = useState(initialConflicts)
@@ -57,7 +73,7 @@ export function TimetableGrid({
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<Date | null>(initialSavedAt)
 
-  // Build conflict lookup: entryId -> Conflict[] for quick lookup in cells
+  // Build conflict lookup: entryId -> Conflict[] for quick cell lookup
   const conflictsByEntry = new Map<string, Conflict[]>()
 
   for (const c of conflicts) {
@@ -89,13 +105,11 @@ export function TimetableGrid({
         }
       }
     } else if (c.type === 'JUDGE') {
-      // Match judge conflicts to the slot with the matching athlete name in the matching block
       for (const block of timeBlocks) {
         if (block.blockNumber !== c.blockNumber) continue
         for (const slot of block.platforms) {
           if (!slot) continue
-          const fullName = `${slot.firstName} ${slot.lastName}`
-          if (fullName === c.athleteName) {
+          if (`${slot.firstName} ${slot.lastName}` === c.athleteName) {
             const existing = conflictsByEntry.get(slot.entryId) ?? []
             existing.push(c)
             conflictsByEntry.set(slot.entryId, existing)
@@ -139,8 +153,12 @@ export function TimetableGrid({
     srcBlock.platforms[dragSource.platformIdx] = dstBlock.platforms[dest.platformIdx]
     dstBlock.platforms[dest.platformIdx] = temp
 
-    setTimeBlocks(newBlocks)
-    const newConflicts = detectConflicts(newBlocks, minRestBlocks)
+    const { blocks: reassigned, conflicts: newConflicts } = recalculate(
+      newBlocks,
+      minRestBlocks,
+      judgeCandidates
+    )
+    setTimeBlocks(reassigned)
     setConflicts(newConflicts)
     setDragSource(null)
     setDragOver(null)
@@ -154,48 +172,38 @@ export function TimetableGrid({
 
   function handleInsertBlock(afterIndex: number) {
     const newBlocks = structuredClone(timeBlocks)
-    const prevBlock = newBlocks[afterIndex]
-    // Create empty block — start/end times will be renumbered below
-    const emptyBlock: TimeBlock = {
-      blockNumber: 0, // placeholder, renumbered below
-      startTime: 0,
-      endTime: 0,
-      platforms: Array.from({ length: numPlatforms }, () => null),
-    }
-    newBlocks.splice(afterIndex + 1, 0, emptyBlock)
 
-    // Renumber all blocks sequentially
-    for (let i = 0; i < newBlocks.length; i++) {
-      newBlocks[i].blockNumber = i + 1
-    }
-
-    // Recalculate start/end times — first block keeps original startTime
-    // Each subsequent block: startTime = previous endTime, endTime = startTime + blockDuration
-    // Infer blockDuration from the first block (endTime - startTime)
     const blockDuration =
       newBlocks.length > 0 && newBlocks[0].endTime > newBlocks[0].startTime
         ? newBlocks[0].endTime - newBlocks[0].startTime
         : 10
     const transitionDuration = 5
 
+    const emptyBlock: TimeBlock = {
+      blockNumber: 0,
+      startTime: 0,
+      endTime: 0,
+      platforms: Array.from({ length: numPlatforms }, () => null),
+    }
+    newBlocks.splice(afterIndex + 1, 0, emptyBlock)
+
+    // Renumber sequentially
+    for (let i = 0; i < newBlocks.length; i++) {
+      newBlocks[i].blockNumber = i + 1
+    }
+
+    // Recalculate times from first block's original startTime
     for (let i = 1; i < newBlocks.length; i++) {
       newBlocks[i].startTime = newBlocks[i - 1].endTime + transitionDuration
       newBlocks[i].endTime = newBlocks[i].startTime + blockDuration
     }
-    // First block keeps its original startTime/endTime (from the initial schedule)
-    // but we need to set the emptyBlock's times if it was inserted at position 0
-    if (afterIndex === -1) {
-      // Insert before first — rare but handle gracefully
-      newBlocks[0].startTime = prevBlock.startTime - (blockDuration + transitionDuration)
-      newBlocks[0].endTime = newBlocks[0].startTime + blockDuration
-      for (let i = 1; i < newBlocks.length; i++) {
-        newBlocks[i].startTime = newBlocks[i - 1].endTime + transitionDuration
-        newBlocks[i].endTime = newBlocks[i].startTime + blockDuration
-      }
-    }
 
-    setTimeBlocks(newBlocks)
-    const newConflicts = detectConflicts(newBlocks, minRestBlocks)
+    const { blocks: reassigned, conflicts: newConflicts } = recalculate(
+      newBlocks,
+      minRestBlocks,
+      judgeCandidates
+    )
+    setTimeBlocks(reassigned)
     setConflicts(newConflicts)
     setIsDirty(true)
   }

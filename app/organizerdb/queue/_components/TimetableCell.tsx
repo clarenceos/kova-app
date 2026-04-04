@@ -20,7 +20,9 @@ export function TimetableCell({ slot, conflicts }: TimetableCellProps) {
             <span
               key={i}
               className={`rounded px-1 py-0.5 text-[10px] font-medium ${
-                c.type === 'REST'
+                c.type === 'JUDGE'
+                  ? 'bg-violet-950/40 text-violet-400'
+                  : c.type === 'REST'
                   ? 'bg-red-950/40 text-red-400'
                   : 'bg-amber-950/40 text-amber-400'
               }`}
@@ -45,6 +47,13 @@ export function TimetableCell({ slot, conflicts }: TimetableCellProps) {
       {(slot.club || slot.coach) && (
         <p className="text-xs text-raw-steel/60">
           {[slot.club, slot.coach ? `(${slot.coach})` : null].filter(Boolean).join(' · ')}
+        </p>
+      )}
+
+      {/* Line 4: Judge name (most muted) */}
+      {slot.judge && (
+        <p className="text-xs text-raw-steel/40">
+          Judge: {slot.judge.lastName.toUpperCase()}, {slot.judge.firstName}
         </p>
       )}
     </div>

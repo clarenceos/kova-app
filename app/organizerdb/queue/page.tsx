@@ -3,7 +3,9 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { getCompetitionDashboard } from '@/lib/actions/dashboard'
 import { schedule } from '@/lib/queue/scheduler'
-import type { SchedulerEntry, TimeBlock } from '@/lib/queue/types'
+import { assignJudges } from '@/lib/queue/assignJudges'
+import { detectConflicts } from '@/lib/queue/detectConflicts'
+import type { SchedulerEntry, TimeBlock, JudgeCandidate } from '@/lib/queue/types'
 import { TimetableGrid } from './_components/TimetableGrid'
 import './print.css'
 
@@ -32,12 +34,27 @@ export default async function QueuePage({
 
   const { competition, registrants } = result
 
+  // Build JudgeCandidate array from all registrants (not just those with entries)
+  const judgeCandidates: JudgeCandidate[] = registrants.map(r => ({
+    registrantId: r.id,
+    firstName: r.firstName,
+    lastName: r.lastName,
+    club: r.club,
+    coach: r.coach,
+    isJudging: r.isJudging ?? 0,
+  }))
+
   let initialTimeBlocks: TimeBlock[]
   let estimatedFinishTime: number
+  let initialConflicts: ReturnType<typeof detectConflicts>
 
   if (competition.queueJson) {
-    // Load from saved queue JSON — skip scheduler
-    initialTimeBlocks = JSON.parse(competition.queueJson) as TimeBlock[]
+    // Load from saved queue JSON — skip scheduler, re-run assignJudges in case registrants changed
+    const savedBlocks = JSON.parse(competition.queueJson) as TimeBlock[]
+    const { timeBlocks: blocksWithJudges, judgeConflicts } = assignJudges(savedBlocks, judgeCandidates)
+    const restCoachConflicts = detectConflicts(blocksWithJudges, 2)
+    initialTimeBlocks = blocksWithJudges
+    initialConflicts = [...restCoachConflicts, ...judgeConflicts]
     estimatedFinishTime =
       initialTimeBlocks.length > 0
         ? initialTimeBlocks[initialTimeBlocks.length - 1].endTime
@@ -70,7 +87,15 @@ export default async function QueuePage({
       startTimeMinutes,
     })
 
-    initialTimeBlocks = scheduleResult.timeBlocks
+    // Run judge assignment on scheduled blocks
+    const { timeBlocks: blocksWithJudges, judgeConflicts } = assignJudges(
+      scheduleResult.timeBlocks,
+      judgeCandidates
+    )
+    const restCoachConflicts = detectConflicts(blocksWithJudges, 2)
+
+    initialTimeBlocks = blocksWithJudges
+    initialConflicts = [...restCoachConflicts, ...judgeConflicts]
     estimatedFinishTime = scheduleResult.estimatedFinishTime
   }
 
@@ -89,7 +114,7 @@ export default async function QueuePage({
           </Link>
         </div>
 
-        {/* Print header — always visible, styled differently in print */}
+        {/* Print header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-parchment">
             {competition.name} — {competition.date}
@@ -97,14 +122,15 @@ export default async function QueuePage({
           <p className="text-xs text-raw-steel">Generated: {generatedAt}</p>
         </div>
 
-        {/* Timetable grid — owns ConflictPanel and DnD swap state internally */}
+        {/* Timetable grid */}
         <TimetableGrid
           initialTimeBlocks={initialTimeBlocks}
           numPlatforms={competition.numPlatforms}
-          initialConflicts={[]}
+          initialConflicts={initialConflicts}
           minRestBlocks={2}
           compId={compId}
           savedAt={competition.queueSavedAt ?? null}
+          judgeCandidates={judgeCandidates}
         />
 
         {/* Estimated finish — hidden in print */}

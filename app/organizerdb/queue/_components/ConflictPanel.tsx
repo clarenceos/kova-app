@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { Conflict, RestConflict, CoachConflict } from '@/lib/queue/types'
+import type { Conflict, RestConflict, CoachConflict, JudgeConflict } from '@/lib/queue/types'
 
 interface ConflictPanelProps {
   conflicts: Conflict[]
@@ -12,6 +12,7 @@ export function ConflictPanel({ conflicts }: ConflictPanelProps) {
 
   const restConflicts = conflicts.filter((c): c is RestConflict => c.type === 'REST')
   const coachConflicts = conflicts.filter((c): c is CoachConflict => c.type === 'COACH')
+  const judgeConflicts = conflicts.filter((c): c is JudgeConflict => c.type === 'JUDGE')
   const totalCount = conflicts.length
 
   return (
@@ -51,6 +52,18 @@ export function ConflictPanel({ conflicts }: ConflictPanelProps) {
           <p key={`coach-${i}`} className="text-sm text-amber-400 print:text-black">
             <span className="font-bold">COACH:</span> {c.coachName} coaching{' '}
             {c.studentName} in block {c.blockNumber}
+          </p>
+        ))}
+
+        {judgeConflicts.map((c, i) => (
+          <p key={`judge-${i}`} className="text-sm text-violet-400 print:text-black">
+            <span className="font-bold">JUDGE:</span>{' '}
+            {c.reason === 'NO_JUDGE_AVAILABLE'
+              ? `No judge available for ${c.athleteName} in block ${c.blockNumber}`
+              : c.reason === 'OWN_STUDENT'
+              ? `${c.judgeName} assigned to judge own student ${c.athleteName} in block ${c.blockNumber}`
+              : `${c.judgeName} same club as ${c.athleteName} in block ${c.blockNumber}`
+            }
           </p>
         ))}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Trash2, Pencil } from 'lucide-react'
 import {
   Table,
   TableHeader,
@@ -19,6 +19,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip'
 import { RemoveRegistrantDialog } from './RemoveRegistrantDialog'
+import { EditRegistrantDialog } from './EditRegistrantDialog'
 import type { RegistrantWithEntries } from '@/lib/actions/dashboard'
 
 type SortColumn = 'name' | 'bodyweight' | 'registeredAt'
@@ -39,6 +40,7 @@ export function RegistrationsTable({
   const [eventFilter, setEventFilter] = useState<string | null>(null)
   const [genderFilter, setGenderFilter] = useState<string | null>(null)
   const [removingRegistrant, setRemovingRegistrant] = useState<RegistrantWithEntries | null>(null)
+  const [editingRegistrant, setEditingRegistrant] = useState<RegistrantWithEntries | null>(null)
 
   function handleSort(column: string) {
     setSortConfig(prev => ({
@@ -144,6 +146,7 @@ export function RegistrationsTable({
               <TableHead className="text-xs text-raw-steel">Events</TableHead>
               <TableHead className="text-xs text-raw-steel">Club</TableHead>
               <TableHead className="text-xs text-raw-steel">Coach</TableHead>
+              <TableHead className="text-xs text-raw-steel">Judging</TableHead>
               <SortableHeader label="Registered At" columnKey="registeredAt" />
               <TableHead className="text-xs text-raw-steel">Actions</TableHead>
             </TableRow>
@@ -169,43 +172,60 @@ export function RegistrationsTable({
                         {entry.event}
                       </Badge>
                     ))}
-                    {reg.isJudging === 1 && (
-                      <Badge
-                        className="bg-violet-950/40 text-violet-400 text-xs border-violet-700/30"
-                        variant="outline"
-                      >
-                        Judge only
-                      </Badge>
-                    )}
-                    {reg.isJudging === 2 && (
-                      <Badge
-                        className="bg-violet-950/40 text-violet-400 text-xs border-violet-700/30"
-                        variant="outline"
-                      >
-                        + Judge
-                      </Badge>
-                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-raw-steel">{reg.club ?? '—'}</TableCell>
                 <TableCell className="text-sm text-raw-steel">{reg.coach ?? '—'}</TableCell>
+                <TableCell>
+                  {reg.isJudging === 0 ? (
+                    <span className="text-sm text-raw-steel">—</span>
+                  ) : reg.isJudging === 1 ? (
+                    <Badge
+                      className="bg-violet-950/40 text-violet-400 text-xs border-violet-700/30"
+                      variant="outline"
+                    >
+                      Judge only
+                    </Badge>
+                  ) : (
+                    <Badge
+                      className="bg-violet-950/40 text-violet-400 text-xs border-violet-700/30"
+                      variant="outline"
+                    >
+                      Competing + Judge
+                    </Badge>
+                  )}
+                </TableCell>
                 <TableCell className="text-xs text-raw-steel">
                   {reg.createdAt.toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          className="rounded p-1 text-raw-steel hover:bg-red-950/30 hover:text-red-400 transition-colors"
-                          onClick={() => setRemovingRegistrant(reg)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Remove registrant</span>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>Remove registrant</TooltipContent>
-                    </Tooltip>
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            className="rounded p-1 text-raw-steel hover:bg-charcoal/80 hover:text-parchment transition-colors"
+                            onClick={() => setEditingRegistrant(reg)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Edit registrant</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit registrant</TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            className="rounded p-1 text-raw-steel hover:bg-red-950/30 hover:text-red-400 transition-colors"
+                            onClick={() => setRemovingRegistrant(reg)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Remove registrant</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Remove registrant</TooltipContent>
+                      </Tooltip>
+                    </div>
                   </TooltipProvider>
                 </TableCell>
               </TableRow>
@@ -223,6 +243,18 @@ export function RegistrationsTable({
           competitionId={competitionId}
           onRemoved={() => {
             setRemovingRegistrant(null)
+            router.refresh()
+          }}
+        />
+      )}
+
+      {/* Edit dialog */}
+      {editingRegistrant && (
+        <EditRegistrantDialog
+          registrant={editingRegistrant}
+          competitionId={competitionId}
+          onSaved={() => {
+            setEditingRegistrant(null)
             router.refresh()
           }}
         />

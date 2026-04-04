@@ -25,6 +25,7 @@ export type CSVRow = {
   }>
   club: string | null
   coach: string | null
+  isJudging: 0 | 1 | 2
 }
 
 /**
@@ -121,6 +122,53 @@ export async function removeRegistrant(
 }
 
 /**
+ * Update an existing registrant's editable fields.
+ * Does not modify entries (events/serials) — only registrant metadata.
+ */
+export async function updateRegistrant(input: {
+  registrantId: string
+  competitionId: string
+  lastName: string
+  firstName: string
+  gender: 'Male' | 'Female'
+  bodyWeightKg: number
+  country: string
+  club: string | null
+  coach: string | null
+  isJudging: 0 | 1 | 2
+}): Promise<{ success: true } | { error: string }> {
+  try {
+    if (!input.registrantId?.trim()) return { error: 'Registrant ID is required' }
+    if (!input.competitionId?.trim()) return { error: 'Competition ID is required' }
+    if (!input.bodyWeightKg || input.bodyWeightKg <= 0) return { error: 'Body weight must be a positive number' }
+    if (input.gender !== 'Male' && input.gender !== 'Female') return { error: 'Gender must be Male or Female' }
+    if (![0, 1, 2].includes(input.isJudging)) return { error: 'isJudging must be 0, 1, or 2' }
+
+    await db
+      .update(registrants)
+      .set({
+        lastName: input.lastName,
+        firstName: input.firstName,
+        gender: input.gender,
+        bodyWeightKg: input.bodyWeightKg,
+        country: input.country,
+        club: input.club,
+        coach: input.coach,
+        isJudging: input.isJudging,
+      })
+      .where(eq(registrants.id, input.registrantId))
+
+    revalidatePath('/organizerdb')
+
+    return { success: true }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error('[updateRegistrant] Failed:', msg, error)
+    return { error: 'Failed to update registrant' }
+  }
+}
+
+/**
  * Bulk-import registrants from validated CSV rows.
  * Serials are generated in a for-loop before db.batch() (same pattern as registerAthlete).
  */
@@ -177,6 +225,7 @@ export async function bulkImportRegistrants(input: {
           country: row.country,
           club: row.club,
           coach: row.coach,
+          isJudging: row.isJudging,
           createdAt: now,
         }) as unknown as BatchStatement
       )

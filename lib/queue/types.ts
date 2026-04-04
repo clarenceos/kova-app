@@ -43,6 +43,7 @@ export interface PlatformSlot {
   coach: string | null;
   country: string;
   serial: string;
+  judge: { registrantId: string; firstName: string; lastName: string } | null;
 }
 
 export interface TimeBlock {
@@ -72,7 +73,24 @@ export interface CoachConflict {
   bellWeight: string;
 }
 
-export type Conflict = RestConflict | CoachConflict;
+export interface JudgeConflict {
+  type: 'JUDGE';
+  judgeName: string;
+  athleteName: string;
+  blockNumber: number;
+  reason: 'OWN_STUDENT' | 'SAME_CLUB' | 'NO_JUDGE_AVAILABLE';
+}
+
+export interface JudgeCandidate {
+  registrantId: string;
+  firstName: string;
+  lastName: string;
+  club: string | null;
+  coach: string | null;
+  isJudging: number; // 0=no, 1=judge-only, 2=competing+judging
+}
+
+export type Conflict = RestConflict | CoachConflict | JudgeConflict;
 
 export interface ScheduleResult {
   timeBlocks: TimeBlock[];

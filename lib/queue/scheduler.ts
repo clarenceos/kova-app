@@ -79,6 +79,7 @@ function buildPlatformSlot(entry: SchedulerEntry): PlatformSlot {
     coach: entry.coach,
     country: entry.country,
     serial: entry.serial,
+    judge: null,
   };
 }
 

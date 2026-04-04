@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { QrCode } from 'lucide-react'
 import {
@@ -14,21 +14,25 @@ import { Button } from '@/components/ui/button'
 
 export function QRCodeModal({ compId }: { compId: string }) {
   const [open, setOpen] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [dataUrl, setDataUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!open || !canvasRef.current) return
+    if (!open) {
+      setDataUrl(null)
+      return
+    }
     const url = `${window.location.origin}/registration/${compId}`
-    QRCode.toCanvas(canvasRef.current, url, {
+    QRCode.toDataURL(url, {
       width: 256,
       margin: 2,
       color: { dark: '#EDE9E2', light: '#0D0D0D' },
+    }).then((result) => {
+      setDataUrl(result)
     })
   }, [open, compId])
 
   function handleDownload() {
-    if (!canvasRef.current) return
-    const dataUrl = canvasRef.current.toDataURL('image/png')
+    if (!dataUrl) return
     const a = document.createElement('a')
     a.href = dataUrl
     a.download = `kova-registration-qr-${compId.slice(0, 8)}.png`
@@ -48,7 +52,17 @@ export function QRCodeModal({ compId }: { compId: string }) {
           <DialogTitle>Registration QR Code</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4 py-4">
-          <canvas ref={canvasRef} className="rounded-lg" />
+          {dataUrl ? (
+            <img
+              src={dataUrl}
+              alt="Registration QR Code"
+              className="rounded-lg"
+              width={256}
+              height={256}
+            />
+          ) : (
+            <div className="h-[256px] w-[256px] animate-pulse rounded-lg bg-charcoal" />
+          )}
           <p className="text-xs text-raw-steel">Scan to open registration form</p>
           <button
             className="rounded-lg bg-patina-bronze px-4 py-2 text-sm font-bold text-parchment transition-colors hover:bg-bright-bronze"

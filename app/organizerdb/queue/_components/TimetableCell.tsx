@@ -41,9 +41,11 @@ export function TimetableCell({ slot, conflicts }: TimetableCellProps) {
         {eventLabel} · {slot.bellWeight} · {slot.weightClass}
       </p>
 
-      {/* Line 3: Club (muted, conditional) */}
-      {slot.club && (
-        <p className="text-xs text-raw-steel/60">{slot.club}</p>
+      {/* Line 3: Club and/or Coach (muted, conditional) */}
+      {(slot.club || slot.coach) && (
+        <p className="text-xs text-raw-steel/60">
+          {[slot.club, slot.coach ? `(${slot.coach})` : null].filter(Boolean).join(' · ')}
+        </p>
       )}
     </div>
   )

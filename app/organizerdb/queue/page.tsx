@@ -5,7 +5,6 @@ import { getCompetitionDashboard } from '@/lib/actions/dashboard'
 import { schedule } from '@/lib/queue/scheduler'
 import type { SchedulerEntry } from '@/lib/queue/types'
 import { TimetableGrid } from './_components/TimetableGrid'
-import { ConflictPanel } from './_components/ConflictPanel'
 import './print.css'
 
 function formatTime(minutes: number): string {
@@ -83,14 +82,12 @@ export default async function QueuePage({
           <p className="text-xs text-raw-steel">Generated: {generatedAt}</p>
         </div>
 
-        {/* Conflict panel */}
-        <ConflictPanel conflicts={scheduleResult.conflicts} />
-
-        {/* Timetable grid */}
+        {/* Timetable grid — owns ConflictPanel and DnD swap state internally */}
         <TimetableGrid
-          timeBlocks={scheduleResult.timeBlocks}
+          initialTimeBlocks={scheduleResult.timeBlocks}
           numPlatforms={competition.numPlatforms}
-          conflicts={scheduleResult.conflicts}
+          initialConflicts={scheduleResult.conflicts}
+          minRestBlocks={2}
         />
 
         {/* Estimated finish — hidden in print */}

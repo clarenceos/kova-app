@@ -4,11 +4,9 @@ import type {
   SchedulerEntry,
   TimeBlock,
   PlatformSlot,
-  Conflict,
-  RestConflict,
-  CoachConflict,
 } from "./types";
 import { getWeightClass } from "./weightClass";
+import { detectConflicts } from "./detectConflicts";
 
 // ---------------------------------------------------------------------------
 // Internal helper: numeric sort key for weight class labels
@@ -85,6 +83,39 @@ function buildPlatformSlot(entry: SchedulerEntry): PlatformSlot {
 }
 
 // ---------------------------------------------------------------------------
+// Helper: check if placing a new entry into a partially-filled platform list
+// would create a COACH conflict with any already-placed slot.
+// Returns true if placing entry would cause a COACH conflict.
+// ---------------------------------------------------------------------------
+function wouldCreateCoachConflict(
+  candidate: SchedulerEntry,
+  placedSlots: (PlatformSlot | null)[]
+): boolean {
+  if (candidate.coach == null) {
+    // candidate is not a student — check if candidate IS a coach for any placed slot
+    const candidateFullName = `${candidate.firstName} ${candidate.lastName}`.toLowerCase().trim();
+    for (const slot of placedSlots) {
+      if (slot == null) continue;
+      if (slot.coach != null && slot.coach.toLowerCase().trim() === candidateFullName) {
+        return true; // candidate is the coach of an already-placed student
+      }
+    }
+    return false;
+  }
+
+  // candidate is a student — check if their coach is already placed
+  const candidateCoach = candidate.coach.toLowerCase().trim();
+  for (const slot of placedSlots) {
+    if (slot == null) continue;
+    const slotFullName = `${slot.firstName} ${slot.lastName}`.toLowerCase().trim();
+    if (candidateCoach === slotFullName) {
+      return true; // coach already in this block
+    }
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------------
 // Main schedule function
 // ---------------------------------------------------------------------------
 export function schedule(input: SchedulerInput): ScheduleResult {
@@ -112,20 +143,57 @@ export function schedule(input: SchedulerInput): ScheduleResult {
   const sorted = [...entries].sort(compareEntries);
 
   // ---------------------------------------------------------------------------
-  // Phase B: Assign to time blocks (greedy, fill numPlatforms slots per block)
+  // Phase B: Conflict-aware block assignment (1-lookahead swap to avoid COACH conflicts)
+  //
+  // Algorithm:
+  // 1. Convert sorted array into a mutable queue.
+  // 2. Walk through the queue front-to-back, filling numPlatforms slots per block.
+  // 3. For each slot in a block, before placing the next queue entry, check if it creates
+  //    a COACH conflict with entries already placed in THIS block.
+  // 4. If conflict detected AND the next queue entry (cursor+1) would NOT conflict:
+  //    swap queue[cursor] and queue[cursor+1], then place the (now front) entry.
+  // 5. If no valid swap (end of queue, or next entry also conflicts): force-place anyway.
+  //
+  // This is a 1-lookahead swap only — does not do deep search. Preserves sort order
+  // as much as possible (only adjacent swaps). Best-effort, not guaranteed zero conflicts.
   // ---------------------------------------------------------------------------
+  const queue = [...sorted];
   const timeBlocks: TimeBlock[] = [];
+  let cursor = 0;
 
-  for (let i = 0; i < sorted.length; i += numPlatforms) {
+  while (cursor < queue.length) {
     const blockIndex = timeBlocks.length;
     const startTime = startTimeMinutes + blockIndex * (blockDuration + transitionDuration);
     const endTime = startTime + blockDuration;
 
-    // Fill platforms array, padding with null for empty slots
     const platforms: (PlatformSlot | null)[] = [];
+
     for (let p = 0; p < numPlatforms; p++) {
-      const entry = sorted[i + p];
-      platforms.push(entry != null ? buildPlatformSlot(entry) : null);
+      if (cursor >= queue.length) {
+        // Pad remaining slots with null
+        platforms.push(null);
+        continue;
+      }
+
+      const candidate = queue[cursor];
+
+      // Check if placing candidate creates a COACH conflict with already-placed slots in this block
+      const hasConflict = wouldCreateCoachConflict(candidate, platforms);
+
+      if (hasConflict && cursor + 1 < queue.length) {
+        // Try swapping with the next entry in queue
+        const next = queue[cursor + 1];
+        const nextHasConflict = wouldCreateCoachConflict(next, platforms);
+        if (!nextHasConflict) {
+          // Swap: place next now, candidate moves to cursor+1 position
+          queue[cursor + 1] = candidate;
+          queue[cursor] = next;
+        }
+        // If next also conflicts: fall through, force-place original candidate
+      }
+
+      platforms.push(buildPlatformSlot(queue[cursor]));
+      cursor++;
     }
 
     timeBlocks.push({
@@ -142,84 +210,9 @@ export function schedule(input: SchedulerInput): ScheduleResult {
       : startTimeMinutes;
 
   // ---------------------------------------------------------------------------
-  // Phase C: Detect conflicts
+  // Phase C: Detect conflicts (delegated to standalone pure function)
   // ---------------------------------------------------------------------------
-  const conflicts: Conflict[] = [];
-
-  // --- REST conflict detection (SCHED-04, D-09) ---
-  // Build map: registrantId -> list of {blockNumber, entry} where the registrant appears
-  const registrantBlocks = new Map<
-    string,
-    Array<{ blockNumber: number; entry: PlatformSlot }>
-  >();
-
-  for (const block of timeBlocks) {
-    for (const slot of block.platforms) {
-      if (slot == null) continue;
-      const existing = registrantBlocks.get(slot.registrantId) ?? [];
-      existing.push({ blockNumber: block.blockNumber, entry: slot });
-      registrantBlocks.set(slot.registrantId, existing);
-    }
-  }
-
-  for (const appearances of registrantBlocks.values()) {
-    if (appearances.length < 2) continue;
-    // Check all pairs
-    for (let i = 0; i < appearances.length - 1; i++) {
-      for (let j = i + 1; j < appearances.length; j++) {
-        const blockI = appearances[i].blockNumber;
-        const blockJ = appearances[j].blockNumber;
-        const gap = blockJ - blockI; // always positive since blocks are 1-indexed ascending
-        if (gap < minRestBlocks) {
-          const laterEntry = appearances[j].entry;
-          const restConflict: RestConflict = {
-            type: "REST",
-            athleteName: `${laterEntry.firstName} ${laterEntry.lastName}`,
-            blockNumbers: [blockI, blockJ],
-            gap,
-            minRequired: minRestBlocks,
-            event: laterEntry.event,
-            bellWeight: laterEntry.bellWeight,
-          };
-          conflicts.push(restConflict);
-        }
-      }
-    }
-  }
-
-  // --- COACH conflict detection (SCHED-05, D-01, D-02, D-03) ---
-  // For each block, check if any entry's coach field matches another entry's full name.
-  // Normalize both sides with toLowerCase().trim() (D-01).
-  // The entry with the coach field = the student.
-  // The entry whose full name matches = the coach (as an athlete).
-  for (const block of timeBlocks) {
-    const slots = block.platforms.filter((s): s is PlatformSlot => s != null);
-
-    for (let i = 0; i < slots.length; i++) {
-      const student = slots[i];
-      if (student.coach == null) continue;
-
-      const normalizedCoach = student.coach.toLowerCase().trim();
-
-      for (let j = 0; j < slots.length; j++) {
-        if (i === j) continue;
-        const athlete = slots[j];
-        const athleteFullName = `${athlete.firstName} ${athlete.lastName}`.toLowerCase().trim();
-        if (normalizedCoach === athleteFullName) {
-          const coachConflict: CoachConflict = {
-            type: "COACH",
-            coachName: student.coach, // original case from student entry
-            studentName: `${student.firstName} ${student.lastName}`,
-            blockNumber: block.blockNumber,
-            event: student.event,
-            bellWeight: student.bellWeight,
-          };
-          conflicts.push(coachConflict);
-          break; // found the coach match, no need to check further for this student
-        }
-      }
-    }
-  }
+  const conflicts = detectConflicts(timeBlocks, minRestBlocks);
 
   return {
     timeBlocks,

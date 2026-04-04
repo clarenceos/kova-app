@@ -22,6 +22,7 @@ export async function registerAthlete(input: {
     bellWeight: string
     duration: number
   }>
+  isJudging?: number // 0=not judging, 1=judge-only, 2=competing+judging
 }): Promise<{ registrantId: string } | { error: string }> {
   try {
     // 1. competitionId must be a non-empty string
@@ -66,13 +67,15 @@ export async function registerAthlete(input: {
     }
     if (!input.country?.trim()) return { error: 'Country is required' }
 
-    // 12. Events must be non-empty array
-    if (!Array.isArray(input.events) || input.events.length === 0) {
+    const isJudging = input.isJudging ?? 0
+
+    // 12. Events must be non-empty array (skip for judge-only registrants)
+    if (isJudging !== 1 && (!Array.isArray(input.events) || input.events.length === 0)) {
       return { error: 'Select at least one event' }
     }
 
-    // 13. Each event must have valid fields
-    for (const evt of input.events) {
+    // 13. Each event must have valid fields (skip validation for judge-only — no events)
+    for (const evt of (isJudging === 1 ? [] : input.events)) {
       if (!['LC', 'JERK', 'SNATCH', 'BIATHLON'].includes(evt.event)) {
         return { error: `Invalid event: ${evt.event}` }
       }
@@ -87,11 +90,14 @@ export async function registerAthlete(input: {
     // Generate registrant ID upfront so we can return it on success
     const registrantId = createId()
 
+    // For judge-only (isJudging === 1): no events, no serials needed
+    const eventsToInsert = isJudging === 1 ? [] : input.events
+
     // Generate serial numbers BEFORE the batch — one per event entry.
     // Pass loop index as pendingOffset so each call gets a unique sequence number
     // even though no entries have been committed yet (fixes serial collision on multi-event).
     const serials: string[] = []
-    for (let i = 0; i < input.events.length; i++) {
+    for (let i = 0; i < eventsToInsert.length; i++) {
       const serial = await generateCompetitionSerial(input.competitionId, comp.serialPrefix, i)
       serials.push(serial)
     }
@@ -112,9 +118,10 @@ export async function registerAthlete(input: {
         country: input.country.trim(),
         club: input.club?.trim() || null,
         coach: input.coach?.trim() || null,
+        isJudging,
         createdAt: now,
       }) as unknown as BatchStatement,
-      ...input.events.map((evt, i) =>
+      ...eventsToInsert.map((evt, i) =>
         db.insert(registrationEntries).values({
           registrantId,
           competitionId: input.competitionId,

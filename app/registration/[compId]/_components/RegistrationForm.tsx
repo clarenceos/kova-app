@@ -62,6 +62,8 @@ export function RegistrationForm({
     JERK: { checked: false, bellWeight: '', duration: null },
     SNATCH: { checked: false, bellWeight: '', duration: null },
   })
+  const [isJudgeOnly, setIsJudgeOnly] = useState(false)
+  const [isAlsoJudging, setIsAlsoJudging] = useState(false)
   const [club, setClub] = useState('')
   const [coach, setCoach] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -104,7 +106,7 @@ export function RegistrationForm({
       EventKey,
       EventState,
     ][]
-    if (checkedEvents.length === 0) newErrors.events = 'Select at least one event'
+    if (!isJudgeOnly && checkedEvents.length === 0) newErrors.events = 'Select at least one event'
 
     for (const [key, val] of checkedEvents) {
       if (!val.bellWeight) {
@@ -124,11 +126,14 @@ export function RegistrationForm({
     setErrors({})
     setSubmitting(true)
     try {
-      const eventPayload = checkedEvents.map(([key, val]) => ({
-        event: key as 'LC' | 'JERK' | 'SNATCH',
-        bellWeight: val.bellWeight,
-        duration: allowedDurations === 'both' ? val.duration! : parseInt(allowedDurations),
-      }))
+      const isJudging = isJudgeOnly ? 1 : isAlsoJudging ? 2 : 0
+      const eventPayload = isJudgeOnly
+        ? []
+        : checkedEvents.map(([key, val]) => ({
+            event: key as 'LC' | 'JERK' | 'SNATCH',
+            bellWeight: val.bellWeight,
+            duration: allowedDurations === 'both' ? val.duration! : parseInt(allowedDurations),
+          }))
       const result = await registerAthlete({
         competitionId,
         lastName: lastName.trim(),
@@ -139,6 +144,7 @@ export function RegistrationForm({
         club: club.trim() || null,
         coach: coach.trim() || null,
         events: eventPayload,
+        isJudging,
       })
       if ('error' in result) {
         setSubmitError(result.error)
@@ -298,9 +304,52 @@ export function RegistrationForm({
         )}
       </div>
 
+      {/* Role */}
+      <div>
+        <p className="mb-3 text-base font-semibold text-parchment">Role</p>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="role-judge-only"
+              checked={isJudgeOnly}
+              onCheckedChange={(checked) => {
+                const val = checked === true
+                setIsJudgeOnly(val)
+                if (val) {
+                  setIsAlsoJudging(false)
+                  // Clear all event selections
+                  setEvents({
+                    LC: { checked: false, bellWeight: '', duration: null },
+                    JERK: { checked: false, bellWeight: '', duration: null },
+                    SNATCH: { checked: false, bellWeight: '', duration: null },
+                  })
+                }
+              }}
+            />
+            <label htmlFor="role-judge-only" className="cursor-pointer text-sm text-parchment">
+              I am judging only (not competing in any event)
+            </label>
+          </div>
+          {!isJudgeOnly && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="role-also-judging"
+                checked={isAlsoJudging}
+                onCheckedChange={(checked) => setIsAlsoJudging(checked === true)}
+              />
+              <label htmlFor="role-also-judging" className="cursor-pointer text-sm text-parchment">
+                I am also available to judge
+              </label>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Events */}
       <div>
-        <p className="mb-4 text-base font-semibold text-parchment">Events</p>
+        <p className="mb-4 text-base font-semibold text-parchment">
+          {isJudgeOnly ? 'Events (not applicable — judge only)' : 'Events'}
+        </p>
         <div className="space-y-3">
           {EVENT_KEYS.map(key => {
             const ev = events[key]
@@ -311,6 +360,7 @@ export function RegistrationForm({
                   <Checkbox
                     id={`event-${key}`}
                     checked={ev.checked}
+                    disabled={isJudgeOnly}
                     onCheckedChange={(checked) => toggleEvent(key, checked === true)}
                   />
                   <label

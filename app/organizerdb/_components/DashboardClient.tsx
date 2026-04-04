@@ -20,9 +20,10 @@ import { CSVImportModal } from './CSVImportModal'
 import { QRCodeModal } from './QRCodeModal'
 import { GenerateQueueModal } from './GenerateQueueModal'
 import { CopyLinkButton } from './CopyLinkButton'
+import { AddRegistrantDialog } from './AddRegistrantDialog'
 
-const CSV_TEMPLATE_HEADERS = 'Last Name,First Name,Gender,Body Weight (kg),Country,Events,Bell Weights,Duration,Club,Coach'
-const CSV_TEMPLATE_EXAMPLE = 'Dela Cruz,Juan,Male,72.5,Philippines,"LC,JERK","2x16,2x16",10,Girya Manila,Coach Name'
+const CSV_TEMPLATE_HEADERS = 'Last Name,First Name,Gender,Body Weight (kg),Country,Events,Bell Weights,Duration,Club,Coach,Is Judging'
+const CSV_TEMPLATE_EXAMPLE = 'Dela Cruz,Juan,Male,72.5,Philippines,"LC,JERK","2x16,2x16",10,Girya Manila,Coach Name,0'
 
 function statusSelectClass(status: string): string {
   if (status === 'open') return 'h-7 w-28 text-xs bg-green-700/20 text-green-400 border-green-700/40'
@@ -164,6 +165,12 @@ export function DashboardClient({
               <Download className="h-3 w-3" />
               CSV Template
             </button>
+            <AddRegistrantDialog
+              competitionId={dashboardData.competition.id}
+              allowedDurations={dashboardData.competition.allowedDurations as 'both' | '10' | '5'}
+              allowedBellWeights={dashboardData.competition.allowedBellWeights}
+              onAdded={() => window.location.reload()}
+            />
             <GenerateQueueModal
               compId={dashboardData.competition.id}
               registrantCount={dashboardData.totalCount}

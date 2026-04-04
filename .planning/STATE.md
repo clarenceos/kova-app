@@ -135,6 +135,9 @@ Recent decisions affecting current work:
 - [Phase 10-03]: qrcode npm package used for QR generation (offline-capable, no external API dependency)
 - [Phase 10-03]: Self-contained modal pattern: each modal manages its own open state and renders its own trigger — DashboardClient passes props only
 - [Phase 10-03]: Disabled button tooltip requires span wrapper — Radix Tooltip on disabled Button has no pointer events; span restores them
+- [quick-260404-ruf]: detectConflicts extracted as pure function with no server imports — safe to import from 'use client' components
+- [quick-260404-ruf]: 1-lookahead adjacent swap chosen for block fill to minimize sort order disruption and keep O(n) complexity
+- [quick-260404-ruf]: TimetableGrid renders ConflictPanel internally so conflicts update live after DnD swaps; DnD swaps are client-side only (no DB persistence)
 
 ### Pending Todos
 
@@ -168,8 +171,9 @@ None yet.
 | 260404-lg4 | Fix UAT bugs: QR code blank, missing status toggle, hidden serial prefix | 2026-04-04 | 6745402 | [260404-lg4-fix-uat-bugs-qr-code-blank-no-status-tog](./quick/260404-lg4-fix-uat-bugs-qr-code-blank-no-status-tog/) |
 | 260404-mj1 | Fix registration bugs and UX: multi-discipline batch, CSV template, status dropdown, form control visibility | 2026-04-04 | f3a77e3 | [260404-mj1-fix-registration-bugs-and-ux-improvement](./quick/260404-mj1-fix-registration-bugs-and-ux-improvement/) |
 | 260404-r98 | Fix serial collision on multi-event batch insert and add BIATHLON event to CSV importer | 2026-04-04 | d706d74 | [260404-r98-fix-serial-collision-on-multi-event-batc](./quick/260404-r98-fix-serial-collision-on-multi-event-batc/) |
+| 260404-ruf | Conflict-aware scheduler (1-lookahead COACH avoidance), DnD slot swap, coach name on cells | 2026-04-04 | 0d6f3fa | [260404-ruf-conflict-aware-scheduler-manual-slot-swa](./quick/260404-ruf-conflict-aware-scheduler-manual-slot-swa/) |
 
 ## Session Continuity
 
-Last activity: 2026-04-04 - Completed quick task 260404-r98: Fix serial collision on multi-event batch insert and add BIATHLON event
+Last activity: 2026-04-04 - Completed quick task 260404-ruf: Conflict-aware scheduler, DnD slot swap, coach name on cells
 Resume file: None

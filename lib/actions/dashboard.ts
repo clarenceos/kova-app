@@ -150,13 +150,19 @@ export async function bulkImportRegistrants(input: {
     type BatchStatement = Parameters<typeof db.batch>[0][number]
     const allInserts: BatchStatement[] = []
 
+    // globalOffset tracks how many serials have been generated across all rows so far
+    // (none are committed until the final db.batch()). Passing it as pendingOffset ensures
+    // each serial gets a unique sequence number and avoids UNIQUE constraint violations.
+    let globalOffset = 0
+
     for (const row of input.rows) {
       const registrantId = createId()
 
       // Generate one serial per event for this row
       const serials: string[] = []
       for (const _evt of row.events) {
-        const serial = await generateCompetitionSerial(input.competitionId, comp.serialPrefix)
+        const serial = await generateCompetitionSerial(input.competitionId, comp.serialPrefix, globalOffset)
+        globalOffset++
         serials.push(serial)
       }
 

@@ -87,10 +87,12 @@ export async function registerAthlete(input: {
     // Generate registrant ID upfront so we can return it on success
     const registrantId = createId()
 
-    // Generate serial numbers BEFORE the batch — one per event entry
+    // Generate serial numbers BEFORE the batch — one per event entry.
+    // Pass loop index as pendingOffset so each call gets a unique sequence number
+    // even though no entries have been committed yet (fixes serial collision on multi-event).
     const serials: string[] = []
-    for (const _evt of input.events) {
-      const serial = await generateCompetitionSerial(input.competitionId, comp.serialPrefix)
+    for (let i = 0; i < input.events.length; i++) {
+      const serial = await generateCompetitionSerial(input.competitionId, comp.serialPrefix, i)
       serials.push(serial)
     }
 

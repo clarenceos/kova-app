@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createCompetition } from '@/lib/actions/competitions'
-import { deriveSerialPrefix } from '@/lib/queue/serial'
+import { deriveSerialPrefix } from '@/lib/queue/serial-prefix'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'

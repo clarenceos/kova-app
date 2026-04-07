@@ -62,29 +62,34 @@ function parseCSV(text: string): ParsedRow[] {
 
     if (!raw['country']) errors.push('Country required')
 
-    const eventNames = (raw['events'] || '').split(',').map(e => e.trim().toUpperCase())
-    const bellWeights = (raw['bell weights'] || '').split(',').map(b => b.trim())
-    const duration = parseInt(raw['duration'] || '10', 10)
-    if (duration !== 5 && duration !== 10) errors.push('Duration must be 5 or 10')
+    const isJudgingRaw = parseInt(raw['is judging'] || '0', 10)
+    const isJudging: 0 | 1 | 2 = isJudgingRaw === 1 ? 1 : isJudgingRaw === 2 ? 2 : 0
 
-    const validEvents = ['LC', 'JERK', 'SNATCH', 'BIATHLON']
     const events: CSVRow['events'] = []
-    for (let i = 0; i < eventNames.length; i++) {
-      if (!validEvents.includes(eventNames[i])) {
-        errors.push(`Unknown event: ${eventNames[i]}`)
-        continue
+    if (isJudging !== 1) {
+      const eventNames = (raw['events'] || '').split(',').map(e => e.trim().toUpperCase())
+      const bellWeights = (raw['bell weights'] || '').split(',').map(b => b.trim())
+      const duration = parseInt(raw['duration'] || '10', 10)
+      if (duration !== 5 && duration !== 10) errors.push('Duration must be 5 or 10')
+
+      const validEvents = ['LC', 'JERK', 'SNATCH', 'BIATHLON']
+      for (let i = 0; i < eventNames.length; i++) {
+        if (!validEvents.includes(eventNames[i])) {
+          errors.push(`Unknown event: ${eventNames[i]}`)
+          continue
+        }
+        if (!bellWeights[i]) {
+          errors.push(`Missing bell weight for ${eventNames[i]}`)
+          continue
+        }
+        events.push({
+          event: eventNames[i] as 'LC' | 'JERK' | 'SNATCH' | 'BIATHLON',
+          bellWeight: bellWeights[i],
+          duration,
+        })
       }
-      if (!bellWeights[i]) {
-        errors.push(`Missing bell weight for ${eventNames[i]}`)
-        continue
-      }
-      events.push({
-        event: eventNames[i] as 'LC' | 'JERK' | 'SNATCH' | 'BIATHLON',
-        bellWeight: bellWeights[i],
-        duration,
-      })
+      if (events.length === 0 && errors.length === 0) errors.push('At least one valid event required')
     }
-    if (events.length === 0 && errors.length === 0) errors.push('At least one valid event required')
 
     const data: CSVRow | null =
       errors.length === 0
@@ -97,6 +102,7 @@ function parseCSV(text: string): ParsedRow[] {
             events,
             club: raw['club'] || null,
             coach: raw['coach'] || null,
+            isJudging,
           }
         : null
 
@@ -219,7 +225,7 @@ export function CSVImportModal({
             <table className="w-full border-collapse text-xs">
               <thead className="sticky top-0 bg-charcoal">
                 <tr>
-                  {['#', 'Last Name', 'First Name', 'Gender', 'Body Weight', 'Country', 'Events', 'Bell Weights', 'Duration', 'Club', 'Coach', 'Status'].map(h => (
+                  {['#', 'Last Name', 'First Name', 'Gender', 'Body Weight', 'Country', 'Events', 'Bell Weights', 'Duration', 'Club', 'Coach', 'Is Judging', 'Status'].map(h => (
                     <th key={h} className="px-2 py-1 border border-raw-steel/20 text-left text-raw-steel font-medium whitespace-nowrap">
                       {h}
                     </th>
@@ -243,6 +249,7 @@ export function CSVImportModal({
                     <td className="px-2 py-1 border border-raw-steel/20 text-parchment">{row.raw['duration'] ?? ''}</td>
                     <td className="px-2 py-1 border border-raw-steel/20 text-parchment">{row.raw['club'] ?? ''}</td>
                     <td className="px-2 py-1 border border-raw-steel/20 text-parchment">{row.raw['coach'] ?? ''}</td>
+                    <td className="px-2 py-1 border border-raw-steel/20 text-parchment">{row.raw['is judging'] ?? '0'}</td>
                     <td className="px-2 py-1 border border-raw-steel/20">
                       {row.data !== null ? (
                         <Check className="h-3 w-3 text-green-400" />

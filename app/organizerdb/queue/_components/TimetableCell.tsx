@@ -11,8 +11,15 @@ export function TimetableCell({ slot, conflicts }: TimetableCellProps) {
   const eventLabel =
     slot.event === 'LC' ? 'LC' : slot.event === 'JERK' ? 'JK' : 'SN'
 
+  const eventBorderClass =
+    slot.event === 'LC'
+      ? 'border-l-2 border-blue-500/60'
+      : slot.event === 'JERK'
+      ? 'border-l-2 border-amber-500/60'
+      : 'border-l-2 border-green-500/60'
+
   return (
-    <div className="relative min-w-[140px]">
+    <div className={`relative min-w-[140px] pl-2 ${eventBorderClass}`}>
       {/* Conflict pills — top-right float */}
       {conflicts.length > 0 && (
         <div className="absolute -top-1 -right-1 flex gap-0.5">

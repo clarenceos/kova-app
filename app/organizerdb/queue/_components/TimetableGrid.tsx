@@ -29,11 +29,9 @@ function formatTime(minutes: number): string {
 function getRowTintClass(block: TimeBlock): string {
   const events = block.platforms.filter(Boolean).map(s => s!.event)
   if (events.length === 0) return ''
-  const counts: Record<string, number> = {}
-  for (const e of events) counts[e] = (counts[e] ?? 0) + 1
-  const majority = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
-  if (majority[1] <= events.length / 2) return ''
-  switch (majority[0]) {
+  // Only tint the row when every occupied slot is the same event
+  if (!events.every(e => e === events[0])) return ''
+  switch (events[0]) {
     case 'LC': return 'bg-blue-950/40'
     case 'JERK': return 'bg-amber-950/40'
     case 'SNATCH': return 'bg-green-950/40'
@@ -370,16 +368,25 @@ export function TimetableGrid({
                   <td className="px-2 py-2 text-xs text-raw-steel align-top">
                     <span className="flex items-center gap-1">
                       {block.blockNumber}
-                      {timeBlocks.length > 1 && (
-                        <button
-                          type="button"
-                          title="Delete block"
-                          onClick={() => handleDeleteBlock(blockIdx)}
-                          className="opacity-60 hover:opacity-100 text-raw-steel hover:text-red-400 transition-colors print:hidden"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      )}
+                      {timeBlocks.length > 1 && (() => {
+                        const isOccupied = block.platforms.some(s => s !== null)
+                        return (
+                          <button
+                            type="button"
+                            title={isOccupied ? 'Move all athletes out of this block before deleting' : 'Delete block'}
+                            onClick={isOccupied ? undefined : () => handleDeleteBlock(blockIdx)}
+                            disabled={isOccupied}
+                            className={[
+                              'transition-colors print:hidden',
+                              isOccupied
+                                ? 'opacity-20 cursor-not-allowed text-raw-steel'
+                                : 'opacity-60 hover:opacity-100 text-raw-steel hover:text-red-400',
+                            ].join(' ')}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )
+                      })()}
                     </span>
                   </td>
                   {block.platforms.map((slot: PlatformSlot | null, platformIdx: number) => {

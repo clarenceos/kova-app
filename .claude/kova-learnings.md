@@ -67,10 +67,10 @@ At the end of significant sessions, update it.
 ---
 
 ### 2026-03-26 — Recorder + Playback UX Polish
-**What happened:** 9 fixes across recording/page.tsx and playback/page.tsx. Front camera is now the default. Rear camera no longer mirrored. Beeps now captured in the recorded video by routing AudioContext through a MediaStreamDestinationNode mixed into the canvas stream before passing to MediaRecorder. Numpad inputs via inputMode="decimal"/"numeric". Countdown minimum 5s enforced with inline error. iOS always hides the video player (UA detection before canPlayType). Back button on playback shows a leave-warning dialog instead of silently discarding the recording. Upload flow restructured — single tap starts upload, buttons hidden during upload, export offered only after completion.
-**What worked:** `MediaStreamDestinationNode` pattern for capturing audio into video — create in startSession (user gesture), connect gainNode to both `ctx.destination` (speakers) and `audioDestRef.current`, then `new MediaStream([...canvasStream.getVideoTracks(), ...audioDestRef.current.stream.getAudioTracks()])` for MediaRecorder. iOS detection: `/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)`. YouTubeUploader auto-starts on mount via useEffect — no second tap needed.
-**What didn't work:** N/A — clean first execution.
-**Rule going forward:** Always route AudioContext through MediaStreamDestinationNode so beeps land in the recorded file, not just speakers. Always detect iOS before canPlayType — iOS with MP4 mimeType would pass canPlayType but still show a broken player. Never show "Render and Export" before upload — it encourages the wrong flow and risks losing the recording.
+**What happened:** 9 fixes across recording/page.tsx and playback/page.tsx. Front camera default, rear camera no-mirror, numpad inputs, countdown minimum 5s warning, iOS player hidden, back navigation guard, single-tap upload, export only post-upload.
+**What worked:** iOS detection: `/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)`. YouTubeUploader auto-starts on mount via useEffect. Always detect iOS before canPlayType — iOS with MP4 mimeType passes canPlayType but still shows a broken player.
+**What didn't work:** Mixing audio into the recorded video via MediaStreamAudioDestinationNode — caused Chrome's WebM encoder to skip silent frames, collapsing a 60s recording to 2s (only frames with audio beeps were kept). Do not attempt audio-in-video without a keepalive silent oscillator to prevent frame-skipping.
+**Rule going forward:** Never show "Render and Export" before upload. Do NOT mix audio into the canvas recording stream unless a keepalive silent audio source is also connected — silent gaps cause Chrome to drop video frames. Beeps play through speakers only (ctx.destination), not into the recording.
 
 ---
 
@@ -79,6 +79,14 @@ At the end of significant sessions, update it.
 **What worked:** `h-[60vh]` on video container instead of `aspect-[9/16]` — gives predictable height on all phones. YouTube IFrame API `onStateChange` state `1` = playing, used to gate judge buttons. Passing full `repTaps` array through context to the complete page for display.
 **What didn't work:** `aspect-[9/16]` pushed controls off screen on standard phone heights. `playerReady` alone is insufficient to gate buttons — it fires on player init, not on play start.
 **Rule going forward:** Judge video container uses `h-[60vh]`, never `aspect-[9/16]`. REP/NO REP buttons must be gated on `isPlaying` (YouTube state 1), not just `playerReady`. `LastSubmission` carries full `repTaps: RepEntry[]` — always pass it when calling `setLastSubmission`.
+
+---
+
+### 2026-03-27 — 10-Minute Recording Lost (Critical Data-Loss Bug)
+**What happened:** A 10-minute recording was lost. User stopped recording manually, saw "Set complete" dialog, pressed "Save recording", and was redirected to the discipline selection page with no recording. Root cause: `webmFixDuration` was processing the raw blob (300-500MB for a 10-min set) BEFORE writing to IndexedDB. On large files it caused an OOM crash that killed the JS process — catch block never ran, IndexedDB was never written, React context reset, playback page redirect guard sent user to /record.
+**What worked:** Four independent safeguards now in place: (1) IndexedDB backup via `lib/recording-store.ts` — writes raw blob immediately after size validation, before any other operation. (2) Hardened `recorder.onstop` with try/catch/finally and 150ms navigation delay for context propagation. (3) IndexedDB recovery on playback page mount if context is empty — shows "Recovering recording..." spinner. (4) 1s delayed redirect guard to handle slow context propagation. `clearRecording()` called on successful upload and explicit discard only.
+**What didn't work:** `webmFixDuration` on large files — OOM risk on 10-min recordings. Wrapping it in try-catch is NOT sufficient because OOM kills the JS process, bypassing catch entirely.
+**Rule going forward:** NEVER call `webmFixDuration` or any memory-intensive operation before saving to IndexedDB. The IndexedDB write must be the FIRST thing after blob creation and size validation — nothing else. `webmFixDuration` is permanently removed from the recording pipeline. Raw blob is always what gets saved and uploaded. Operation order in recorder.onstop must always be: validate size → IndexedDB save → React context → navigate.
 
 ---
 

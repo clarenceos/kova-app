@@ -23,7 +23,7 @@ export default async function OrganizerPage({ searchParams }: OrganizerPageProps
 
   return (
     <div className="min-h-screen bg-background px-8 py-12">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-screen-2xl">
         {/* Page title */}
         <h1 className="mb-8 text-2xl font-bold text-parchment">Your Competitions</h1>
 

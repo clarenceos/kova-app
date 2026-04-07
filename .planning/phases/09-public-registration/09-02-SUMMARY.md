@@ -114,3 +114,7 @@ None - no external service configuration required.
 ---
 *Phase: 09-public-registration*
 *Completed: 2026-04-03*
+
+## Self-Check: PASSED
+
+All files verified present on disk. All task commits (d94aa6a, 85de667) verified in git log.
